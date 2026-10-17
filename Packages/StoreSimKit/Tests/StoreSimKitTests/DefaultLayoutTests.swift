@@ -18,7 +18,7 @@ import Testing
             .gondolaShelf: 6, .wallShelf: 4, .endCap: 2, .wallFridge: 4, .dairyChiller: 1, .checkoutCounter: 1,
             .cigaretteCabinet: 1, .hotFoodCounter: 1, .coffeeMachine: 1, .menuScreen: 1, .windowLedge: 1,
             .highStool: 2, .basketStack: 1, .backRoomDoor: 1, .pendantLamp: 4, .entranceDoor: 1,
-            .windowPoster: 2, .atmLocker: 1, .aFrameSign: 1, .litterBin: 2, .bikeRack: 1,
+            .windowPoster: 3, .atmLocker: 1, .aFrameSign: 1, .litterBin: 2, .bikeRack: 1,
             .streetLamp: 4, .tree: 6, .parkedCar: 3,
         ]
         #expect(Set(minimums.keys) == Set(FixtureKind.allCases))

@@ -1,7 +1,7 @@
 import Foundation
 
 enum WallFridgeBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         let w = 0.95, d = 0.6, h = 2.0
         let zBack = -0.15 // pushed against the back wall of the footprint
@@ -16,7 +16,7 @@ enum WallFridgeBuilder: FixtureBuilding {
             let y = 0.2 + 0.45 * Double(i)
             p.box("shelf_\(i)", 0, y, zBack, w - 0.1, 0.025, d - 0.1, .solid(c.tileWhite, roughness: 0.3))
             for n in ProductRows.make(onShelf: i, y: y + 0.025, width: w - 0.16, z: zBack + 0.02,
-                                      detail: detail, seed: seed, prefix: "bottle", mode: .bottles) {
+                                      detail: detail, seed: seed, prefix: "bottle", mode: .bottles, variant: variant) {
                 p.add(n)
             }
         }
@@ -36,7 +36,7 @@ enum WallFridgeBuilder: FixtureBuilding {
 }
 
 enum DairyChillerBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         let w = 1.45, d = 0.9
         var p = Parts()
@@ -48,7 +48,7 @@ enum DairyChillerBuilder: FixtureBuilding {
             let y = 0.78 + 0.18 * Double(i)
             p.box("shelf_\(i)", 0, y, -0.05, w - 0.12, 0.02, 0.5 - 0.1 * Double(i), .solid(c.tileWhite, roughness: 0.3))
             for n in ProductRows.make(onShelf: i, y: y + 0.02, width: w - 0.2, z: -0.05, detail: detail,
-                                      seed: seed, prefix: "carton", mode: .cartons) {
+                                      seed: seed, prefix: "carton", mode: .cartons, variant: variant) {
                 p.add(n)
             }
         }

@@ -82,6 +82,7 @@ extension StoreLayout {
         shop("entrance_door_1", .entranceDoor, 9, 13)
         shop("window_poster_1", .windowPoster, 6, 13)
         shop("window_poster_2", .windowPoster, 13, 13)
+        shop("window_poster_3", .windowPoster, 19, 13)
 
         // Ceiling pendants.
         for (i, p) in [(5, 3), (12, 3), (18, 3), (5, 9), (12, 9), (18, 9)].enumerated() {

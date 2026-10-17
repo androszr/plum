@@ -112,7 +112,7 @@ public enum EntityBuilder {
         case let .light(kind):
             return lightEntity(kind)
         case let .asset(name):
-            if let loaded = try? loader.load(name) { return loaded }
+            if let loaded = try? loader.load(name, variant: node.variant) { return loaded }
             // Loading failed: fall back to the procedural tree kept under `fallback`.
             let holder = Entity()
             for child in node.children { holder.addChild(entity(for: child, loader: loader)) }

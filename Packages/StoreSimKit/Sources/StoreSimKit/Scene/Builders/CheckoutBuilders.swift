@@ -1,7 +1,7 @@
 import Foundation
 
 enum CheckoutCounterBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         // 2.0 m x 1.0 m footprint; the customer side is +z.
@@ -26,7 +26,7 @@ enum CheckoutCounterBuilder: FixtureBuilding {
 }
 
 enum CigaretteCabinetBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.box("cabinet", 0, 0, -0.05, 1.45, 1.9, 0.35, .paint(c.charcoal))

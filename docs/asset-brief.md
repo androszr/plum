@@ -13,6 +13,7 @@ This brief tells an artist, or an AI image-to-3D tool, exactly which models the 
 - Naming: the file name is the asset name below, lower snake case, e.g. `gondola_shelf.usdz`.
 - Level of detail: there is one USDZ per asset. The app drops nothing from a model, so keep the budgets below.
 - Keep the parts listed under each asset as separate named meshes where the tool allows it; the stand-in is built from exactly those parts.
+- Parts named `product_<shelf>_<facing>`, `bottle_<shelf>_<facing>` and `carton_<shelf>_<facing>` are recoloured per placed copy by the app and must carry a flat colour, no texture.
 
 ## Palette
 
@@ -340,7 +341,7 @@ Format: USDZ, embedded textures, one 1024 x 1024 atlas
 
 Parts: poster, headline_block
 
-Description: A poster stuck on the shop window: a pastel sheet with a graphite headline block. The artwork itself comes from window_poster_set.
+Description: A poster stuck on the shop window: a pastel sheet with a graphite headline block. The artwork itself comes from window_poster_set. The sheet's texture coordinates cover the first of the three panels; the app slides them to the second or third per placed copy.
 
 Prompt: Low-poly flat-shaded pastel diorama model of a poster stuck on the shop window: a pastel sheet with a graphite headline block. The artwork itself comes from window_poster_set. Size 0.8 x 0.05 x 1.5 metres, pivot at the bottom centre, front facing +Z, at most 300 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#E9C46A, #B9C6B0, #4A4E57), no text, no real-world logos. Export as USDZ.
 

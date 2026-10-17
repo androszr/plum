@@ -79,4 +79,30 @@ import Testing
         let clashes = root.allNodes().filter { ids.contains($0.name) }
         #expect(clashes.count == ids.count)
     }
+
+    @Test func everyNodeCarriesAVariantInRange() {
+        let root = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: .empty)
+        for f in Self.layout.fixtures {
+            let n = root.node(named: f.id)!
+            #expect(n.variant >= 0 && n.variant < ModelVariant.count(for: f.kind), "\(f.id) variant \(n.variant)")
+        }
+    }
+
+    @Test func threePostersCarryThreeDistinctVariants() {
+        let root = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: .empty)
+        let variants = (1...3).map { root.node(named: "window_poster_\($0)")!.variant }
+        #expect(Set(variants).count == 3)
+    }
+
+    @Test func assetWrapperKeepsVariantAndFallbackUsesIt() {
+        let cat = AssetCatalogue(modelURLs: [modelURL("window_poster")])
+        let root = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: cat)
+        for i in 1...3 {
+            let n = root.node(named: "window_poster_\(i)")!
+            guard case .asset = n.shape else { Issue.record("not an asset"); continue }
+            let poster = n.children.first { $0.name == "fallback" }!.node(named: "poster")!
+            guard case let .solid(c, _) = poster.material else { Issue.record("no solid"); continue }
+            #expect(c == ModelVariant.posterTints[n.variant])
+        }
+    }
 }
