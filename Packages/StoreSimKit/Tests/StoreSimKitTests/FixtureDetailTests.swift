@@ -27,7 +27,7 @@ import Testing
     }
 
     @Test func everyKindIsCovered() {
-        #expect(Set(FixtureKind.allCases) == Set([.gondolaShelf, .wallShelf, .endCap, .wallFridge, .dairyChiller, .checkoutCounter, .cigaretteCabinet, .hotFoodCounter, .coffeeMachine, .menuScreen, .windowLedge, .highStool, .basketStack, .backRoomDoor, .pendantLamp, .entranceDoor, .windowPoster, .atmLocker, .aFrameSign, .litterBin, .bikeRack, .streetLamp, .tree, .parkedCar]))
+        #expect(Set(FixtureKind.allCases) == Set([.gondolaShelf, .wallShelf, .endCap, .wallFridge, .dairyChiller, .checkoutCounter, .cigaretteCabinet, .hotFoodCounter, .coffeeMachine, .menuScreen, .windowLedge, .highStool, .basketStack, .backRoomDoor, .pendantLamp, .entranceDoor, .windowPoster, .atmLocker, .aFrameSign, .litterBin, .bikeRack, .streetLamp, .tree, .parkedCar, .selfCheckout, .alcoholWall]))
     }
 
     @Test func gondolaShelf_full() { checkFull(.gondolaShelf) }
@@ -164,5 +164,48 @@ import Testing
         }
         #expect(colours(0) != colours(1))
         #expect(colours(0).count >= 6 && colours(1).count >= 6)
+    }
+    @Test func selfCheckout_full() { checkFull(.selfCheckout) }
+    @Test func selfCheckout_reduced() { checkReduced(.selfCheckout) }
+    @Test func alcoholWall_full() { checkFull(.alcoholWall) }
+    @Test func alcoholWall_reduced() { checkReduced(.alcoholWall) }
+
+    @Test func selfCheckoutHasItsNamedParts() {
+        let names = Set(FixtureBuilders.builder(for: .selfCheckout).build(Self.fixture(.selfCheckout), detail: .full).descendants.map(\.name))
+        for want in ["screen_left", "screen_right", "scanner_left", "bagging_shelf_right", "beacon_left"] {
+            #expect(names.contains(want), "missing \(want)")
+        }
+    }
+
+    @Test func alcoholWallHasItsNamedParts() {
+        let names = FixtureBuilders.builder(for: .alcoholWall).build(Self.fixture(.alcoholWall), detail: .full).descendants.map(\.name)
+        for want in ["shelf_0", "shelf_4", "price_rail_4", "header_text"] {
+            #expect(names.contains(want), "missing \(want)")
+        }
+        #expect(names.filter { $0.hasPrefix("bottle_") }.count >= 40)
+    }
+
+    @Test func alcoholWallKeepsEverythingBelowItsHeaderAndInsideItsExtent() {
+        for detail in [DetailLevel.full, .reduced] {
+            let node = FixtureBuilders.builder(for: .alcoholWall).build(Self.fixture(.alcoholWall), detail: detail)
+            let parts = node.descendants
+            let header = parts.first { $0.name == "header_sign" }!
+            let headerBottom = header.position.y - header.size.y / 2
+            for p in parts where p.name.hasPrefix("bottle_") || p.name.hasPrefix("shelf_") || p.name.hasPrefix("price_rail_") {
+                #expect(p.position.y + p.size.y / 2 <= headerBottom + 1e-9, "\(p.name) reaches the header")
+            }
+            for s in 0..<4 {
+                let next = parts.first { $0.name == "shelf_\(s + 1)" }!
+                let nextBottom = next.position.y - next.size.y / 2
+                for p in parts where p.name.hasPrefix("bottle_\(s)_") {
+                    #expect(p.position.y + p.size.y / 2 <= nextBottom + 1e-9, "\(p.name) pokes into shelf_\(s + 1)")
+                }
+            }
+            let ceiling = FixtureKind.alcoholWall.verticalExtent.upperBound
+            for p in parts {
+                if case .text = p.shape { continue }
+                #expect(p.position.y + p.size.y / 2 <= ceiling + 1e-9, "\(p.name) pokes above the extent")
+            }
+        }
     }
 }

@@ -43,3 +43,54 @@ enum CigaretteCabinetBuilder: FixtureBuilding {
         return fixtureGroup(fixture, p)
     }
 }
+
+/// Stand-in for a dual self-checkout (1.0 m x 0.5 m); the customer side is +z.
+enum SelfCheckoutBuilder: FixtureBuilding {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
+        let c = Brand.palette
+        var p = Parts()
+        p.box("base", 0, 0, 0, 0.95, 0.1, 0.45, .paint(c.charcoal))
+        for (side, x) in [("left", -0.25), ("right", 0.25)] {
+            p.box("body_\(side)", x, 0.1, -0.05, 0.4, 0.95, 0.3, .paint(c.primary))
+            p.box("screen_\(side)", x, 0.75, 0.105, 0.3, 0.22, 0.02, .emissive(c.accentMint))
+            p.box("scanner_\(side)", x, 1.05, -0.03, 0.2, 0.03, 0.2, .paint(c.asphalt))
+            p.box("card_terminal_\(side)", x + 0.1, 0.62, 0.12, 0.1, 0.05, 0.1, .paint(c.asphalt))
+            p.box("bagging_shelf_\(side)", x, 0.3, 0.12, 0.36, 0.03, 0.14, .paint(c.woodLight))
+            if detail.isFull {
+                p.cyl("light_pole_\(side)", x - 0.15, 1.05, -0.05, 0.012, 0.5, .paint(c.charcoal))
+                p.cyl("beacon_\(side)", x - 0.15, 1.55, -0.05, 0.03, 0.05, .emissive(c.priceRailYellow))
+            }
+        }
+        return fixtureGroup(fixture, p)
+    }
+}
+
+/// Stand-in for the tall bottle wall behind the tills (2.0 m x 0.5 m); the front is +z.
+enum AlcoholWallBuilder: FixtureBuilding {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
+        let c = Brand.palette
+        let w = 1.9, d = 0.35
+        let zBack = -0.25 + d / 2
+        var p = Parts()
+        let seed = ProductRows.seed(fixture.id)
+        p.box("base", 0, 0, zBack, w, 0.1, d, .paint(c.charcoal))
+        p.box("upright_left", -w / 2 + 0.02, 0.1, zBack, 0.04, 1.8, d, .paint(c.charcoal))
+        p.box("upright_right", w / 2 - 0.02, 0.1, zBack, 0.04, 1.8, d, .paint(c.charcoal))
+        p.box("back_panel", 0, 0.1, -0.25 + 0.02, w, 1.8, 0.02, .paint(c.cream))
+        for i in 0..<5 {
+            let y = 0.18 + 0.34 * Double(i)
+            p.box("shelf_\(i)", 0, y, zBack, w - 0.08, 0.03, d - 0.04, .paint(c.tileWhite))
+            p.box("price_rail_\(i)", 0, y - 0.01, zBack + d / 2 - 0.02, w - 0.08, 0.04, 0.015, .paint(c.priceRailYellow))
+            for n in ProductRows.make(onShelf: i, y: y + 0.03, width: w - 0.16, z: zBack + 0.02, detail: detail,
+                                      seed: seed, prefix: "bottle", mode: .bottles, variant: variant) {
+                p.add(n)
+            }
+        }
+        p.box("header_sign", 0, 1.9, zBack, w, 0.2, d, .paint(c.primary))
+        p.text("header_text", fixture.label ?? "Wine & spirits", 0, 2.0, zBack + d / 2 + 0.012, 0.1, .paint(c.cream))
+        if detail.isFull {
+            p.box("lock_rail", 0, 1.0, zBack + d / 2 - 0.005, w - 0.08, 0.03, 0.01, .paint(c.charcoal))
+        }
+        return fixtureGroup(fixture, p)
+    }
+}

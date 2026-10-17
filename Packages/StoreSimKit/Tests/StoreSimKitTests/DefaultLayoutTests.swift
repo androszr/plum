@@ -15,11 +15,12 @@ import Testing
 
     @Test func minimumCountsPerKind() {
         let minimums: [FixtureKind: Int] = [
-            .gondolaShelf: 6, .wallShelf: 4, .endCap: 2, .wallFridge: 4, .dairyChiller: 1, .checkoutCounter: 1,
+            .gondolaShelf: 5, .wallShelf: 6, .endCap: 3, .wallFridge: 5, .dairyChiller: 4, .checkoutCounter: 2,
             .cigaretteCabinet: 1, .hotFoodCounter: 1, .coffeeMachine: 1, .menuScreen: 1, .windowLedge: 1,
-            .highStool: 2, .basketStack: 1, .backRoomDoor: 1, .pendantLamp: 4, .entranceDoor: 1,
+            .highStool: 2, .basketStack: 1, .backRoomDoor: 1, .pendantLamp: 8, .entranceDoor: 1,
             .windowPoster: 3, .atmLocker: 1, .aFrameSign: 1, .litterBin: 2, .bikeRack: 1,
             .streetLamp: 4, .tree: 6, .parkedCar: 3,
+            .selfCheckout: 1, .alcoholWall: 2,
         ]
         #expect(Set(minimums.keys) == Set(FixtureKind.allCases))
         for (kind, n) in minimums {
@@ -41,5 +42,28 @@ import Testing
         #expect(f.rotation == QuarterTurn.none)
         #expect(f.label == nil)
         #expect(f.cell == GridCell(x: 1, z: 2))
+    }
+
+    @Test func unknownFixtureKindIsSkippedOnLoad() throws {
+        var data = try JSONEncoder().encode(StoreLayout(lot: StoreLayout.plumCorner.lot, fixtures: []))
+        var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["fixtures"] = [
+            ["id": "x1", "kind": "hoverboard", "cell": ["x": 1, "z": 2]],
+            ["id": "x2", "kind": "tree", "cell": ["x": 3, "z": 4]],
+        ]
+        data = try JSONSerialization.data(withJSONObject: object)
+        let layout = try JSONDecoder().decode(StoreLayout.self, from: data)
+        #expect(layout.fixtures.map(\.id) == ["x2"])
+        #expect(layout.fixtures.first?.kind == .tree)
+    }
+
+    @Test func newKindsRoundTrip() throws {
+        let fixtures = [
+            Fixture(id: "sc", kind: .selfCheckout, cell: GridCell(x: 20, z: 12)),
+            Fixture(id: "aw", kind: .alcoholWall, cell: GridCell(x: 22, z: 14), rotation: QuarterTurn(2), label: "Wine & spirits"),
+        ]
+        let layout = StoreLayout(lot: StoreLayout.plumCorner.lot, fixtures: fixtures)
+        let back = try JSONDecoder().decode(StoreLayout.self, from: try JSONEncoder().encode(layout))
+        #expect(back.fixtures == fixtures)
     }
 }

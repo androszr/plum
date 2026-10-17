@@ -66,7 +66,7 @@ import Testing
 
     @Test func fixturesLandWhereTheGridSaysAndTurnWithTheirRotation() {
         let root = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: .empty)
-        let f = Self.layout.fixtures.first { $0.id == "wall_shelf_1" }!
+        let f = Self.layout.fixtures.first { $0.id == "back_room_door_1" }!
         let n = root.node(named: f.id)!
         let c = f.occupiedRect.centreMetres
         #expect(n.position.x == c.x && n.position.z == c.y)

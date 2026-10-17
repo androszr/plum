@@ -39,6 +39,8 @@ public enum FixtureBuilders {
         case .streetLamp: StreetLampBuilder.self
         case .tree: TreeBuilder.self
         case .parkedCar: ParkedCarBuilder.self
+        case .selfCheckout: SelfCheckoutBuilder.self
+        case .alcoholWall: AlcoholWallBuilder.self
         }
     }
 
@@ -49,6 +51,7 @@ public enum FixtureBuilders {
         .menuScreen: 4, .windowLedge: 3, .highStool: 3, .basketStack: 6, .backRoomDoor: 4,
         .pendantLamp: 3, .entranceDoor: 6, .windowPoster: 2, .atmLocker: 6, .aFrameSign: 3,
         .litterBin: 3, .bikeRack: 4, .streetLamp: 4, .tree: 3, .parkedCar: 9,
+        .selfCheckout: 11, .alcoholWall: 24,
     ]
 }
 

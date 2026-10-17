@@ -46,7 +46,7 @@ enum HotFoodCounterBuilder: FixtureBuilding {
             g.box("napkin_box", 0.0, 0.04, 0.17, 0.12, 0.1, 0.08, .paint(c.cream))
         }
         // White tile wall behind the counter, with grout lines at full detail.
-        p.box("tile_wall", 0, 0, -0.46, 2.5, 2.1, 0.04, .paint(c.tileWhite))
+        p.box("tile_wall", 0, 0, -0.465, 2.5, 2.1, 0.04, .paint(c.tileWhite))
         if detail.isFull {
             for i in 0..<3 { p.box("grout_h_\(i)", 0, 0.7 + 0.5 * Double(i), -0.435, 2.5, 0.012, 0.01, .paint(c.sidewalk)) }
             for i in 0..<4 { p.box("grout_v_\(i)", -1.0 + 0.6 * Double(i), 0.0, -0.435, 0.012, 2.1, 0.01, .paint(c.sidewalk)) }

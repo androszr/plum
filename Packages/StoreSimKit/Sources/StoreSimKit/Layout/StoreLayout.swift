@@ -14,7 +14,17 @@ public struct StoreLayout: Codable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         lot = try c.decode(Lot.self, forKey: .lot)
-        fixtures = try c.decodeIfPresent([Fixture].self, forKey: .fixtures) ?? []
+        // A fixture of a kind this build has never heard of is skipped, not fatal.
+        let lenient = try c.decodeIfPresent([LenientFixture].self, forKey: .fixtures) ?? []
+        fixtures = lenient.compactMap(\.fixture)
+    }
+}
+
+/// Decodes one fixture, or nothing when it cannot be read (for example an unknown kind).
+private struct LenientFixture: Decodable {
+    let fixture: Fixture?
+    init(from decoder: Decoder) throws {
+        fixture = try? Fixture(from: decoder)
     }
 }
 
@@ -47,45 +57,56 @@ extension StoreLayout {
             out.append(Fixture(id: id, kind: kind, cell: GridCell(x: x, z: z), rotation: QuarterTurn(turn), label: label))
         }
 
-        // Back wall: one wall of coolers, dairy, the hot-food counter and coffee.
-        for i in 0..<4 { shop("wall_fridge_\(i + 1)", .wallFridge, i * 2, 0, label: "Drinks cooler \(i + 1)") }
-        shop("dairy_chiller_1", .dairyChiller, 8, 0)
-        shop("hot_food_counter_1", .hotFoodCounter, 14, 0)
-        shop("coffee_machine_1", .coffeeMachine, 19, 0)
-        shop("menu_screen_1", .menuScreen, 14, 0)
+        // Left wall: the dairy wall, around the back room door.
+        shop("dairy_chiller_1", .dairyChiller, 0, 0, 1, label: "Milk")
+        shop("back_room_door_1", .backRoomDoor, 0, 3, 1)
+        shop("dairy_chiller_2", .dairyChiller, 0, 5, 1, label: "Yoghurt")
+        shop("dairy_chiller_3", .dairyChiller, 0, 8, 1, label: "Cheese")
+        shop("dairy_chiller_4", .dairyChiller, 0, 11, 1, label: "Butter & eggs")
 
-        // Left wall: back room door and wall shelves facing the shop.
-        shop("back_room_door_1", .backRoomDoor, 0, 2, 1)
-        shop("wall_shelf_1", .wallShelf, 0, 4, 1, label: "Bread")
-        shop("wall_shelf_2", .wallShelf, 0, 6, 1, label: "Spices")
-        shop("wall_shelf_3", .wallShelf, 0, 8, 1, label: "Cleaning")
-        shop("wall_shelf_4", .wallShelf, 21, 4, 3, label: "Sweets")
-        shop("cigarette_cabinet_1", .cigaretteCabinet, 21, 6, 3)
+        // Right wall: the drinks wall, the cafe corner and the tobacco cabinet.
+        shop("wall_fridge_1", .wallFridge, 20, 0, 3, label: "Cold drinks")
+        shop("wall_fridge_2", .wallFridge, 20, 2, 3, label: "Soft drinks")
+        shop("wall_fridge_3", .wallFridge, 20, 4, 3, label: "Water & juice")
+        shop("hot_food_counter_1", .hotFoodCounter, 20, 6, 3)
+        shop("menu_screen_1", .menuScreen, 21, 6, 3)
+        shop("cigarette_cabinet_1", .cigaretteCabinet, 21, 11, 3)
 
-        // Gondola runs.
-        let runA = ["Snacks", "Crisps", "Biscuits"]
-        let runB = ["Pasta", "Tins", "Sauces"]
-        let runC = ["Cereal", "Tea", "Baking"]
-        for (i, label) in runA.enumerated() { shop("gondola_a\(i + 1)", .gondolaShelf, 3 + i * 2, 4, label: label) }
-        for (i, label) in runB.enumerated() { shop("gondola_b\(i + 1)", .gondolaShelf, 3 + i * 2, 8, label: label) }
-        for (i, label) in runC.enumerated() { shop("gondola_c\(i + 1)", .gondolaShelf, 12 + i * 2, 4, label: label) }
-        shop("end_cap_1", .endCap, 9, 4, 1, label: "Offers")
-        shop("end_cap_2", .endCap, 9, 8, 1, label: "Seasonal")
-        shop("end_cap_3", .endCap, 18, 4, 1, label: "Drinks deal")
+        // Back-right corner: beer.
+        shop("wall_fridge_4", .wallFridge, 16, 0, label: "Beer")
+        shop("wall_fridge_5", .wallFridge, 18, 0, label: "Beer")
 
-        // Front of shop: checkout, window seating, baskets, entrance.
-        shop("checkout_1", .checkoutCounter, 15, 10)
-                shop("window_ledge_1", .windowLedge, 2, 13, 2)
+        // Back wall: labelled product blocks and a loyalty end cap.
+        let backBlocks = ["Bread", "Fruit & veg", "Ready meals", "Cold cuts", "Household", "Pet food"]
+        for (i, label) in backBlocks.enumerated() { shop("wall_shelf_\(i + 1)", .wallShelf, 2 + i * 2, 0, label: label) }
+        shop("end_cap_3", .endCap, 14, 0, label: "Rewards")
+
+        // The island: five double-sided shelves with an end cap at each end.
+        let island = ["Snacks", "Crisps", "Sweets", "Biscuits", "Tea & coffee"]
+        for (i, label) in island.enumerated() { shop("gondola_\(i + 1)", .gondolaShelf, 5 + i * 2, 5, label: label) }
+        shop("end_cap_1", .endCap, 4, 5, 3, label: "Half price")
+        shop("end_cap_2", .endCap, 15, 5, 1, label: "This week")
+
+        // Front of shop: two tills with the alcohol wall and tobacco behind them.
+        shop("checkout_1", .checkoutCounter, 13, 11, 2)
+        shop("checkout_2", .checkoutCounter, 17, 11, 2)
+        shop("alcohol_wall_1", .alcoholWall, 13, 13, 2, label: "Wine & spirits")
+        shop("alcohol_wall_2", .alcoholWall, 17, 13, 2, label: "Vodka & whisky")
+        shop("self_checkout_1", .selfCheckout, 12, 12, 3)
+        shop("basket_stack_1", .basketStack, 12, 11)
+        shop("coffee_machine_1", .coffeeMachine, 8, 13, 2)
+
+        // Window seating and the entrance.
+        shop("window_ledge_1", .windowLedge, 2, 13, 2)
         shop("high_stool_1", .highStool, 2, 12)
         shop("high_stool_2", .highStool, 5, 12)
-        shop("basket_stack_1", .basketStack, 12, 13)
         shop("entrance_door_1", .entranceDoor, 9, 13)
-        shop("window_poster_1", .windowPoster, 6, 13)
-        shop("window_poster_2", .windowPoster, 13, 13)
-        shop("window_poster_3", .windowPoster, 19, 13)
+        shop("window_poster_1", .windowPoster, 2, 13)
+        shop("window_poster_2", .windowPoster, 4, 13)
+        shop("window_poster_3", .windowPoster, 6, 13)
 
-        // Ceiling pendants.
-        for (i, p) in [(5, 3), (12, 3), (18, 3), (5, 9), (12, 9), (18, 9)].enumerated() {
+        // Ceiling pendants over the loop around the island.
+        for (i, p) in [(3, 3), (9, 3), (15, 3), (3, 6), (17, 6), (3, 8), (9, 8), (15, 8)].enumerated() {
             shop("pendant_lamp_\(i + 1)", .pendantLamp, p.0, p.1)
         }
 
