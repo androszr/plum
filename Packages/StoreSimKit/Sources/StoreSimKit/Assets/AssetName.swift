@@ -30,4 +30,21 @@ public enum AssetName: String, CaseIterable, Sendable {
     case priceStrip = "price_strip"
     case windowPosterSet = "window_poster_set"
     case menuBoardTexture = "menu_board_texture"
+
+    /// Fixture kinds, one model file each.
+    public static var fixtureNames: Set<AssetName> {
+        Set(FixtureKind.allCases.map(\.assetName))
+    }
+
+    /// Pictures: the mark, the canopy, the price strip, the posters, the menu.
+    public static var signageNames: Set<AssetName> {
+        Set(allCases).subtracting(fixtureNames)
+    }
+
+    /// Extensions the generator writes for this name. The mark is both a drawing and a picture.
+    public var expectedFileExtensions: [String] {
+        if self == .plumMark { return ["svg", "png"] }
+        if Self.signageNames.contains(self) { return ["png"] }
+        return ["usdz"]
+    }
 }

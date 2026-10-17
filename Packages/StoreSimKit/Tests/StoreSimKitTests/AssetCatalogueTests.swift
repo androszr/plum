@@ -28,6 +28,33 @@ func modelURL(_ base: String, ext: String = "usdz", dir: String = "/m") -> URL {
         #expect(cat.resolve(.gondolaShelf) == .procedural)
     }
 
+    @Test func signagePngResolvesToTexture() {
+        let url = modelURL("storefront_sign", ext: "png")
+        #expect(AssetCatalogue(modelURLs: [url]).resolve(.storefrontSign) == .texture(url))
+    }
+
+    @Test func priceStripPngResolvesToTexture() {
+        let url = modelURL("price_strip", ext: "png")
+        #expect(AssetCatalogue(modelURLs: [url]).resolve(.priceStrip) == .texture(url))
+    }
+
+    @Test func fixturePngIsIgnored() {
+        let url = modelURL("gondola_shelf", ext: "png")
+        #expect(AssetCatalogue(modelURLs: [url]).resolve(.gondolaShelf) == .procedural)
+    }
+
+    @Test func signageUsdzIsIgnored() {
+        let url = modelURL("price_strip")
+        #expect(AssetCatalogue(modelURLs: [url]).resolve(.priceStrip) == .procedural)
+    }
+
+    @Test func fixtureAndSignageNamesPartitionTheCatalogue() {
+        let fixtures = AssetName.fixtureNames
+        let signage = AssetName.signageNames
+        #expect(fixtures.union(signage) == Set(AssetName.allCases))
+        #expect(fixtures.isDisjoint(with: signage))
+    }
+
     @Test func everyFixtureKindHasAnAsset() {
         let names = Set(AssetName.allCases)
         for kind in FixtureKind.allCases { #expect(names.contains(kind.assetName)) }

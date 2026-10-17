@@ -58,7 +58,7 @@ enum BuildingBuilder {
         p.box("mullion_door_left", doorL, 0.0, z1 + 0.02, 0.05, 2.4, 0.05, .paint(c.charcoal))
         p.box("mullion_door_right", doorR, 0.0, z1 + 0.02, 0.05, 2.4, 0.05, .paint(c.charcoal))
         p.box("canopy", s.cx, h + 0.1, z1 + 0.6, s.w + 0.6, 0.12, 1.3, .paint(c.primary))
-        p.box("canopy_sign", s.cx, h + 0.22, z1 + 1.27, 6.0, 0.55, 0.06, .emissive(c.primaryDeep))
+        p.box("canopy_sign", s.cx, h + 0.22, z1 + 1.27, 6.0, 0.55, 0.06, .textured(.storefrontSign, fallback: c.primaryDeep))
         p.text("canopy_sign_text", Brand.name, s.cx, h + 0.5, z1 + 1.32, 0.42, .emissive(c.cream))
 
         // Block of flats above the shop's back and beside it.

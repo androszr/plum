@@ -148,7 +148,7 @@ import Testing
             let total = yaw + n.yaw
             var opaque = false
             switch n.material {
-            case .solid, .emissive: opaque = true
+            case .solid, .emissive, .textured: opaque = true
             default: break
             }
             var isBox = false

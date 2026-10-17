@@ -14,7 +14,14 @@ public enum Materials {
         PlatformColor(red: c.r, green: c.g, blue: c.b, alpha: c.a)
     }
 
+    @MainActor
     public static func material(for m: SurfaceMaterial) -> RealityKit.Material? {
+        make(m, loader: nil)
+    }
+
+    /// `loader` supplies a picture for `.textured`. Without one, that case is the fallback colour.
+    @MainActor
+    public static func make(_ m: SurfaceMaterial, loader: ModelLoader?) -> RealityKit.Material? {
         switch m {
         case .none:
             return nil
@@ -28,6 +35,13 @@ public enum Materials {
             pbr.roughness = .init(floatLiteral: 0.1)
             pbr.blending = .transparent(opacity: .init(floatLiteral: Float(opacity)))
             return pbr
+        case let .textured(name, fallback):
+            if let loader, let texture = try? loader.texture(name) {
+                var unlit = UnlitMaterial()
+                unlit.color = .init(tint: .white, texture: .init(texture))
+                return unlit
+            }
+            return UnlitMaterial(color: platformColor(fallback))
         }
     }
 }

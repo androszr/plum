@@ -56,8 +56,8 @@ spawned on judgment when the diff touches its domain through other files.
 
 | Agent | Fires when a changed path matches |
 |---|---|
-| `ss-security-reviewer` | `\.entitlements|Info\.plist|project\.yml|Package\.swift|Package\.resolved|\.github/workflows/|Scripts/` |
-| `ss-integration-reviewer` | `project\.yml|Package\.swift|Package\.resolved|\.github/workflows/|Scripts/|Info\.plist|\.xcassets|App/Resources/|docs/context\.md` |
+| `ss-security-reviewer` | `\.entitlements|Info\.plist|project\.yml|Package\.swift|Package\.resolved|\.github/workflows/|Scripts/|requirements\.txt|Tools/assetgen/` |
+| `ss-integration-reviewer` | `project\.yml|Package\.swift|Package\.resolved|\.github/workflows/|Scripts/|Info\.plist|\.xcassets|App/Resources/|docs/context\.md|Tools/|App/Resources/Models/` |
 
 ## Architecture
 
@@ -121,6 +121,14 @@ into a Metal texture without a window; `SnapshotRenderTests` writes two PNGs
 under `NSTemporaryDirectory()/storesim-snapshots/` and skips only when no GPU
 exists.
 
+**Asset generation.** `Tools/assetgen` (Python, `usd-core` and `Pillow`, pinned
+by hash) builds the twenty-nine assets. `Scripts/models.sh` writes them into
+`App/Resources/Models/`. The catalogue resolves `.usdz` for fixtures and `.png`
+for signage; `ModelLoader` is the only file that loads either. Decision
+2026-10-17, plan `plans/2026-10-17-grok-models-from-asset-brief.md`: generate
+from the brief so CI can prove the shipped files match the generator
+byte-for-byte, instead of checking in a model that cannot be rebuilt.
+
 **Decisions (2026-10-17, plan `plans/2026-10-17-3d-store-and-surroundings.md`).**
 - XcodeGen over a hand-kept `.xcodeproj` (a pbxproj is opaque and merge-hostile;
   `project.yml` is readable), over Tuist (a Swift manifest toolchain for no gain
@@ -157,7 +165,7 @@ coding.
 5. **Both shells, same pass.** A screen change states what desktop and mobile
    each do and branches in code (`horizontalSizeClass`, `#if os(...)`), never a
    duplicate view tree. *(preflight BLOCK, integration reviewer)*
-6. **Models load only through `AssetCatalogue` and `ModelLoader`.**
+6. **Models and textures load only through `AssetCatalogue` and `ModelLoader`.**
    *(lint gate g)*
 7. **No SceneKit.** *(lint gate a)*
 8. **English-only sources, no competitor names or trade dress.**
@@ -168,6 +176,10 @@ coding.
 10. **Metres, Y up, fixture pivot at the bottom centre of its footprint, +Z is
     the fixture's front.** *(asset brief, integration reviewer)*
 11. **Never commit or push** unless explicitly asked.
+12. **Shipped models are generated.** `App/Resources/Models/` is never hand-edited;
+    `bash Scripts/models.sh --check` in CI proves the committed files equal the
+    generator's output. The generator reads colours from the brief's palette
+    table and the name from `Brand.swift`. *(lint gates d and h)*
 13. **Variety is derived, never stored.** `ModelVariant.index(of:in:)` is the only source of a variant index; it lives on `SceneNode.variant` and is applied by `ModelVariants.apply`; no `Codable` type carries it. *(`ModelVariantTests`, `SceneComposerTests`; verifier grep on `Fixture.swift` and `StoreLayout.swift`)*
 
 ## What the tests cannot see
@@ -180,8 +192,10 @@ the domain reviewers and the audit skill exist:
   picture comes out.
 - **The signed, archived app.** CI and local builds are ad-hoc signed.
 - **The Xcode version on the CI runner.** It may lag the local one.
-- **A dropped USDZ with the wrong scale or pivot.** The catalogue test only
-  proves resolution, not that the model fits its footprint.
+- **How a generated model reads on a real screen next to the brief.** Size,
+  pivot, facing, triangle budget, file presence, fallback, pixel distance and
+  `usdchecker` are asserted. Whether it looks like the shop in the brief is a
+  judgement on a Mac screen.
 
 ## Interview branches
 

@@ -15,7 +15,8 @@ public struct SceneComposer {
                 var fallback = built
                 fallback.name = "fallback"
                 node = SceneNode(name: f.id, shape: .asset(f.kind.assetName), children: [fallback])
-            case .procedural:
+            case .procedural, .texture:
+                // A fixture name never resolves to a picture. The case is here so the switch stays total.
                 node = built
                 node.name = f.id
             }

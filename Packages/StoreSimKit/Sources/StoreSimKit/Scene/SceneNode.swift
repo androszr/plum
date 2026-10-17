@@ -23,6 +23,8 @@ public enum SurfaceMaterial: Sendable {
     case solid(BrandColor, roughness: Double)
     case glass(BrandColor, opacity: Double)
     case emissive(BrandColor)
+    /// A picture from the catalogue, or the fallback colour when that picture is absent.
+    case textured(AssetName, fallback: BrandColor)
     case none
 
     public static func paint(_ c: BrandColor) -> SurfaceMaterial { .solid(c, roughness: 0.6) }

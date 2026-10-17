@@ -83,7 +83,7 @@ public enum EntityBuilder {
 
     private static func baseEntity(for node: SceneNode, loader: ModelLoader) -> Entity {
         let size = SIMD3<Float>(node.size)
-        let material = Materials.material(for: node.material)
+        let material = Materials.make(node.material, loader: loader)
         func model(_ mesh: MeshResource) -> Entity {
             ModelEntity(mesh: mesh, materials: material.map { [$0] } ?? [])
         }
@@ -112,12 +112,40 @@ public enum EntityBuilder {
         case let .light(kind):
             return lightEntity(kind)
         case let .asset(name):
-            if let loaded = try? loader.load(name, variant: node.variant) { return loaded }
+            if let loaded = try? loader.load(name, variant: node.variant) {
+                // The file is centred and floor-pivoted. `entity(for:)` overwrites this node's
+                // position, so the stand-in offset lives on the loaded child.
+                align(loaded, toStandInOf: node, loader: loader)
+                let holder = Entity()
+                holder.addChild(loaded)
+                return holder
+            }
             // Loading failed: fall back to the procedural tree kept under `fallback`.
             let holder = Entity()
             for child in node.children { holder.addChild(entity(for: child, loader: loader)) }
             return holder
         }
+    }
+
+    /// Moves `loaded` so its visual bounds sit on the fallback's. Pitch and roll are in the
+    /// built stand-in, which is what a lying wheel needs. Floor fixtures share the stand-in's
+    /// bottom; anything above the floor shares its top, so a taller pendant stays under the roof.
+    /// X and Z follow the stand-in's centre, which is where a wall-hung piece actually is.
+    private static func align(_ loaded: Entity, toStandInOf node: SceneNode, loader: ModelLoader) {
+        guard let fallback = node.children.first(where: { $0.name == "fallback" }) else { return }
+        let standIn = entity(for: fallback, loader: loader)
+        let stand = standIn.visualBounds(relativeTo: nil)
+        let model = loaded.visualBounds(relativeTo: nil)
+        guard stand.min.x <= stand.max.x, model.min.x <= model.max.x else { return }
+        let standCenter = (stand.min + stand.max) * 0.5
+        let modelCenter = (model.min + model.max) * 0.5
+        var shift = standCenter - modelCenter
+        if stand.min.y <= 0.05 {
+            shift.y = stand.min.y - model.min.y
+        } else {
+            shift.y = stand.max.y - model.max.y
+        }
+        loaded.position += shift
     }
 
     private static func lightEntity(_ kind: LightKind) -> Entity {

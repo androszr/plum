@@ -1,0 +1,4 @@
+usd-core==26.8 \
+    --hash=sha256:aaf1a68bf4c7ab959b9f4d3a6e0ef9347ff6135a1452676bb40916060146c53e
+pillow==13.0.0 \
+    --hash=sha256:fc481f742ccda20e9ed760b8f978dff50f2a4e9bc253ac167fb0a05b0783ef52

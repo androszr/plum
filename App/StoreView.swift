@@ -29,8 +29,9 @@ struct StoreView: View {
         RealityView { content in
             content.camera = .virtual
 
-            let catalogue = AssetCatalogue(
-                modelURLs: Bundle.main.urls(forResourcesWithExtension: "usdz", subdirectory: "Models") ?? [])
+            let usdz = Bundle.main.urls(forResourcesWithExtension: "usdz", subdirectory: "Models") ?? []
+            let png = Bundle.main.urls(forResourcesWithExtension: "png", subdirectory: "Models") ?? []
+            let catalogue = AssetCatalogue(modelURLs: usdz + png)
             let node = SceneComposer.compose(layout: .plumCorner, detail: .platformDefault, catalogue: catalogue)
             let root = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: catalogue))
             content.add(root)

@@ -15,6 +15,8 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.venv-assetgen/
+Tools/assetgen/.staging/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
