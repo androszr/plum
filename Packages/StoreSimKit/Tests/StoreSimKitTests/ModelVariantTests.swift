@@ -81,11 +81,30 @@ import Testing
     @Test func parserSkipsNonProductParts() {
         let shelving = ModelVariant.productPartStems(for: .gondolaShelf)
         let a = ModelVariant.parseProductPart("product_2_5", stems: shelving)
-        #expect(a?.shelf == 2 && a?.facing == 5)
+        #expect(a?.shelf == 2 && a?.facing == 5 && a?.shape == nil)
+        #expect(ModelVariant.parseProductPart("product_2_5_packet", stems: shelving)?.shape == .packet)
+        #expect(ModelVariant.parseProductPart("product_back_1_0_can", stems: shelving)?.shape == .can)
+        #expect(ModelVariant.parseProductPart("product_0_3_bottle_neck", stems: shelving) == nil)
         let b = ModelVariant.parseProductPart("product_back_1_0", stems: shelving)
         #expect(b?.shelf == 1 && b?.facing == 0)
         #expect(ModelVariant.parseProductPart("product_0_3_neck", stems: shelving) == nil)
         #expect(ModelVariant.parseProductPart("upright_left", stems: shelving) == nil)
         #expect(ModelVariant.parseProductPart("bottle_1_2", stems: shelving) == nil)
+    }
+
+    @Test func visibleShapeWalksTheRow() {
+        // (shelf, facing, variant)
+        func shape(_ shelf: Int, _ facing: Int, _ variant: Int) -> ProductShape {
+            ModelVariant.visibleShape(variant: variant, shelf: shelf, facing: facing)
+        }
+        #expect(shape(0, 0, 0) == .packet)
+        #expect(shape(0, 0, 1) == .can)
+        #expect(shape(0, 0, 2) == .bottle)
+        #expect(shape(1, 0, 0) == .can)
+        #expect(shape(2, 0, 0) == .bottle)
+        #expect(shape(3, 0, 0) == .packet)
+        #expect(shape(-1, 0, 0) == .bottle)
+        #expect(shape(0, 1, 0) == .can)
+        #expect(shape(1, 1, 1) == .packet)
     }
 }

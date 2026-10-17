@@ -74,13 +74,32 @@ public enum ModelVariant {
         }
     }
 
-    /// `<stem>_<shelf>_<facing>` with the stem in `stems`; anything else (`_neck`, uprights) is nil.
-    public static func parseProductPart(_ name: String, stems: Set<String>) -> (shelf: Int, facing: Int)? {
-        let parts = name.split(separator: "_", omittingEmptySubsequences: false)
+    /// The shape shown at a spot: `(shelf + facing + variant) mod 3` over packet, can, bottle, so each
+    /// shelf starts one step along and the variant shifts the whole walk. A negative variant wraps.
+    public static func visibleShape(variant: Int, shelf: Int, facing: Int) -> ProductShape {
+        let all = ProductShape.allCases
+        return all[wrap(shelf + facing + wrap(variant, count: all.count), count: all.count)]
+    }
+
+    /// `<stem>_<shelf>_<facing>[_<shape>]` with the stem in `stems`; anything else (`_neck`, uprights) is nil.
+    /// `shape` is nil for a part with no shape suffix (fridge bottles, cartons, the stand-in).
+    public static func parseProductPart(_ name: String, stems: Set<String>)
+        -> (shelf: Int, facing: Int, shape: ProductShape?)? {
+        var parts = name.split(separator: "_", omittingEmptySubsequences: false)
+        var shape: ProductShape?
+        if let last = parts.last, let found = ProductShape(rawValue: String(last)) {
+            shape = found
+            parts.removeLast()
+        }
         guard parts.count >= 3,
               let shelf = Int(parts[parts.count - 2]),
               let facing = Int(parts[parts.count - 1]) else { return nil }
         let stem = parts.dropLast(2).joined(separator: "_")
-        return stems.contains(stem) ? (shelf, facing) : nil
+        return stems.contains(stem) ? (shelf, facing, shape) : nil
     }
+}
+
+/// The three goods a shelf spot can show, in canonical order.
+public enum ProductShape: String, CaseIterable, Sendable {
+    case packet, can, bottle
 }

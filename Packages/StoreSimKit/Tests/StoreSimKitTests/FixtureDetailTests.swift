@@ -141,6 +141,38 @@ import Testing
         #expect(colours.count >= 6)
     }
 
+    /// box, cylinder, or cylinder with a neck, per `product_` node, in tree order.
+    static func shapeClasses(_ node: SceneNode) -> [String] {
+        let all = node.descendants
+        let names = Set(all.map(\.name))
+        return all.compactMap { n -> String? in
+            guard n.name.hasPrefix("product_"), !n.name.hasSuffix("_neck") else { return nil }
+            if case .box = n.shape { return "box" }
+            return names.contains("\(n.name)_neck") ? "bottle" : "can"
+        }
+    }
+
+    @Test func gondolaVariantsChangeTheShapes() {
+        let f = Self.fixture(.gondolaShelf)
+        let v0 = GondolaShelfBuilder.build(f, detail: .full, variant: 0)
+        let v1 = GondolaShelfBuilder.build(f, detail: .full, variant: 1)
+        #expect(Self.shapeClasses(v0) != Self.shapeClasses(v1))
+        let first = v0.node(named: "product_0_0")
+        if case .box? = first?.shape {} else { Issue.record("product_0_0 at variant 0 is not a box") }
+        #expect(v0.node(named: "product_0_0_neck") == nil)
+    }
+
+    @Test func wallAndEndCapFollowTheSameShape() {
+        for kind in [FixtureKind.wallShelf, .endCap] {
+            let f = Self.fixture(kind)
+            let v0 = FixtureBuilders.builder(for: kind).build(f, detail: .full, variant: 0)
+            let v1 = FixtureBuilders.builder(for: kind).build(f, detail: .full, variant: 1)
+            if case .box? = v0.node(named: "product_0_0")?.shape {} else { Issue.record("\(kind) variant 0 is not a box") }
+            if case .cylinder? = v1.node(named: "product_0_0")?.shape {} else { Issue.record("\(kind) variant 1 is not a cylinder") }
+            #expect(v1.node(named: "product_0_0_neck") == nil)
+        }
+    }
+
     @Test func windowPosterVariantsDiffer() {
         let f = Self.fixture(.windowPoster)
         var tints: [BrandColor] = []

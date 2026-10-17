@@ -15,7 +15,8 @@ This brief tells an artist, or an AI image-to-3D tool, exactly which models the 
 - Keep the parts listed under each asset as separate named meshes where the tool allows it; the stand-in is built from exactly those parts.
 - A section whose Status line reads "stand-in only" is a kind with no model yet: the generator and the checker skip it and nothing is written for it (no section carries it today).
 - Sourced street props (`parked_car_*`, `tree_*`) are the written exception to the flat-pastel rule and to the named-parts rule: realistic proportions and textured surfaces, colours muted toward the palette, one mesh. A section with a `Source:` line is not generated; `Tools/assetgen` skips it.
-- Parts named `product_<shelf>_<facing>`, `bottle_<shelf>_<facing>` and `carton_<shelf>_<facing>` are recoloured per placed copy by the app and must carry a flat colour, no texture.
+- On `gondola_shelf`, `wall_shelf` and `end_cap`, every facing is three meshes named `product_<shelf>_<facing>_<shape>` (and `product_back_<shelf>_<facing>_<shape>` on the gondola) with `<shape>` one of `packet`, `can`, `bottle`; each is at most 48 triangles; the app shows one per facing and hides the other two, and the checker counts every triangle, hidden ones included. `wall_fridge` and `dairy_chiller` keep their single bottle and carton meshes.
+- Parts named `product_<shelf>_<facing>_<shape>` (and `product_back_<shelf>_<facing>_<shape>` on the gondola) on the three shelf assets, `bottle_<shelf>_<facing>` on `wall_fridge` and `carton_<shelf>_<facing>` on `dairy_chiller` are recoloured per placed copy by the app and must carry a flat colour, no texture.
 
 ## Palette
 
@@ -47,7 +48,7 @@ Dimensions: 1.0 x 1.0 x 1.75 m (width x depth x height)
 
 Pivot: bottom centre of the footprint, front towards +Z
 
-Poly budget: 6000 triangles
+Poly budget: 10000 triangles
 
 Palette: charcoal #22252B, primaryDeep #2E1A47, cream #FAFAF7, tileWhite #F4F4F2, priceRailYellow #E9C46A, primary #4A4E57
 
@@ -55,9 +56,9 @@ Format: USDZ, embedded textures, one 1024 x 1024 atlas
 
 Parts: base, upright_left, upright_right, back_panel, slot_row_0-2, shelf_0-3, price_rail_0-3 (yellow strip on every shelf edge), header_sign with category text, product rows on every shelf (at least 16 facings mixing packets, cans and bottles in at least six colours)
 
-Description: A free-standing metal shop shelf, 0.9 m wide, with four shelves, a yellow price strip on each shelf edge and a graphite header sign. Rows of varied packets, cans and bottles sit on every shelf.
+Description: A free-standing metal shop shelf, 0.9 m wide, with four shelves, a yellow price strip on each shelf edge and a graphite header sign. Rows of varied packets, cans and bottles sit on every shelf. Every spot on every shelf holds three separate meshes, a packet, a can and a bottle, and the app shows one and hides the other two. Each of those meshes is at most 48 triangles.
 
-Prompt: Low-poly flat-shaded pastel diorama model of a free-standing metal shop shelf, 0.9 m wide, with four shelves, a yellow price strip on each shelf edge and a graphite header sign. Rows of varied packets, cans and bottles sit on every shelf. Size 1.0 x 1.0 x 1.75 metres, pivot at the bottom centre, front facing +Z, at most 6000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #2E1A47, #FAFAF7, #F4F4F2, #E9C46A, #4A4E57), no text, no real-world logos. Export as USDZ.
+Prompt: Low-poly flat-shaded pastel diorama model of a free-standing metal shop shelf, 0.9 m wide, with four shelves, a yellow price strip on each shelf edge and a graphite header sign. Rows of varied packets, cans and bottles sit on every shelf. Size 1.0 x 1.0 x 1.75 metres, pivot at the bottom centre, front facing +Z, at most 10000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #2E1A47, #FAFAF7, #F4F4F2, #E9C46A, #4A4E57), no text, no real-world logos. Export as USDZ.
 
 ### wall_shelf
 
@@ -65,7 +66,7 @@ Dimensions: 1.0 x 0.5 x 1.9 m (width x depth x height)
 
 Pivot: bottom centre of the footprint, front towards +Z
 
-Poly budget: 5000 triangles
+Poly budget: 8500 triangles
 
 Palette: charcoal #22252B, primaryDeep #2E1A47, cream #FAFAF7, tileWhite #F4F4F2, priceRailYellow #E9C46A, primary #4A4E57, woodLight #C9A27E
 
@@ -73,9 +74,9 @@ Format: USDZ, embedded textures, one 1024 x 1024 atlas
 
 Parts: base, upright_left, upright_right, back_panel, slot_row_0-2, shelf_0-3, price_rail_0-3, header_sign, wall_rail, product rows (at least 12 facings)
 
-Description: A shallow shelf unit that stands against a wall, with four shelves, yellow price strips and a header sign. It is the single-sided version of the gondola shelf.
+Description: A shallow shelf unit that stands against a wall, with four shelves, yellow price strips and a header sign. It is the single-sided version of the gondola shelf. Every spot on every shelf holds three separate meshes, a packet, a can and a bottle, and the app shows one and hides the other two. Each of those meshes is at most 48 triangles.
 
-Prompt: Low-poly flat-shaded pastel diorama model of a shallow shelf unit that stands against a wall, with four shelves, yellow price strips and a header sign. It is the single-sided version of the gondola shelf. Size 1.0 x 0.5 x 1.9 metres, pivot at the bottom centre, front facing +Z, at most 5000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #2E1A47, #FAFAF7, #F4F4F2, #E9C46A, #4A4E57, #C9A27E), no text, no real-world logos. Export as USDZ.
+Prompt: Low-poly flat-shaded pastel diorama model of a shallow shelf unit that stands against a wall, with four shelves, yellow price strips and a header sign. It is the single-sided version of the gondola shelf. Size 1.0 x 0.5 x 1.9 metres, pivot at the bottom centre, front facing +Z, at most 8500 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #2E1A47, #FAFAF7, #F4F4F2, #E9C46A, #4A4E57, #C9A27E), no text, no real-world logos. Export as USDZ.
 
 ### end_cap
 
@@ -83,7 +84,7 @@ Dimensions: 1.0 x 0.5 x 1.5 m (width x depth x height)
 
 Pivot: bottom centre of the footprint, front towards +Z
 
-Poly budget: 3000 triangles
+Poly budget: 5000 triangles
 
 Palette: charcoal #22252B, cream #FAFAF7, tileWhite #F4F4F2, priceRailYellow #E9C46A, mintDeep #6E8B74
 
@@ -91,9 +92,9 @@ Format: USDZ, embedded textures, one 1024 x 1024 atlas
 
 Parts: base, back, shelf_0-2, price_rail_0-2, product rows (at least 4 facings), promo_sign with offer text
 
-Description: A short display stand that closes the end of a shelf run. It has three shelves of promotional goods and a mint promo sign on top.
+Description: A short display stand that closes the end of a shelf run. It has three shelves of promotional goods and a mint promo sign on top. Every spot on every shelf holds three separate meshes, a packet, a can and a bottle, and the app shows one and hides the other two. Each of those meshes is at most 48 triangles.
 
-Prompt: Low-poly flat-shaded pastel diorama model of a short display stand that closes the end of a shelf run. It has three shelves of promotional goods and a mint promo sign on top. Size 1.0 x 0.5 x 1.5 metres, pivot at the bottom centre, front facing +Z, at most 3000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #FAFAF7, #F4F4F2, #E9C46A, #6E8B74), no text, no real-world logos. Export as USDZ.
+Prompt: Low-poly flat-shaded pastel diorama model of a short display stand that closes the end of a shelf run. It has three shelves of promotional goods and a mint promo sign on top. Size 1.0 x 0.5 x 1.5 metres, pivot at the bottom centre, front facing +Z, at most 5000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #FAFAF7, #F4F4F2, #E9C46A, #6E8B74), no text, no real-world logos. Export as USDZ.
 
 ### wall_fridge
 

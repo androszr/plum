@@ -136,6 +136,53 @@ import StoreSimKit
     @Test func model_tree_linden() throws { try Self.assertMatchesBrief(.treeLinden) }
     @Test func model_tree_maple() throws { try Self.assertMatchesBrief(.treeMaple) }
 
+    private static func find(_ entity: Entity, _ name: String) -> Entity? {
+        if entity.name == name || entity.name.hasSuffix("/" + name) { return entity }
+        for child in entity.children { if let found = find(child, name) { return found } }
+        return nil
+    }
+
+    private static func allEntities(_ entity: Entity) -> [Entity] {
+        [entity] + entity.children.flatMap { allEntities($0) }
+    }
+
+    @Test func shelfModelTogglesShapes() throws {
+        let loader = try ModelLoader(catalogue: Self.catalogue())
+        for (variant, shown) in [(0, "packet"), (1, "can")] {
+            let root = try loader.load(.gondolaShelf, variant: variant)
+            for stem in ["product_0_0", "product_back_0_0"] {
+                let trio = try ["packet", "can", "bottle"].map { shape in
+                    try #require(Self.find(root, "\(stem)_\(shape)"), "missing \(stem)_\(shape)")
+                }
+                #expect(trio.filter(\.isEnabled).count == 1)
+                for (shape, entity) in zip(["packet", "can", "bottle"], trio) {
+                    #expect(entity.isEnabled == (shape == shown), "\(stem)_\(shape) at variant \(variant)")
+                }
+            }
+        }
+        // Every shape mesh, shown or hidden, stays within 48 triangles and keeps its indices.
+        let root = try loader.load(.gondolaShelf, variant: 0)
+        var seen = 0
+        for entity in Self.allEntities(root) where ["_packet", "_can", "_bottle"].contains(where: entity.name.hasSuffix) {
+            let triangles = Self.triangleCount(entity)
+            #expect(triangles > 0 && triangles <= 48, "\(entity.name) has \(triangles)")
+            seen += 1
+        }
+        #expect(seen >= 96)
+    }
+
+    @Test func coolerAndChillerHaveNoShapeSiblings() throws {
+        let loader = try ModelLoader(catalogue: Self.catalogue())
+        for name in [AssetName.wallFridge, .dairyChiller] {
+            let root = try loader.load(name, variant: 1)
+            for entity in Self.allEntities(root) {
+                for suffix in ["_packet", "_can", "_bottle"] {
+                    #expect(!entity.name.hasSuffix(suffix), "\(name.rawValue) has \(entity.name)")
+                }
+            }
+        }
+    }
+
     @Test func missingFileFallsBack() throws {
         let urls = try FileManager.default.contentsOfDirectory(
             at: BriefSpec.modelsDirectory(), includingPropertiesForKeys: nil)
