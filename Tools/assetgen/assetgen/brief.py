@@ -27,6 +27,7 @@ class Spec:
     palette_names: list[str] = field(default_factory=list)
     # True when the section says `Status: stand-in only`: no model yet, generator and checker skip it.
     pending: bool = False
+    sourced: bool = False
 
     @property
     def is_signage(self) -> bool:
@@ -177,6 +178,15 @@ def _palette_names(palette_line: str) -> list[str]:
     return re.findall(r"\b([a-z][A-Za-z0-9]*)\b", palette_line)
 
 
+def _is_sourced(body: str) -> bool:
+    """True when the section has a `Source:` line that is not `generated`."""
+    for line in body.splitlines():
+        if line.startswith("Source:"):
+            value = line.split(":", 1)[1].strip()
+            return bool(value) and value.lower() != "generated"
+    return False
+
+
 def load_brief(path: str) -> Brief:
     text = open(path, encoding="utf-8").read()
     palette: dict[str, tuple[float, float, float]] = {}
@@ -235,5 +245,6 @@ def load_brief(path: str) -> Brief:
             format=format_line,
             palette_names=_palette_names(_line_value(body, "Palette:", name)),
             pending=status is not None and "stand-in only" in status,
+            sourced=_is_sourced(body),
         )
     return Brief(palette=palette, specs=specs)

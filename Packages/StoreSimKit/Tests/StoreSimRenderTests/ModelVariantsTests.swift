@@ -51,7 +51,17 @@ import StoreSimKit
     @Test func singleVariantAssetIsUntouched() {
         let (root, parts) = Self.tree(["product_1_4", "poster"])
         let t = Self.tint(parts[0]), o = Self.offset(parts[1])
-        ModelVariants.apply(variant: 2, to: root, for: .tree)
+        ModelVariants.apply(variant: 2, to: root, for: .streetLamp)
+        #expect(Self.tint(parts[0]) == t)
+        #expect(Self.offset(parts[1]) == o)
+    }
+
+    @Test func sourcedAssetIsUntouched() {
+        // The saloon has three variants but no product or poster parts, so nothing changes.
+        #expect(ModelVariant.count(for: AssetName.parkedCarSaloon) == 3)
+        let (root, parts) = Self.tree(["product_1_4", "poster"])
+        let t = Self.tint(parts[0]), o = Self.offset(parts[1])
+        ModelVariants.apply(variant: 1, to: root, for: .parkedCarSaloon)
         #expect(Self.tint(parts[0]) == t)
         #expect(Self.offset(parts[1]) == o)
     }

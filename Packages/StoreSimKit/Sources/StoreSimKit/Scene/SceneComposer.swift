@@ -10,11 +10,12 @@ public struct SceneComposer {
             let ext = f.kind.verticalExtent
             let fp = footprintMetres(f.kind)
             var node: SceneNode
-            switch catalogue.resolve(f.kind.assetName) {
+            let assetName = ModelVariant.assetName(for: f.kind, variant: variant)
+            switch catalogue.resolve(assetName) {
             case .model:
                 var fallback = built
                 fallback.name = "fallback"
-                node = SceneNode(name: f.id, shape: .asset(f.kind.assetName), children: [fallback])
+                node = SceneNode(name: f.id, shape: .asset(assetName), children: [fallback])
             case .procedural, .texture:
                 // A fixture name never resolves to a picture. The case is here so the switch stays total.
                 node = built

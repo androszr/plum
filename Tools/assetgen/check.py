@@ -16,6 +16,9 @@ from pxr import Usd, UsdGeom, UsdShade
 
 from assetgen.brief import load_brief
 
+# A sourced file may embed nothing bigger than this on either side.
+MAX_SOURCED_IMAGE = 2048
+
 SIGNAGE = {
     "plum_mark",
     "storefront_sign",
@@ -129,6 +132,28 @@ def _check_model(name: str, spec, models: str) -> None:
             _fail(name, f"texture {texture} is not inside the package")
 
 
+def _check_sourced(name: str, spec, shipped: str) -> None:
+    """A sourced file is made elsewhere: prove it is there, opens and is within budget."""
+    path = os.path.join(shipped, f"{name}.usdz")
+    if not os.path.isfile(path):
+        _fail(name, "sourced file missing")
+    stage = Usd.Stage.Open(path)
+    if stage is None:
+        _fail(name, "stage did not open")
+    triangles = sum(_triangles(prim) for prim in _mesh_prims(stage).values())
+    if triangles == 0:
+        _fail(name, "no triangles")
+    if spec.poly_budget is not None and triangles > spec.poly_budget:
+        _fail(name, f"{triangles} triangles over budget {spec.poly_budget}")
+    with zipfile.ZipFile(path) as package:
+        for member in package.namelist():
+            if not member.lower().endswith((".png", ".jpg", ".jpeg")):
+                continue
+            with package.open(member) as handle, Image.open(handle) as image:
+                if max(image.size) > MAX_SOURCED_IMAGE:
+                    _fail(name, f"embedded image {member} is {image.size[0]} x {image.size[1]}, limit {MAX_SOURCED_IMAGE}")
+
+
 def _check_signage(name: str, spec, models: str) -> None:
     png = os.path.join(models, f"{name}.png")
     if not os.path.isfile(png):
@@ -146,22 +171,29 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--brief", required=True)
     parser.add_argument("--models", required=True)
+    parser.add_argument("--shipped", help="folder holding the sourced files (App/Resources/Models)")
     parser.add_argument("--only", nargs="*")
     args = parser.parse_args()
     only = set(args.only) if args.only else None
     brief = load_brief(args.brief)
     checked = 0
+    sourced = 0
     for name, spec in brief.specs.items():
         if only and name not in only:
             continue
         if spec.pending:
             continue
-        if spec.is_signage or name in SIGNAGE:
+        if spec.sourced:
+            if not args.shipped:
+                _fail(name, "sourced: pass --shipped <dir> to check it")
+            _check_sourced(name, spec, args.shipped)
+            sourced += 1
+        elif spec.is_signage or name in SIGNAGE:
             _check_signage(name, spec, args.models)
         else:
             _check_model(name, spec, args.models)
             checked += 1
-    print(f"{checked} models checked")
+    print(f"{checked} models checked, {sourced} sourced")
     return 0
 
 

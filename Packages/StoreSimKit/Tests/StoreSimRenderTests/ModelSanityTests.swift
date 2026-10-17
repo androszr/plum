@@ -5,7 +5,7 @@ import StoreSimKit
 @testable import StoreSimRender
 
 /// One test per asset file, one per fixture model, and one fallback. Swift Testing counts a
-/// parameterised test once, so each case is its own function (29 + 24 + 1, plus the pending-kind check).
+/// parameterised test once, so each case is its own function (32 + 27 + 1, plus the pending-kind check).
 @MainActor
 @Suite struct ModelSanityTests {
     private static func catalogue() throws -> AssetCatalogue {
@@ -41,8 +41,15 @@ import StoreSimKit
         let triangles = triangleCount(entity)
         #expect(triangles > 0)
         #expect(triangles <= budget, "\(name.rawValue) \(triangles) over \(budget)")
-        for part in spec.parts {
-            #expect(containsPart(entity, part), "\(name.rawValue) missing \(part)")
+        if spec.sourced {
+            // One mesh, no named parts. Instead refuse a visibly squashed model.
+            let factors = try #require(try ModelLoader(catalogue: catalogue()).rawFitFactors(name))
+            let anisotropy = SourcedModelFit.anisotropy(factors)
+            #expect(anisotropy <= 1.2, "\(name.rawValue) stretched \(anisotropy)x between axes")
+        } else {
+            for part in spec.parts {
+                #expect(containsPart(entity, part), "\(name.rawValue) missing \(part)")
+            }
         }
     }
 
@@ -86,8 +93,11 @@ import StoreSimKit
     @Test func file_litter_bin() throws { try Self.assertPresent(.litterBin) }
     @Test func file_bike_rack() throws { try Self.assertPresent(.bikeRack) }
     @Test func file_street_lamp() throws { try Self.assertPresent(.streetLamp) }
-    @Test func file_tree() throws { try Self.assertPresent(.tree) }
-    @Test func file_parked_car() throws { try Self.assertPresent(.parkedCar) }
+    @Test func file_parked_car_hatchback() throws { try Self.assertPresent(.parkedCarHatchback) }
+    @Test func file_parked_car_saloon() throws { try Self.assertPresent(.parkedCarSaloon) }
+    @Test func file_parked_car_van() throws { try Self.assertPresent(.parkedCarVan) }
+    @Test func file_tree_linden() throws { try Self.assertPresent(.treeLinden) }
+    @Test func file_tree_maple() throws { try Self.assertPresent(.treeMaple) }
     @Test func file_plum_mark() throws { try Self.assertPresent(.plumMark) }
     @Test func file_storefront_sign() throws { try Self.assertPresent(.storefrontSign) }
     @Test func file_price_strip() throws { try Self.assertPresent(.priceStrip) }
@@ -116,8 +126,11 @@ import StoreSimKit
     @Test func model_litter_bin() throws { try Self.assertMatchesBrief(.litterBin) }
     @Test func model_bike_rack() throws { try Self.assertMatchesBrief(.bikeRack) }
     @Test func model_street_lamp() throws { try Self.assertMatchesBrief(.streetLamp) }
-    @Test func model_tree() throws { try Self.assertMatchesBrief(.tree) }
-    @Test func model_parked_car() throws { try Self.assertMatchesBrief(.parkedCar) }
+    @Test func model_parked_car_hatchback() throws { try Self.assertMatchesBrief(.parkedCarHatchback) }
+    @Test func model_parked_car_saloon() throws { try Self.assertMatchesBrief(.parkedCarSaloon) }
+    @Test func model_parked_car_van() throws { try Self.assertMatchesBrief(.parkedCarVan) }
+    @Test func model_tree_linden() throws { try Self.assertMatchesBrief(.treeLinden) }
+    @Test func model_tree_maple() throws { try Self.assertMatchesBrief(.treeMaple) }
 
     @Test func missingFileFallsBack() throws {
         let urls = try FileManager.default.contentsOfDirectory(

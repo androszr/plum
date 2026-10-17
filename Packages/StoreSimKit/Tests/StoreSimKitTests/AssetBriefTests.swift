@@ -35,6 +35,37 @@ import Testing
         }
     }
 
+    static let sourcedNames: [AssetName] = [.parkedCarHatchback, .parkedCarSaloon, .parkedCarVan, .treeLinden, .treeMaple]
+
+    static func line(_ body: String, _ key: String) -> String? {
+        body.split(separator: "\n", omittingEmptySubsequences: false)
+            .first { $0.hasPrefix(key) }
+            .map { String($0.dropFirst(key.count)).trimmingCharacters(in: .whitespaces) }
+    }
+
+    @Test func sourcedSectionsCarryProvenance() throws {
+        let s = Self.sections(try Self.brief())
+        for name in Self.sourcedNames {
+            let source = try #require(Self.line(s[name.rawValue] ?? "", "Source:"), "\(name.rawValue) has no Source line")
+            #expect(source.contains("Meshy"), "\(name.rawValue) source names no service")
+            #expect(source.contains("task"), "\(name.rawValue) names no task id")
+            #expect(source.contains("remesh"), "\(name.rawValue) names no remesh id")
+            #expect(source.firstMatch(of: /\d{4}-\d{2}-\d{2}/) != nil, "\(name.rawValue) source has no date")
+        }
+    }
+
+    @Test func sourcedFitMatchesTheBrief() throws {
+        let s = Self.sections(try Self.brief())
+        for name in Self.sourcedNames {
+            let fit = try #require(SourcedModelFit.fit(for: name))
+            let dim = try #require(Self.line(s[name.rawValue] ?? "", "Dimensions:"))
+            let nums = dim.matches(of: /\d+(?:\.\d+)?/).prefix(3).compactMap { Double($0.output) }
+            #expect(nums.count == 3, "\(name.rawValue) dimensions \(dim)")
+            // Brief order is width x depth x height; the fit is width, height, depth.
+            #expect(fit.size == SIMD3(nums[0], nums[2], nums[1]), "\(name.rawValue) fit \(fit.size) vs \(dim)")
+        }
+    }
+
     @Test func paletteHexesAppearInTheBrief() throws {
         let text = try Self.brief()
         for c in Brand.palette.all { #expect(text.contains(c.hex), "missing #\(c.hex)") }

@@ -143,8 +143,8 @@ public enum FixtureKind: String, CaseIterable, Codable, Sendable {
         case .litterBin: .litterBin
         case .bikeRack: .bikeRack
         case .streetLamp: .streetLamp
-        case .tree: .tree
-        case .parkedCar: .parkedCar
+        case .tree: .treeLinden
+        case .parkedCar: .parkedCarHatchback
         case .selfCheckout: .selfCheckout
         case .alcoholWall: .alcoholWall
         }

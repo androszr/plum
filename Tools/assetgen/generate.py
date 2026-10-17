@@ -59,6 +59,11 @@ def main() -> int:
     if only and not only.issubset(set(names)):
         unknown = sorted(only.difference(names))[0]
         raise RuntimeError(f"unknown --only name {unknown}")
+    if only:
+        for name in sorted(only):
+            if brief.specs[name].sourced:
+                raise RuntimeError(f"{name} is sourced (see its Source line); nothing to generate")
+    fixture_names = [name for name in fixture_names if not brief.specs[name].sourced]
     chosen_fixtures = [name for name in fixture_names if not only or name in only]
     chosen_signage = [name for name in signage_names if not only or name in only]
     if only:

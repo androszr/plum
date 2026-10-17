@@ -11,6 +11,7 @@ struct BriefSpec: Sendable {
     var format: String
     /// True when the section says `Status: stand-in only`: no model file yet.
     var pending = false
+    var sourced: Bool
 
     var isSignage: Bool { dimensions == nil }
 
@@ -80,9 +81,19 @@ struct BriefSpec: Sendable {
                 polyBudget: budget,
                 parts: partNames(partsLine),
                 format: try value(chunk, "Format:", name),
-                pending: status?.contains("stand-in only") ?? false)
+                pending: status?.contains("stand-in only") ?? false,
+                sourced: sourced(chunk))
         }
         return specs
+    }
+
+    /// True when the section has a `Source:` line that is not `generated`.
+    static func sourced(_ body: String) -> Bool {
+        for line in body.split(separator: "\n", omittingEmptySubsequences: false) where line.hasPrefix("Source:") {
+            let text = line.dropFirst("Source:".count).trimmingCharacters(in: .whitespaces)
+            return !text.isEmpty && text.lowercased() != "generated"
+        }
+        return false
     }
 
     private static func value(_ body: String, _ label: String, _ section: String) throws -> String {

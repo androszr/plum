@@ -23,8 +23,11 @@ public enum AssetName: String, CaseIterable, Sendable {
     case litterBin = "litter_bin"
     case bikeRack = "bike_rack"
     case streetLamp = "street_lamp"
-    case tree = "tree"
-    case parkedCar = "parked_car"
+    case parkedCarHatchback = "parked_car_hatchback"
+    case parkedCarSaloon = "parked_car_saloon"
+    case parkedCarVan = "parked_car_van"
+    case treeLinden = "tree_linden"
+    case treeMaple = "tree_maple"
     case selfCheckout = "self_checkout"
     case alcoholWall = "alcohol_wall"
     case plumMark = "plum_mark"
@@ -33,9 +36,15 @@ public enum AssetName: String, CaseIterable, Sendable {
     case windowPosterSet = "window_poster_set"
     case menuBoardTexture = "menu_board_texture"
 
-    /// Fixture kinds, one model file each.
+    /// Fixture kinds, one model file per kind and variant.
     public static var fixtureNames: Set<AssetName> {
-        Set(FixtureKind.allCases.map(\.assetName))
+        var names = Set<AssetName>()
+        for kind in FixtureKind.allCases {
+            for v in 0..<ModelVariant.count(for: kind) {
+                names.insert(ModelVariant.assetName(for: kind, variant: v))
+            }
+        }
+        return names
     }
 
     /// Pictures: the mark, the canopy, the price strip, the posters, the menu.

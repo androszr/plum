@@ -27,6 +27,30 @@ import Testing
         }
     }
 
+    @Test func threeCarsGetThreeModels() {
+        let cars = Self.layout.fixtures.filter { $0.kind == .parkedCar }
+        let indices = cars.map { ModelVariant.index(of: $0, in: Self.layout) }
+        #expect(indices == [0, 1, 2])
+        #expect(indices.map { ModelVariant.assetName(for: .parkedCar, variant: $0) }
+                == [.parkedCarHatchback, .parkedCarSaloon, .parkedCarVan])
+    }
+
+    @Test func sixTreesAlternate() {
+        let trees = Self.layout.fixtures.filter { $0.kind == .tree }
+        let indices = trees.map { ModelVariant.index(of: $0, in: Self.layout) }
+        #expect(indices == [0, 1, 0, 1, 0, 1])
+        #expect(indices.map { ModelVariant.assetName(for: .tree, variant: $0) }
+                == [.treeLinden, .treeMaple, .treeLinden, .treeMaple, .treeLinden, .treeMaple])
+    }
+
+    @Test func assetNameWrapsAndDefaults() {
+        #expect(ModelVariant.assetName(for: .parkedCar, variant: 3) == .parkedCarHatchback)
+        #expect(ModelVariant.assetName(for: .parkedCar, variant: -1) == .parkedCarVan)
+        #expect(ModelVariant.assetName(for: .tree, variant: 5) == .treeMaple)
+        #expect(ModelVariant.assetName(for: .streetLamp, variant: 7) == .streetLamp)
+        #expect(ModelVariant.assetName(for: .windowPoster, variant: 2) == .windowPoster)
+    }
+
     @Test func absentFixtureIsZero() {
         let ghost = Fixture(id: "ghost", kind: .windowPoster, cell: GridCell(x: 0, z: 0))
         #expect(ModelVariant.index(of: ghost, in: Self.layout) == 0)

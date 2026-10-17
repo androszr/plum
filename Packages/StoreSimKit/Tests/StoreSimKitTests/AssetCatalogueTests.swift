@@ -14,7 +14,17 @@ func modelURL(_ base: String, ext: String = "usdz", dir: String = "/m") -> URL {
     }
 
     @Test func absentNameIsProcedural() {
-        #expect(AssetCatalogue.empty.resolve(.tree) == .procedural)
+        #expect(AssetCatalogue.empty.resolve(.treeLinden) == .procedural)
+    }
+
+    @Test func variantFileNamesAreFixtures() {
+        for name in [AssetName.parkedCarSaloon, .parkedCarVan, .treeMaple] {
+            #expect(AssetName.fixtureNames.contains(name))
+            let url = modelURL(name.rawValue)
+            #expect(AssetCatalogue(modelURLs: [url]).resolve(name) == .model(url))
+            let png = modelURL(name.rawValue, ext: "png")
+            #expect(AssetCatalogue(modelURLs: [png]).resolve(name) == .procedural)
+        }
     }
 
     @Test func nonUsdzAndUnknownNamesAreIgnored() {
