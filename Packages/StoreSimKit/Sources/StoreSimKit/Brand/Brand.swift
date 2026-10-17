@@ -39,21 +39,21 @@ public enum Brand {
     public static let tagline = "Fresh. Close. Yours."
 
     public static let palette = Palette(
-        primary: BrandColor(rgb: 0x6B2D8C),
-        primaryDeep: BrandColor(rgb: 0x3E1A5C),
-        primaryLight: BrandColor(rgb: 0xB58BD6),
-        accentMint: BrandColor(rgb: 0x7EE0B5),
-        mintDeep: BrandColor(rgb: 0x2FA37A),
-        cream: BrandColor(rgb: 0xFFF6E5),
-        charcoal: BrandColor(rgb: 0x2B2B33),
-        priceRailYellow: BrandColor(rgb: 0xF7D23E),
-        woodLight: BrandColor(rgb: 0xD9B382),
-        tileWhite: BrandColor(rgb: 0xF2F4F5),
-        asphalt: BrandColor(rgb: 0x5A5D66),
-        sidewalk: BrandColor(rgb: 0xC9C6BE),
-        grassPastel: BrandColor(rgb: 0xA8D8A0),
-        skyPastel: BrandColor(rgb: 0xBFE3F5),
-        warmLamp: BrandColor(rgb: 0xFFD9A0)
+        primary: BrandColor(rgb: 0x4A4E57),
+        primaryDeep: BrandColor(rgb: 0x2E1A47),
+        primaryLight: BrandColor(rgb: 0xD9D6CF),
+        accentMint: BrandColor(rgb: 0xB9C6B0),
+        mintDeep: BrandColor(rgb: 0x6E8B74),
+        cream: BrandColor(rgb: 0xFAFAF7),
+        charcoal: BrandColor(rgb: 0x22252B),
+        priceRailYellow: BrandColor(rgb: 0xE9C46A),
+        woodLight: BrandColor(rgb: 0xC9A27E),
+        tileWhite: BrandColor(rgb: 0xF4F4F2),
+        asphalt: BrandColor(rgb: 0x4B4F57),
+        sidewalk: BrandColor(rgb: 0xBDBAB3),
+        grassPastel: BrandColor(rgb: 0xB7C4A8),
+        skyPastel: BrandColor(rgb: 0xE6EAEE),
+        warmLamp: BrandColor(rgb: 0xFFE2B8)
     )
 
     public static let mark = PlumMark(
