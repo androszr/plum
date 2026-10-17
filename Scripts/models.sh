@@ -49,7 +49,8 @@ generate_cmd=(.venv-assetgen/bin/python Tools/assetgen/generate.py
   --out "$target")
 check_cmd=(.venv-assetgen/bin/python Tools/assetgen/check.py
   --brief docs/asset-brief.md
-  --models "$target")
+  --models "$target"
+  --shipped App/Resources/Models)
 if [[ ${#only[@]} -gt 0 ]]; then
   generate_cmd+=(--only "${only[@]}")
   check_cmd+=(--only "${only[@]}")
@@ -91,5 +92,5 @@ fi
 [[ -n "$cleanup" ]] && rm -rf "$cleanup"
 
 if [[ ${#only[@]} -eq 0 ]]; then
-  echo "29 assets generated, 24 models checked"
+  echo "27 assets generated, 22 models checked, 5 sourced"
 fi

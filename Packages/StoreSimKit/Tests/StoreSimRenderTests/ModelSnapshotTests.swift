@@ -14,8 +14,9 @@ let maxMeanDifference = 0.12
 
 @MainActor
 @Suite struct ModelSnapshotTests {
-    private static func fixture(_ kind: FixtureKind) -> Fixture {
-        StoreLayout.plumCorner.fixtures.first { $0.kind == kind }!
+    /// The `variant`-th fixture of `kind` in layout order, so its derived variant index is `variant`.
+    private static func fixture(_ kind: FixtureKind, variant: Int) -> Fixture {
+        StoreLayout.plumCorner.fixtures.filter { $0.kind == kind }[variant]
     }
 
     private static func camera(extent: Double, height: Double) -> OrbitCamera {
@@ -89,27 +90,28 @@ let maxMeanDifference = 0.12
         return samples == 0 ? 1 : sum / Double(samples)
     }
 
-    private static func compare(_ kind: FixtureKind) async throws {
-        let spec = try #require(BriefSpec.load()[kind.assetName.rawValue])
-        let dim = try #require(spec.dimensions)
-        let fixture = Self.fixture(kind)
+    private static func compare(_ kind: FixtureKind, variant wanted: Int = 0) async throws {
+        let fixture = Self.fixture(kind, variant: wanted)
         let variant = ModelVariant.index(of: fixture, in: .plumCorner)
+        let assetName = ModelVariant.assetName(for: kind, variant: variant)
+        let spec = try #require(BriefSpec.load()[assetName.rawValue])
+        let dim = try #require(spec.dimensions)
         let proceduralNode = FixtureBuilders.builder(for: kind).build(fixture, detail: .full, variant: variant)
         let procedural = grounded(EntityBuilder.entity(for: proceduralNode, loader: ModelLoader(catalogue: .empty)))
         let urls = try FileManager.default.contentsOfDirectory(at: BriefSpec.modelsDirectory(), includingPropertiesForKeys: nil)
-        let model = grounded(try ModelLoader(catalogue: AssetCatalogue(modelURLs: urls)).load(kind.assetName, variant: variant))
+        let model = grounded(try ModelLoader(catalogue: AssetCatalogue(modelURLs: urls)).load(assetName, variant: variant))
         let camera = camera(extent: max(dim.w, dim.d, dim.h), height: dim.h)
         let renderer = OffscreenRenderer()
         let left = try await renderer.render(root: lit(procedural), camera: camera, size: (256, 256))
         let right = try await renderer.render(root: lit(model), camera: camera, size: (256, 256))
         #expect(left.width == 256 && left.height == 256)
         #expect(right.width == 256 && right.height == 256)
-        #expect(distinct(left) >= 8, "\(kind.assetName.rawValue) procedural colours")
-        #expect(distinct(right) >= 8, "\(kind.assetName.rawValue) model colours")
+        #expect(distinct(left) >= 8, "\(assetName.rawValue) procedural colours")
+        #expect(distinct(right) >= 8, "\(assetName.rawValue) model colours")
         let diff = meanDifference(left, right)
-        _ = try write(left, "\(kind.assetName.rawValue)-procedural.png")
-        _ = try write(right, "\(kind.assetName.rawValue)-model.png")
-        #expect(diff <= maxMeanDifference, "\(kind.assetName.rawValue) mean difference \(diff)")
+        _ = try write(left, "\(assetName.rawValue)-procedural.png")
+        _ = try write(right, "\(assetName.rawValue)-model.png")
+        #expect(diff <= maxMeanDifference, "\(assetName.rawValue) mean difference \(diff)")
     }
 
     @Test(.enabled(if: hasGPU)) func shot_gondola_shelf() async throws { try await Self.compare(.gondolaShelf) }
@@ -134,8 +136,11 @@ let maxMeanDifference = 0.12
     @Test(.enabled(if: hasGPU)) func shot_litter_bin() async throws { try await Self.compare(.litterBin) }
     @Test(.enabled(if: hasGPU)) func shot_bike_rack() async throws { try await Self.compare(.bikeRack) }
     @Test(.enabled(if: hasGPU)) func shot_street_lamp() async throws { try await Self.compare(.streetLamp) }
-    @Test(.enabled(if: hasGPU)) func shot_tree() async throws { try await Self.compare(.tree) }
-    @Test(.enabled(if: hasGPU)) func shot_parked_car() async throws { try await Self.compare(.parkedCar) }
+    @Test(.enabled(if: hasGPU)) func shot_parked_car_hatchback() async throws { try await Self.compare(.parkedCar, variant: 0) }
+    @Test(.enabled(if: hasGPU)) func shot_parked_car_saloon() async throws { try await Self.compare(.parkedCar, variant: 1) }
+    @Test(.enabled(if: hasGPU)) func shot_parked_car_van() async throws { try await Self.compare(.parkedCar, variant: 2) }
+    @Test(.enabled(if: hasGPU)) func shot_tree_linden() async throws { try await Self.compare(.tree, variant: 0) }
+    @Test(.enabled(if: hasGPU)) func shot_tree_maple() async throws { try await Self.compare(.tree, variant: 1) }
 
     @Test(.enabled(if: hasGPU))
     func sceneResemblesProcedural() async throws {

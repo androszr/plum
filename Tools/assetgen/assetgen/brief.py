@@ -25,6 +25,7 @@ class Spec:
     parts: list[str]
     format: str
     palette_names: list[str] = field(default_factory=list)
+    sourced: bool = False
 
     @property
     def is_signage(self) -> bool:
@@ -168,6 +169,15 @@ def _palette_names(palette_line: str) -> list[str]:
     return re.findall(r"\b([a-z][A-Za-z0-9]*)\b", palette_line)
 
 
+def _is_sourced(body: str) -> bool:
+    """True when the section has a `Source:` line that is not `generated`."""
+    for line in body.splitlines():
+        if line.startswith("Source:"):
+            value = line.split(":", 1)[1].strip()
+            return bool(value) and value.lower() != "generated"
+    return False
+
+
 def load_brief(path: str) -> Brief:
     text = open(path, encoding="utf-8").read()
     palette: dict[str, tuple[float, float, float]] = {}
@@ -224,5 +234,6 @@ def load_brief(path: str) -> Brief:
             parts=part_names(parts_line),
             format=format_line,
             palette_names=_palette_names(_line_value(body, "Palette:", name)),
+            sourced=_is_sourced(body),
         )
     return Brief(palette=palette, specs=specs)

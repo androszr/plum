@@ -15,11 +15,28 @@ public struct ModelLoader {
 
     public init(catalogue: AssetCatalogue) { self.catalogue = catalogue }
 
-    public func load(_ name: AssetName, variant: Int = 0) throws -> Entity {
+    /// Each file is read from disk once; every caller gets its own deep copy of that entity.
+    private static var loaded: [URL: Entity] = [:]
+
+    private func raw(_ name: AssetName) throws -> Entity {
         guard case let .model(url) = catalogue.resolve(name) else { throw ModelLoaderError(name: name) }
+        if let cached = Self.loaded[url] { return cached.clone(recursive: true) }
         let entity = try Entity.load(contentsOf: url)
-        ModelVariants.apply(variant: variant, to: entity, for: name)
-        return entity
+        Self.loaded[url] = entity
+        return entity.clone(recursive: true)
+    }
+
+    public func load(_ name: AssetName, variant: Int = 0) throws -> Entity {
+        let entity = try raw(name)
+        let fitted = ModelFit.apply(to: entity, for: name)
+        ModelVariants.apply(variant: variant, to: fitted, for: name)
+        return fitted
+    }
+
+    /// The per-axis stretch a sourced file needs to reach its brief size, before the fit is applied.
+    /// Nil for generated assets. Tests use it to refuse a visibly squashed model.
+    public func rawFitFactors(_ name: AssetName) throws -> SIMD3<Double>? {
+        return ModelFit.factors(for: try raw(name), name: name)
     }
 
     public func texture(_ name: AssetName) throws -> TextureResource {

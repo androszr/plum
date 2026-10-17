@@ -18,4 +18,8 @@ Determinism:
 - Zip timestamps inside every `.usdz` are rewritten to a fixed date after packaging.
 - Pictures use Pillow's bundled font (`ImageFont.load_default`), never a font installed on the machine.
 
+Sourced assets:
+
+- A brief section with a `Source:` line (anything but `generated`) is made by someone else, so `generate.py` skips it and `--only <name>` refuses it. `check.py --shipped App/Resources/Models` only proves the file is there, opens and is within its `Poly budget:`; bounds, parts and facing are not checked here (the app fits them on load and the tests measure them). `models.sh --check` never visits them for drift.
+
 Never hand-edit the files in `App/Resources/Models/`. Change this generator and re-run `bash Scripts/models.sh`.

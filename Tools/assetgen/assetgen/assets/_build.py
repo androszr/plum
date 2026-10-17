@@ -36,8 +36,6 @@ FRONT = {
     "litter_bin": [],
     "bike_rack": [],
     "street_lamp": [],
-    "tree": [],
-    "parked_car": ["bumper_front", "headlight_left"],
 }
 
 
@@ -397,30 +395,6 @@ def street_lamp(b, spec, palette, textures):
     _box(b, "glow", 0.26, h - 0.22, 0, 0.2, 0.04, 0.18, palette["warmLamp"], emissive=True)
 
 
-def tree(b, spec, palette, textures):
-    w, d, h = spec.dimensions
-    _cyl(b, "trunk", 0, 0, 0, 0.12, 1.7, palette["woodLight"], segments=8)
-    _box(b, "crown", 0, 1.55, 0, w, 1.5, d, palette["grassPastel"])
-    _box(b, "crown_top", 0, h - 0.95, 0, w * 0.62, 0.95, d * 0.62, palette["grassPastel"])
-
-
-def parked_car(b, spec, palette, textures):
-    w, d, h = spec.dimensions
-    body_keys = ["primaryLight", "accentMint", "priceRailYellow", "cream"]
-    body = palette[body_keys[b.rng.randrange(len(body_keys))]]
-    _box(b, "bumper_front", w / 2 - 0.05, 0.28, 0, 0.1, 0.16, d - 0.3, palette["asphalt"])
-    _box(b, "bumper_rear", -w / 2 + 0.05, 0.28, 0, 0.1, 0.16, d - 0.3, palette["asphalt"])
-    _box(b, "body", 0, 0.26, 0, w - 0.3, 0.62, d, body)
-    _box(b, "cabin", -0.15, 0.88, 0, w * 0.46, h - 0.88, d - 0.28, body)
-    _box(b, "windows", -0.15, 0.96, 0, w * 0.42, h - 1.08, d - 0.22, palette["skyPastel"], opacity=0.4, roughness=0.1)
-    corners = [(1.35, 0.72), (1.35, -0.72), (-1.35, 0.72), (-1.35, -0.72)]
-    for i, name in enumerate(_have(spec, "wheel")):
-        _cyl(b, name, corners[i][0], 0, corners[i][1], 0.3, 0.2, palette["charcoal"], segments=8, axis="z")
-    _box(b, "headlight_left", w / 2 - 0.12, 0.55, 0.48, 0.04, 0.12, 0.28, palette["warmLamp"], emissive=True)
-    _box(b, "headlight_right", w / 2 - 0.12, 0.55, -0.48, 0.04, 0.12, 0.28, palette["warmLamp"], emissive=True)
-    _box(b, "tail_lights", -w / 2 + 0.12, 0.58, 0, 0.04, 0.1, d * 0.55, palette["primaryDeep"], emissive=True)
-
-
 BUILDERS = {
     "gondola_shelf": gondola_shelf,
     "wall_shelf": wall_shelf,
@@ -444,6 +418,4 @@ BUILDERS = {
     "litter_bin": litter_bin,
     "bike_rack": bike_rack,
     "street_lamp": street_lamp,
-    "tree": tree,
-    "parked_car": parked_car,
 }

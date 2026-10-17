@@ -13,6 +13,7 @@ This brief tells an artist, or an AI image-to-3D tool, exactly which models the 
 - Naming: the file name is the asset name below, lower snake case, e.g. `gondola_shelf.usdz`.
 - Level of detail: there is one USDZ per asset. The app drops nothing from a model, so keep the budgets below.
 - Keep the parts listed under each asset as separate named meshes where the tool allows it; the stand-in is built from exactly those parts.
+- Sourced street props (`parked_car_*`, `tree_*`) are the written exception to the flat-pastel rule and to the named-parts rule: realistic proportions and textured surfaces, colours muted toward the palette, one mesh. A section with a `Source:` line is not generated; `Tools/assetgen` skips it.
 - Parts named `product_<shelf>_<facing>`, `bottle_<shelf>_<facing>` and `carton_<shelf>_<facing>` are recoloured per placed copy by the app and must carry a flat colour, no texture.
 
 ## Palette
@@ -435,41 +436,105 @@ Description: A tall dark street lamp with a short arm and a head that glows warm
 
 Prompt: Low-poly flat-shaded pastel diorama model of a tall dark street lamp with a short arm and a head that glows warm. Size 0.8 x 0.3 x 4.5 metres, pivot at the bottom centre, front facing +Z, at most 1500 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #FFE2B8), no text, no real-world logos. Export as USDZ.
 
-### tree
-
-Dimensions: 1.4 x 1.4 x 4.0 m (width x depth x height)
-
-Pivot: bottom centre of the footprint, front towards +Z
-
-Poly budget: 2500 triangles
-
-Palette: woodLight #C9A27E, grassPastel #B7C4A8
-
-Format: USDZ, embedded textures, one 1024 x 1024 atlas
-
-Parts: trunk, crown, crown_top
-
-Description: A stylised street tree: a short trunk with a rounded block-shaped crown and a smaller rounded block on top, in soft pastel green.
-
-Prompt: Low-poly flat-shaded pastel diorama model of a stylised street tree: a short trunk with a rounded block-shaped crown and a smaller rounded block on top, in soft pastel green. Size 1.4 x 1.4 x 4.0 metres, pivot at the bottom centre, front facing +Z, at most 2500 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#C9A27E, #B7C4A8), no text, no real-world logos. Export as USDZ.
-
-### parked_car
+### parked_car_hatchback
 
 Dimensions: 4.5 x 2.0 x 1.5 m (width x depth x height)
 
-Pivot: bottom centre of the footprint, front towards +Z
+Pivot: bottom centre of the footprint, long axis along X, front of the car toward +X (the app turns the file two quarter turns on load)
 
-Poly budget: 6000 triangles
+Poly budget: 15000 triangles
 
-Palette: primaryLight #D9D6CF, accentMint #B9C6B0, priceRailYellow #E9C46A, cream #FAFAF7, skyPastel #E6EAEE, charcoal #22252B, warmLamp #FFE2B8, primaryDeep #2E1A47, asphalt #4B4F57
+Palette: accentMint #B9C6B0, mintDeep #6E8B74, charcoal #22252B, skyPastel #E6EAEE
 
-Format: USDZ, embedded textures, one 1024 x 1024 atlas
+Format: USDZ, embedded 1K texture (1024 x 1024 colour and normal, constant metallic and roughness), one mesh
 
-Parts: body, cabin, windows (glass), wheel_0-3, headlight_left, headlight_right, tail_lights, bumper_front, bumper_rear. Long axis along X, the front of the car points to +X; offer four body colours.
+Parts: single mesh (sourced, no named parts)
 
-Description: A small friendly hatchback with rounded body and cabin, glass windows, dark wheels and warm headlights. No manufacturer badges or recognisable real model.
+Description: A small five-door hatchback in muted sage green with real wheel arches, tyres with rims, door mirrors, glass windows and blank number-plate recesses. No badges or logos.
 
-Prompt: Low-poly flat-shaded pastel diorama model of a small friendly hatchback with rounded body and cabin, glass windows, dark wheels and warm headlights. No manufacturer badges or recognisable real model. Size 4.5 x 2.0 x 1.5 metres, pivot at the bottom centre, front facing +Z, at most 6000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#D9D6CF, #B9C6B0, #E9C46A, #FAFAF7, #E6EAEE, #22252B, #FFE2B8, #2E1A47, #4B4F57), no text, no real-world logos. Export as USDZ.
+Prompt: small European-style five-door hatchback with a low, long body — roof height about one third of the car's length, muted sage green, real wheel arches, tyres with rims, door mirrors, blank number-plate recesses, no badges or logos, clean three-quarter view on a plain light background
+
+Source: Meshy — text-to-image task 01a14b38-457f-761f-9091-45ff9d942059, image-to-3d task 01a14b38-f5ea-76db-9a3b-00867c297ca0, remesh task 01a14b3a-f15a-736c-83da-1c3b3c7066c6, meshy-6, 2026-10-17
+
+### parked_car_saloon
+
+Dimensions: 4.5 x 2.0 x 1.5 m (width x depth x height)
+
+Pivot: bottom centre of the footprint, long axis along X, front of the car toward +X (the app turns the file two quarter turns on load)
+
+Poly budget: 15000 triangles
+
+Palette: sidewalk #BDBAB3, primaryLight #D9D6CF, charcoal #22252B, skyPastel #E6EAEE
+
+Format: USDZ, embedded 1K texture (1024 x 1024 colour and normal, constant metallic and roughness), one mesh
+
+Parts: single mesh (sourced, no named parts)
+
+Description: A compact four-door saloon in warm grey with real wheel arches, tyres with rims, door mirrors, glass windows and blank number-plate recesses. No badges or logos.
+
+Prompt: compact four-door saloon, warm grey, real wheel arches, tyres with rims, door mirrors, blank number-plate recesses, no badges or logos, clean three-quarter view on a plain light background
+
+Source: Meshy — text-to-image task 01a14b26-a939-7155-87bf-d1f3b41d1472, image-to-3d task 01a14b27-db63-74da-86fb-28f5511f6817, remesh task 01a14b2e-bf92-76f0-b948-d00ffd978594, meshy-6, 2026-10-17
+
+### parked_car_van
+
+Dimensions: 4.5 x 2.0 x 1.5 m (width x depth x height)
+
+Pivot: bottom centre of the footprint, long axis along X, front of the car toward +X (the app turns the file two quarter turns on load)
+
+Poly budget: 15000 triangles
+
+Palette: cream #FAFAF7, tileWhite #F4F4F2, charcoal #22252B, skyPastel #E6EAEE
+
+Format: USDZ, embedded 1K texture (1024 x 1024 colour and normal, constant metallic and roughness), one mesh
+
+Parts: single mesh (sourced, no named parts)
+
+Description: A small low estate car in off-white with a long flat roofline, real wheel arches, tyres with rims, door mirrors, glass windows and blank number-plate recesses. No badges or logos.
+
+Prompt: small low estate car (station wagon) with a long flat roofline — roof height about one third of the car's length, off-white, real wheel arches, tyres with rims, door mirrors, blank number-plate recesses, no badges or logos, clean three-quarter view on a plain light background
+
+Source: Meshy — text-to-image task 01a14b38-4662-7729-84c3-bf6ae4be34e2, image-to-3d task 01a14b38-ff83-7054-b2bf-a695cccb910c, remesh task 01a14b3c-d04f-75b7-b8c6-b1cf8a9be350, meshy-6, 2026-10-17
+
+### tree_linden
+
+Dimensions: 1.4 x 1.4 x 4.0 m (width x depth x height)
+
+Pivot: bottom centre of the footprint (no turn needed)
+
+Poly budget: 10000 triangles
+
+Palette: woodLight #C9A27E, grassPastel #B7C4A8, mintDeep #6E8B74, charcoal #22252B
+
+Format: USDZ, embedded 1K texture (1024 x 1024 colour and normal, constant metallic and roughness), one mesh
+
+Parts: single mesh (sourced, no named parts)
+
+Description: A street linden with a tall straight trunk, a rounded crown with visible leaf clusters and a round metal grate at the base, in muted green.
+
+Prompt: slender street linden with a narrow upright column-shaped crown, the whole tree about three times taller than it is wide, tall straight trunk, visible leaf clusters, round metal tree grate at the base, muted green, 4 m tall and about 1.4 m wide, full tree in frame on a plain light background
+
+Source: Meshy — text-to-image task 01a14b38-4759-7042-bb38-9ee507c5eb22, image-to-3d task 01a14b39-08ef-76ff-bdbb-be63ee9c6b17, remesh task 01a14b3c-d162-727f-ba13-ce09f1bcf19c, meshy-6, 2026-10-17
+
+### tree_maple
+
+Dimensions: 1.4 x 1.4 x 4.0 m (width x depth x height)
+
+Pivot: bottom centre of the footprint (no turn needed)
+
+Poly budget: 10000 triangles
+
+Palette: woodLight #C9A27E, grassPastel #B7C4A8, mintDeep #6E8B74, priceRailYellow #E9C46A
+
+Format: USDZ, embedded 1K texture (1024 x 1024 colour and normal, constant metallic and roughness), one mesh
+
+Parts: single mesh (sourced, no named parts)
+
+Description: A young maple or plane street tree with a narrower crown, slightly autumn-tinted foliage and a wooden stake with ties.
+
+Prompt: young maple or plane street tree, narrower crown, slightly autumn-tinted foliage, wooden stake with ties, 4 m tall and about 1.4 m wide
+
+Source: Meshy — text-to-image task 01a14b26-abfe-772a-aaee-1fcb27511a24, image-to-3d task 01a14b27-fc56-76a6-9004-db5aba562992, remesh task 01a14b2d-59ae-7063-b276-9c2ef386aec3, meshy-6, 2026-10-17
 
 ### plum_mark
 

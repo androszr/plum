@@ -95,7 +95,9 @@ loads a model (lint rule g). The brief for the artist is `docs/asset-brief.md`.
 **Per-instance variety (2026-10-17, plan `plans/2026-10-17-per-instance-model-variety.md`).**
 `ModelVariant` (pure) derives a variant index for each placed fixture: its ordinal
 among fixtures of the same kind in `layout.fixtures`, wrapped at the kind's variant
-count (3 for posters, shelving and fridges, 1 otherwise). It also holds the poster
+count (3 for posters, shelving, fridges and parked cars, 2 for trees, 1 otherwise).
+For cars and trees the index also picks the model file (`ModelVariant.assetName(for:variant:)`:
+hatchback, saloon, van; linden, maple). It also holds the poster
 headlines and tints and the seven-colour product window per variant. The index
 travels on `SceneNode.variant`; the stand-in builders take it as `variant:`, and
 `ModelVariants.apply` (in `StoreSimRender`) honours it right after the one
@@ -122,15 +124,28 @@ under `NSTemporaryDirectory()/storesim-snapshots/` and skips only when no GPU
 exists.
 
 **Asset generation.** `Tools/assetgen` (Python, `usd-core` and `Pillow`, pinned
-by hash) builds the twenty-nine assets. `Scripts/models.sh` writes them into
+by hash) builds twenty-seven assets (22 models and 5 pictures); five more models are sourced
+(see below). `Scripts/models.sh` writes them into
 `App/Resources/Models/`. That folder is copied into the app whole, so it holds
-only the generated files; the note for it is `App/Resources/Models.md`. The catalogue resolves `.usdz` for fixtures and `.png`
+the generated and the sourced model files and no notes; the note for it is `App/Resources/Models.md`. The catalogue resolves `.usdz` for fixtures and `.png`
 for signage; `ModelLoader` is the only file that loads either. Decision
 2026-10-17, plan `plans/2026-10-17-grok-models-from-asset-brief.md`: generate
 from the brief so CI can prove the shipped files match the generator
 byte-for-byte, instead of checking in a model that cannot be rebuilt.
 
+**Sourced models.** `parked_car_hatchback`, `parked_car_saloon`, `parked_car_van`,
+`tree_linden` and `tree_maple` are not generated: they come from Meshy and carry a
+`Source:` line in the brief. The generator skips a section with such a line;
+`check.py --shipped` proves the file is present and within budget. `SourcedModelFit`
+(pure table) and `ModelFit` (RealityKit, called by `ModelLoader`) turn them by quarter
+turns, stretch them to the brief size and ground them, because Meshy files arrive at an
+arbitrary size and facing.
+
 **Decisions (2026-10-17, plan `plans/2026-10-17-3d-store-and-surroundings.md`).**
+- 2026-10-17, plan `plans/2026-10-17-realistic-cars-and-trees.md`: five street props are
+  sourced from Meshy and fitted in code (`SourcedModelFit` + `ModelFit`), because the
+  project has no Blender and `EntityBuilder.align` moves position only; the brief's
+  `Source:` line is what the generator, the checker and the tests key off.
 - XcodeGen over a hand-kept `.xcodeproj` (a pbxproj is opaque and merge-hostile;
   `project.yml` is readable), over Tuist (a Swift manifest toolchain for no gain
   at this size) and over a package-only app (SwiftPM cannot produce an iOS app
@@ -177,10 +192,12 @@ coding.
 10. **Metres, Y up, fixture pivot at the bottom centre of its footprint, +Z is
     the fixture's front.** *(asset brief, integration reviewer)*
 11. **Never commit or push** unless explicitly asked.
-12. **Shipped models are generated.** `App/Resources/Models/` is never hand-edited;
+12. **Shipped models are generated, except the sourced ones.** `App/Resources/Models/` is never hand-edited;
     `bash Scripts/models.sh --check` in CI proves the committed files equal the
     generator's output. The generator reads colours from the brief's palette
-    table and the name from `Brand.swift`. *(lint gates d and h)*
+    table and the name from `Brand.swift`. The written exception is a brief section with
+    a `Source:` line (the five sourced street props): the generator skips it and the
+    checker proves only presence and budget. *(lint gates d and h)*
 13. **Variety is derived, never stored.** `ModelVariant.index(of:in:)` is the only source of a variant index; it lives on `SceneNode.variant` and is applied by `ModelVariants.apply`; no `Codable` type carries it. *(`ModelVariantTests`, `SceneComposerTests`; verifier grep on `Fixture.swift` and `StoreLayout.swift`)*
 
 ## What the tests cannot see
@@ -193,6 +210,8 @@ the domain reviewers and the audit skill exist:
   picture comes out.
 - **The signed, archived app.** CI and local builds are ad-hoc signed.
 - **The Xcode version on the CI runner.** It may lag the local one.
+- **Which way a sourced model faces.** Bounds are symmetric, so a car facing -X passes
+  every automated check; the facing is set from a picture comparison and confirmed by eye.
 - **How a generated model reads on a real screen next to the brief.** Size,
   pivot, facing, triangle budget, file presence, fallback, pixel distance and
   `usdchecker` are asserted. Whether it looks like the shop in the brief is a

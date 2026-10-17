@@ -120,7 +120,7 @@ import StoreSimKit
     /// the car on the ground, the menu and posters on the wall, the pendant under the roof.
     @Test func loadedModelsSitWithTheStandIn() throws {
         let dir = try BriefSpec.modelsDirectory()
-        let urls = ["parked_car", "menu_screen", "window_poster", "pendant_lamp"].map {
+        let urls = ["parked_car_hatchback", "menu_screen", "window_poster", "pendant_lamp"].map {
             dir.appendingPathComponent($0).appendingPathExtension("usdz")
         }
         let layout = StoreLayout.plumCorner

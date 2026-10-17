@@ -4,14 +4,34 @@ import Foundation
 /// kind in `layout.fixtures`, wrapped at the kind's variant count. It is recomputed every
 /// time the scene is built and never stored (no `Codable` type carries it).
 public enum ModelVariant {
-    public static func count(for name: AssetName) -> Int {
-        switch name {
-        case .windowPoster, .gondolaShelf, .wallShelf, .endCap, .wallFridge, .dairyChiller: 3
+    public static func count(for kind: FixtureKind) -> Int {
+        switch kind {
+        case .windowPoster, .gondolaShelf, .wallShelf, .endCap, .wallFridge, .dairyChiller, .parkedCar: 3
+        case .tree: 2
         default: 1
         }
     }
 
-    public static func count(for kind: FixtureKind) -> Int { count(for: kind.assetName) }
+    public static func count(for name: AssetName) -> Int {
+        switch name {
+        case .windowPoster, .gondolaShelf, .wallShelf, .endCap, .wallFridge, .dairyChiller: 3
+        case .parkedCarHatchback, .parkedCarSaloon, .parkedCarVan: 3
+        case .treeLinden, .treeMaple: 2
+        default: 1
+        }
+    }
+
+    /// The model file a placed fixture of `kind` uses for `variant` (wrapped at the kind's count).
+    public static func assetName(for kind: FixtureKind, variant: Int) -> AssetName {
+        switch kind {
+        case .parkedCar:
+            [AssetName.parkedCarHatchback, .parkedCarSaloon, .parkedCarVan][wrap(variant, count: 3)]
+        case .tree:
+            [AssetName.treeLinden, .treeMaple][wrap(variant, count: 2)]
+        default:
+            kind.assetName
+        }
+    }
 
     /// `((v % count) + count) % count`, safe for negative and oversized input.
     public static func wrap(_ v: Int, count: Int) -> Int {
