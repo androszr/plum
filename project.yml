@@ -1,0 +1,48 @@
+# XcodeGen spec: `xcodegen generate` turns this into StoreSim.xcodeproj (gitignored).
+name: StoreSim
+options:
+  bundleIdPrefix: com.androsz
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "26.0"
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    # Ad-hoc signing: the Mac build launches locally, the simulator build needs nothing.
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+packages:
+  StoreSimKit:
+    path: Packages/StoreSimKit
+targets:
+  StoreSim:
+    type: application
+    platform: [macOS, iOS]
+    sources:
+      - path: App
+        excludes:
+          - Resources/Models
+          - Info.plist
+      # A folder reference, so a dropped .usdz ships without a project change.
+      - path: App/Resources/Models
+        type: folder
+    dependencies:
+      - package: StoreSimKit
+        product: StoreSimKit
+      - package: StoreSimKit
+        product: StoreSimRender
+    settings:
+      base:
+        PRODUCT_NAME: StoreSim
+        PRODUCT_BUNDLE_IDENTIFIER: com.androsz.storesim
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: NO
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Store Sim
+        NSHighResolutionCapable: true
+        UILaunchScreen: {}

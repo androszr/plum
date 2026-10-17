@@ -1,18 +1,13 @@
 name: CI
 
-# A commit that only touches the iOS client has nothing for THIS workflow to
-# do — there is no Next build to run in it. If this project has no ios/
-# directory the paths-ignore is harmless. iOS guards live in ios.yml, which
-# carries no path filter for exactly that reason.
+# The Mac runner may lag the local Xcode; the project was built with Xcode 26.6
+# (macOS 26.5 SDK). The step below picks the newest Xcode 26 on the runner.
 on:
   pull_request:
-    paths-ignore: ['ios/**']
   push:
     branches: [main]
-    paths-ignore: ['ios/**']
 
-# A newer push to the same branch cancels the older run — no point paying for
-# CI on a commit that is already superseded.
+# A newer push to the same branch cancels the older run.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -21,37 +16,25 @@ permissions:
   contents: read
 
 jobs:
-  quality:
+  gates:
     name: Lint · Typecheck · Test · Build
-    runs-on: ubuntu-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - name: Select the newest Xcode 26
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
 
-      - uses: actions/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
+      - run: brew install xcodegen
 
-      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: bash Scripts/lint.sh
 
-      - run: pnpm lint
+      - name: Typecheck
+        run: swift build --package-path Packages/StoreSimKit
 
-      - run: pnpm typecheck
+      - name: Test
+        run: swift test --package-path Packages/StoreSimKit
 
-      - run: pnpm test
-
-      # `next build` runs env() at module scope for any route that touches auth
-      # or the DB, so it needs syntactically valid values. These are throwaways
-      # — the build never opens a connection.
-      - name: Build
-        run: pnpm build
-        env:
-          # Every REQUIRED field of the env schema needs a placeholder here, or
-          # the build refuses to start. None of these values is ever used: CI
-          # opens no connection and makes no request.
-          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-          AUTH_SECRET: ci-placeholder-secret-not-used-in-production-000
-          AUTH_URL: http://localhost:3000
-          # <add one line per required env field>
+      - name: Build (Mac and iPhone simulator)
+        run: bash Scripts/build.sh

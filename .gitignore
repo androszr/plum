@@ -34,3 +34,9 @@ user-data/
 out/
 .vercel
 coverage/
+
+# Xcode / SwiftPM
+StoreSim.xcodeproj/
+*.xcuserstate
+xcuserdata/
+.swiftpm/
