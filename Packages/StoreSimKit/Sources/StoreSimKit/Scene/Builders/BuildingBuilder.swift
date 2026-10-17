@@ -35,7 +35,9 @@ enum BuildingBuilder {
         p.box("store_wall_right", x1 + 0.05, 0, s.cz, 0.1, h, s.d, .paint(c.cream))
         p.box("tile_wall", s.cx, 0, z0 + 0.005, s.w, 1.4, 0.01, .paint(c.tileWhite))
         p.box("wood_accent", s.cx, 1.4, z0 + 0.02, s.w, 0.07, 0.04, .paint(c.woodLight))
-        p.box("store_roof", s.cx, h, s.cz, s.w + 0.4, 0.15, s.d + 0.2, .paint(c.primaryLight))
+        // The roof reaches 0.1 m further back (into the facade, out of sight) so its back edge does not
+        // share a plane with the neighbouring shops' back faces, which now sit on the facade front.
+        p.box("store_roof", s.cx, h, s.cz - 0.05, s.w + 0.4, 0.15, s.d + 0.3, .paint(c.primaryLight))
 
         // Storefront glazing, split around the entrance doorway, under a canopy with the lit sign.
         let doorX = (Double(lot.entrance.x) + 0.5) * cellSize
@@ -75,9 +77,13 @@ enum BuildingBuilder {
                 }
             }
         }
-        // Low neighbouring shops either side of the store.
-        p.box("neighbour_left", (x0 - 0.1) / 2, 0, s.cz, x0 - 0.1, 3.6, s.d, .paint(c.accentMint.scaled(by: 0.9)))
-        p.box("neighbour_right", (x1 + 0.1 + lotW) / 2, 0, s.cz, lotW - x1 - 0.1, 3.6, s.d, .paint(c.warmLamp.scaled(by: 0.9)))
+        // Low neighbouring shops either side of the store. They run 0.1 m further back than the
+        // shop so their back face lies on the facade's front face (z = facadeFront): face-to-face,
+        // never coplanar, so there is no slot and no z-fighting.
+        let neighbourDepth = s.d + 0.1
+        let neighbourZ = s.cz - 0.05
+        p.box("neighbour_left", (x0 - 0.1) / 2, 0, neighbourZ, x0 - 0.1, 3.6, neighbourDepth, .paint(c.accentMint.scaled(by: 0.9)))
+        p.box("neighbour_right", (x1 + 0.1 + lotW) / 2, 0, neighbourZ, lotW - x1 - 0.1, 3.6, neighbourDepth, .paint(c.warmLamp.scaled(by: 0.9)))
         // Opaque shell parts catch clicks so fixtures hidden behind them cannot be picked through them.
         let opaque: Set<String> = ["store_wall_back", "store_wall_left", "store_wall_right", "facade",
                                    "neighbour_left", "neighbour_right", "canopy"]

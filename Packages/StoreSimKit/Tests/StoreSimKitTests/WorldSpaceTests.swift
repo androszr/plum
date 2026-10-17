@@ -210,4 +210,22 @@ import Testing
         }
         #expect(clashes.isEmpty, "\(clashes)")
     }
+
+    @Test func neighboursMeetTheFacadeWithNoGap() {
+        let building = Self.root.node(named: "building")!
+        var holder = SceneNode(name: "building", children: building.children.filter { $0.children.isEmpty })
+        holder.position = .zero
+        let boxes = Self.opaqueBoxes(under: holder, owner: "shell", originX: 0, originZ: 0, yaw: 0)
+        let facade = boxes.first { $0.name == "facade" }!
+        let shop = Self.layout.lot.zones(of: .storeInterior).first!.rect
+        let shopFront = Double(shop.maxZ) * cellSize
+        for name in ["neighbour_left", "neighbour_right"] {
+            let n = boxes.first { $0.name == name }!
+            #expect(abs(n.lo.z - facade.hi.z) < 1e-6, "\(name) leaves a \(n.lo.z - facade.hi.z) m slot before the facade")
+            #expect(min(n.hi.x, facade.hi.x) - max(n.lo.x, facade.lo.x) > 1, "\(name) does not stand in front of the facade")
+            #expect(min(n.hi.y, facade.hi.y) - max(n.lo.y, facade.lo.y) > 1, "\(name) does not share the facade's height band")
+            #expect(abs(n.hi.z - shopFront) < 1e-6, "\(name) front face moved off the shop front")
+            #expect(abs(n.hi.y - 3.6) < 1e-6, "\(name) height changed")
+        }
+    }
 }
