@@ -140,4 +140,29 @@ import Testing
         })
         #expect(colours.count >= 6)
     }
+
+    @Test func windowPosterVariantsDiffer() {
+        let f = Self.fixture(.windowPoster)
+        var tints: [BrandColor] = []
+        var headlines: [String] = []
+        for variant in 0..<3 {
+            let node = WindowPosterBuilder.build(f, detail: .full, variant: variant)
+            if case let .solid(c, _)? = node.node(named: "poster")?.material { tints.append(c) }
+            if case let .text(s)? = node.node(named: "headline_text")?.shape { headlines.append(s) }
+        }
+        #expect(Set(tints).count == 3)
+        #expect(headlines == ModelVariant.posterHeadlines)
+    }
+
+    @Test func gondolaVariantsChangeTheColourMix() {
+        let f = Self.fixture(.gondolaShelf)
+        func colours(_ variant: Int) -> Set<BrandColor> {
+            Set(GondolaShelfBuilder.build(f, detail: .full, variant: variant).descendants.compactMap { n -> BrandColor? in
+                guard n.name.hasPrefix("product_"), case let .solid(c, _) = n.material else { return nil }
+                return c
+            })
+        }
+        #expect(colours(0) != colours(1))
+        #expect(colours(0).count >= 6 && colours(1).count >= 6)
+    }
 }

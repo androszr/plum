@@ -55,6 +55,8 @@ public struct SceneNode: Sendable {
     /// Opaque shell parts take clicks (so they hide what is behind them) without being selectable.
     public var blocksPicking: Bool
     public var children: [SceneNode]
+    /// Derived per-instance version (see `ModelVariant`); never persisted.
+    public var variant: Int
 
     public init(
         name: String,
@@ -69,7 +71,8 @@ public struct SceneNode: Sendable {
         material: SurfaceMaterial = .none,
         bounds: NodeBounds? = nil,
         blocksPicking: Bool = false,
-        children: [SceneNode] = []
+        children: [SceneNode] = [],
+        variant: Int = 0
     ) {
         self.name = name
         self.displayName = displayName
@@ -84,6 +87,7 @@ public struct SceneNode: Sendable {
         self.bounds = bounds
         self.blocksPicking = blocksPicking
         self.children = children
+        self.variant = variant
     }
 
     /// Depth-first, self first.

@@ -4,7 +4,8 @@ public struct SceneComposer {
     public static func compose(layout: StoreLayout, detail: DetailLevel, catalogue: AssetCatalogue) -> SceneNode {
         var fixtureNodes: [SceneNode] = []
         for f in layout.fixtures {
-            let built = FixtureBuilders.builder(for: f.kind).build(f, detail: detail)
+            let variant = ModelVariant.index(of: f, in: layout)
+            let built = FixtureBuilders.builder(for: f.kind).build(f, detail: detail, variant: variant)
             let m = f.occupiedRect.centreMetres
             let ext = f.kind.verticalExtent
             let fp = footprintMetres(f.kind)
@@ -18,6 +19,7 @@ public struct SceneComposer {
                 node = built
                 node.name = f.id
             }
+            node.variant = variant
             node.displayName = f.label ?? f.kind.displayName
             node.selectable = true
             node.position = SIMD3(m.x, 0, m.y)

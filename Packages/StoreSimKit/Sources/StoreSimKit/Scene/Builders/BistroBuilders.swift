@@ -1,7 +1,7 @@
 import Foundation
 
 enum HotFoodCounterBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         // 2.5 m x 1.0 m footprint; the back wall is at z = -0.5.
@@ -56,7 +56,7 @@ enum HotFoodCounterBuilder: FixtureBuilding {
 }
 
 enum CoffeeMachineBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.box("stand", 0, 0, 0, 0.46, 0.4, 0.4, .paint(c.woodLight))
@@ -73,7 +73,7 @@ enum CoffeeMachineBuilder: FixtureBuilding {
 }
 
 enum MenuScreenBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         // Footprint is 0.5 m deep: the bezel's back sits on the back edge (z = -0.25).
@@ -93,7 +93,7 @@ enum MenuScreenBuilder: FixtureBuilding {
 }
 
 enum WindowLedgeBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.box("ledge_top", 0, 0.95, 0, 2.0, 0.05, 0.45, .paint(c.woodLight))
@@ -104,7 +104,7 @@ enum WindowLedgeBuilder: FixtureBuilding {
 }
 
 enum HighStoolBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.cyl("base_disc", 0, 0, 0, 0.18, 0.02, .paint(c.charcoal))

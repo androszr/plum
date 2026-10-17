@@ -2,7 +2,14 @@ import Foundation
 
 public protocol FixtureBuilding {
     /// Returns a group named after the fixture, built around the footprint centre at floor level.
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode
+    /// `variant` is the derived per-instance version (see `ModelVariant`); most kinds ignore it.
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode
+}
+
+public extension FixtureBuilding {
+    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+        build(fixture, detail: detail, variant: 0)
+    }
 }
 
 public enum FixtureBuilders {
@@ -83,8 +90,9 @@ enum ProductRows {
 
     /// One row of facings on one shelf. Reduced detail keeps every second facing.
     static func make(onShelf shelf: Int, y: Double, width: Double, z: Double, detail: DetailLevel,
-                     seed: UInt64, prefix: String = "product", mode: Mode = .mixed) -> [SceneNode] {
-        let palette = colours()
+                     seed: UInt64, prefix: String = "product", mode: Mode = .mixed,
+                     variant: Int = 0) -> [SceneNode] {
+        let palette = ModelVariant.productColours(variant)
         let facings = max(2, Int(width / 0.1))
         let pitch = width / Double(facings)
         var state = seed &+ UInt64(shelf) &* 7919

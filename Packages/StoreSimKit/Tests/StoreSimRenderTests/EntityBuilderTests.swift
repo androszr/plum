@@ -79,4 +79,17 @@ import StoreSimKit
         tag.show(over: bounds, text: "Fridge", cameraYaw: 2)
         #expect(tag.meshBuilds == 2)
     }
+
+    @Test func missingPosterModelFallsBackWithItsVariant() {
+        let cat = AssetCatalogue(modelURLs: [URL(fileURLWithPath: "/nonexistent").appendingPathComponent("window_poster").appendingPathExtension("usdz")])
+        let root = Self.root(catalogue: cat)
+        var tints: [SimpleMaterial.Color] = []
+        for i in 1...3 {
+            let poster = root.findEntity(named: "window_poster_\(i)")?.findEntity(named: "poster") as? ModelEntity
+            #expect(poster != nil)
+            if let m = poster?.model?.materials.first as? SimpleMaterial { tints.append(m.color.tint) }
+        }
+        #expect(tints.count == 3)
+        #expect(Set(tints.map { "\($0)" }).count == 3)
+    }
 }

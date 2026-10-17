@@ -5,7 +5,7 @@ enum Shelving {
     /// A double-sided unit has its back panel on the centre line and mirrors the
     /// shelves, rails and products onto the -z side (names carry `_back`).
     static func parts(_ f: Fixture, width w: Double, depth d: Double, height h: Double,
-                      header: String, detail: DetailLevel, doubleSided: Bool = false) -> Parts {
+                      header: String, detail: DetailLevel, variant: Int = 0, doubleSided: Bool = false) -> Parts {
         let c = Brand.palette
         var p = Parts()
         let seed = ProductRows.seed(f.id)
@@ -31,7 +31,7 @@ enum Shelving {
                 p.box("price_rail\(side.suffix)_\(i)", 0, y - 0.01, railZ, w - 0.08, 0.04, 0.015, .paint(c.priceRailYellow))
                 let rowSeed = side.sign > 0 ? seed : seed ^ 11400714819323198485
                 for n in ProductRows.make(onShelf: i, y: y + 0.03, width: w - 0.14, z: productZ, detail: detail,
-                                          seed: rowSeed, prefix: "product\(side.suffix)") {
+                                          seed: rowSeed, prefix: "product\(side.suffix)", variant: variant) {
                     p.add(n)
                 }
             }
@@ -46,17 +46,17 @@ enum Shelving {
 }
 
 enum GondolaShelfBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         fixtureGroup(fixture, Shelving.parts(fixture, width: 0.9, depth: 0.5, height: 1.5,
-                                              header: fixture.label ?? "Shelf", detail: detail,
+                                              header: fixture.label ?? "Shelf", detail: detail, variant: variant,
                                               doubleSided: true))
     }
 }
 
 enum WallShelfBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         var inner = Shelving.parts(fixture, width: 0.95, depth: 0.3, height: 1.7,
-                                   header: fixture.label ?? "Wall shelf", detail: detail)
+                                   header: fixture.label ?? "Wall shelf", detail: detail, variant: variant)
         inner.box("wall_rail", 0, 1.55, -0.14, 0.95, 0.03, 0.02, .paint(Brand.palette.woodLight))
         // Shift the 0.3 m deep unit to the back edge of its 0.5 m footprint.
         var p = Parts()
@@ -66,7 +66,7 @@ enum WallShelfBuilder: FixtureBuilding {
 }
 
 enum EndCapBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         let w = 0.9, d = 0.4
         var p = Parts()
@@ -77,7 +77,7 @@ enum EndCapBuilder: FixtureBuilding {
             let y = 0.15 + 0.35 * Double(i)
             p.box("shelf_\(i)", 0, y, 0, w - 0.04, 0.03, d - 0.04, .paint(c.tileWhite))
             p.box("price_rail_\(i)", 0, y - 0.01, d / 2 - 0.02, w - 0.04, 0.04, 0.015, .paint(c.priceRailYellow))
-            for n in ProductRows.make(onShelf: i, y: y + 0.03, width: w - 0.12, z: d / 2 - 0.1, detail: detail, seed: seed) {
+            for n in ProductRows.make(onShelf: i, y: y + 0.03, width: w - 0.12, z: d / 2 - 0.1, detail: detail, seed: seed, variant: variant) {
                 p.add(n)
             }
         }

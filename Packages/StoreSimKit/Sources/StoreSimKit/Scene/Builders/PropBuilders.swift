@@ -1,7 +1,7 @@
 import Foundation
 
 enum BasketStackBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.box("stand", 0, 0, 0, 0.4, 0.05, 0.4, .paint(c.charcoal))
@@ -13,7 +13,7 @@ enum BasketStackBuilder: FixtureBuilding {
 }
 
 enum BackRoomDoorBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         // The footprint is 0.5 m deep; the frame's back sits on the wall at z = -0.25.
@@ -26,7 +26,7 @@ enum BackRoomDoorBuilder: FixtureBuilding {
 }
 
 enum PendantLampBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.cyl("cord", 0, 2.6, 0, 0.008, 0.5, .paint(c.charcoal))
@@ -37,7 +37,7 @@ enum PendantLampBuilder: FixtureBuilding {
 }
 
 enum EntranceDoorBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         let glass = SurfaceMaterial.glass(c.skyPastel, opacity: 0.25)
@@ -52,18 +52,19 @@ enum EntranceDoorBuilder: FixtureBuilding {
 }
 
 enum WindowPosterBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
-        let tint = fixture.id.hasSuffix("1") ? c.priceRailYellow : c.accentMint
-        p.box("poster", 0, 0.9, 0.2, 0.8, 1.0, 0.01, .paint(tint))
+        let v = ModelVariant.wrap(variant, count: ModelVariant.posterTints.count)
+        p.box("poster", 0, 0.9, 0.2, 0.8, 1.0, 0.01, .paint(ModelVariant.posterTints[v]))
         p.box("headline_block", 0, 1.45, 0.21, 0.6, 0.2, 0.01, .paint(c.primary))
+        p.text("headline_text", ModelVariant.posterHeadlines[v], 0, 1.45, 0.22, 0.08, .paint(c.cream))
         return fixtureGroup(fixture, p)
     }
 }
 
 enum AtmLockerBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         // 1.5 m x 0.5 m: cash machine on the left, parcel lockers on the right.
@@ -79,7 +80,7 @@ enum AtmLockerBuilder: FixtureBuilding {
 }
 
 enum AFrameSignBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.box("leg_left", -0.17, 0, 0, 0.04, 0.9, 0.3, .paint(c.woodLight))
@@ -91,7 +92,7 @@ enum AFrameSignBuilder: FixtureBuilding {
 }
 
 enum LitterBinBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.cyl("post", 0, 0, 0, 0.03, 0.4, .paint(c.charcoal))
@@ -102,7 +103,7 @@ enum LitterBinBuilder: FixtureBuilding {
 }
 
 enum BikeRackBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.box("base", 0, 0, 0, 1.4, 0.03, 0.12, .paint(c.asphalt))
@@ -118,7 +119,7 @@ enum BikeRackBuilder: FixtureBuilding {
 }
 
 enum StreetLampBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.cyl("post", 0, 0, 0, 0.06, 4.2, .paint(c.charcoal))
@@ -130,7 +131,7 @@ enum StreetLampBuilder: FixtureBuilding {
 }
 
 enum TreeBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         var p = Parts()
         p.cyl("trunk", 0, 0, 0, 0.12, 1.8, .paint(c.woodLight.scaled(by: 0.7)))
@@ -141,7 +142,7 @@ enum TreeBuilder: FixtureBuilding {
 }
 
 enum ParkedCarBuilder: FixtureBuilding {
-    static func build(_ fixture: Fixture, detail: DetailLevel) -> SceneNode {
+    static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
         let c = Brand.palette
         // Colour varies per car, picked from the palette by id.
         let bodies = [c.primaryLight, c.accentMint, c.priceRailYellow, c.cream]

@@ -92,6 +92,18 @@ with a model becomes `.asset(name)` and keeps its procedural tree as a child
 named `fallback`, used when loading throws. `ModelLoader` is the only file that
 loads a model (lint rule g). The brief for the artist is `docs/asset-brief.md`.
 
+**Per-instance variety (2026-10-17, plan `plans/2026-10-17-per-instance-model-variety.md`).**
+`ModelVariant` (pure) derives a variant index for each placed fixture: its ordinal
+among fixtures of the same kind in `layout.fixtures`, wrapped at the kind's variant
+count (3 for posters, shelving and fridges, 1 otherwise). It also holds the poster
+headlines and tints and the seven-colour product window per variant. The index
+travels on `SceneNode.variant`; the stand-in builders take it as `variant:`, and
+`ModelVariants.apply` (in `StoreSimRender`) honours it right after the one
+`Entity.load` in `ModelLoader` (poster texture offset, product recolour). USD
+variant sets were rejected: RealityKit offers no public way to select a variant
+after loading, and one file per variant would break the one-file-per-`AssetName`
+catalogue.
+
 **Camera and roof.** `OrbitCamera` is a pure value: pan, zoom, rotate and tilt
 are clamped, and `roofOpacity` is 1 below 30 degrees of pitch, 0 above 50,
 linear between. `EntityBuilder.applyRoofOpacity` sets the `store_roof`
@@ -156,6 +168,7 @@ coding.
 10. **Metres, Y up, fixture pivot at the bottom centre of its footprint, +Z is
     the fixture's front.** *(asset brief, integration reviewer)*
 11. **Never commit or push** unless explicitly asked.
+13. **Variety is derived, never stored.** `ModelVariant.index(of:in:)` is the only source of a variant index; it lives on `SceneNode.variant` and is applied by `ModelVariants.apply`; no `Codable` type carries it. *(`ModelVariantTests`, `SceneComposerTests`; verifier grep on `Fixture.swift` and `StoreLayout.swift`)*
 
 ## What the tests cannot see
 
