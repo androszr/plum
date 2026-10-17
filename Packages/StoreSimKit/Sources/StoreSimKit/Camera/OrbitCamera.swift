@@ -9,16 +9,31 @@ public struct OrbitCamera: Equatable, Sendable {
     /// Radians above the horizon.
     public var pitch: Double
 
-    public static let minDistance = 4.0
-    public static let maxDistance = 80.0
-    public static let minPitch = 20.0 * .pi / 180
-    public static let maxPitch = 80.0 * .pi / 180
+    /// The clamps this camera obeys; Outside by default.
+    public var limits: CameraLimits
 
-    public init(target: SIMD3<Double>, distance: Double, yaw: Double, pitch: Double) {
+    public static let minDistance = CameraLimits.outside.distance.lowerBound
+    public static let maxDistance = CameraLimits.outside.distance.upperBound
+    public static let minPitch = CameraLimits.outside.pitch.lowerBound
+    public static let maxPitch = CameraLimits.outside.pitch.upperBound
+
+    /// One turn-button step: 45 degrees.
+    public static let rotateStep = Double.pi / 4
+
+    public init(target: SIMD3<Double>, distance: Double, yaw: Double, pitch: Double,
+                limits: CameraLimits = .outside) {
+        self.limits = limits
         self.target = target
-        self.distance = min(max(distance, Self.minDistance), Self.maxDistance)
+        self.distance = min(max(distance, limits.distance.lowerBound), limits.distance.upperBound)
         self.yaw = Self.wrap(yaw)
-        self.pitch = min(max(pitch, Self.minPitch), Self.maxPitch)
+        self.pitch = min(max(pitch, limits.pitch.lowerBound), limits.pitch.upperBound)
+    }
+
+    /// A copy turned by whole 45 degree steps; positive steps turn the view left.
+    public func turned(by steps: Int) -> OrbitCamera {
+        var c = self
+        c.rotate(by: Double(steps) * Self.rotateStep)
+        return c
     }
 
     /// Frames the whole lot from the front-right at an isometric-style angle.
@@ -43,16 +58,18 @@ public struct OrbitCamera: Equatable, Sendable {
         let right = SIMD3(cos(yaw), 0, -sin(yaw))
         let forward = SIMD3(-sin(yaw), 0, -cos(yaw))
         target += right * delta.x + forward * delta.y
+        if let r = limits.targetX { target.x = min(max(target.x, r.lowerBound), r.upperBound) }
+        if let r = limits.targetZ { target.z = min(max(target.z, r.lowerBound), r.upperBound) }
     }
 
     public mutating func zoom(by factor: Double) {
-        distance = min(max(distance * factor, Self.minDistance), Self.maxDistance)
+        distance = min(max(distance * factor, limits.distance.lowerBound), limits.distance.upperBound)
     }
 
     public mutating func rotate(by angle: Double) { yaw = Self.wrap(yaw + angle) }
 
     public mutating func tilt(by angle: Double) {
-        pitch = min(max(pitch + angle, Self.minPitch), Self.maxPitch)
+        pitch = min(max(pitch + angle, limits.pitch.lowerBound), limits.pitch.upperBound)
     }
 
     public var position: SIMD3<Double> {

@@ -18,6 +18,14 @@ struct StoreView: View {
     private var compact: Bool { sizeClass == .compact }
 
     var body: some View {
+        ZStack {
+            scene
+                .ignoresSafeArea()
+            HUDLayer(controller: controller, compact: compact)
+        }
+    }
+
+    private var scene: some View {
         RealityView { content in
             content.camera = .virtual
 
@@ -57,11 +65,6 @@ struct StoreView: View {
         .simultaneousGesture(magnifyGesture)
         .simultaneousGesture(rotateGesture)
         .background(platformInputCatchers)
-        .overlay(alignment: .topLeading) { BrandCard(compact: compact).padding(12) }
-        .overlay(alignment: compact ? .bottom : .topTrailing) {
-            SelectionCard(selection: controller.selection).padding(12)
-        }
-        .ignoresSafeArea()
     }
 
     // MARK: Gestures

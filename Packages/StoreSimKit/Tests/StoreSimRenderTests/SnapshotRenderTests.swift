@@ -68,4 +68,21 @@ let hasGPU = MTLCreateSystemDefaultDevice() != nil
         #expect(s.distinct >= 16)
         #expect(s.centre != s.corner)
     }
+
+    @Test(.enabled(if: hasGPU))
+    func insideViewSnapshot() async throws {
+        let catalogue = AssetCatalogue.empty
+        let lot = StoreLayout.plumCorner.lot
+        let node = SceneComposer.compose(layout: .plumCorner, detail: .full, catalogue: catalogue)
+        let root = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: catalogue))
+        let camera = OrbitCamera.preset(for: .inside, lot: lot)
+        let candidates = EntityBuilder.shellCandidates(in: root)
+        let hidden = InteriorVisibility.hiddenNames(
+            mode: .inside, candidates: Array(candidates.keys), camera: camera, lot: lot)
+        EntityBuilder.applyShellVisibility(hidden: hidden, in: candidates)
+        let image = try await OffscreenRenderer().render(root: root, camera: camera, size: (512, 512))
+        try Self.write(image, name: "inside-512x512.png")
+        #expect(image.width == 512 && image.height == 512)
+        #expect(Self.stats(image).distinct >= 16)
+    }
 }

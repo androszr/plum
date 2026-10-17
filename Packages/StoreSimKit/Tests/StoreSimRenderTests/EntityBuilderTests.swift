@@ -79,4 +79,29 @@ import StoreSimKit
         tag.show(over: bounds, text: "Fridge", cameraYaw: 2)
         #expect(tag.meshBuilds == 2)
     }
+
+    @Test func insideViewDisablesTheRoofAndStorefront() {
+        let root = Self.root()
+        let candidates = EntityBuilder.shellCandidates(in: root)
+        let lot = Self.layout.lot
+        let hidden = InteriorVisibility.hiddenNames(
+            mode: .inside, candidates: Array(candidates.keys), camera: .preset(for: .inside, lot: lot), lot: lot)
+        EntityBuilder.applyShellVisibility(hidden: hidden, in: candidates)
+        for n in ["store_roof", "storefront_glazing", "canopy", "mullion_0"] {
+            #expect(candidates[n]?.isEnabled == false, "\(n)")
+        }
+        #expect(candidates["store_wall_right"]?.isEnabled == true)
+    }
+
+    @Test func switchingBackToOutsideReEnablesEverything() {
+        let root = Self.root()
+        let candidates = EntityBuilder.shellCandidates(in: root)
+        let lot = Self.layout.lot
+        let hidden = InteriorVisibility.hiddenNames(
+            mode: .inside, candidates: Array(candidates.keys), camera: .preset(for: .inside, lot: lot), lot: lot)
+        EntityBuilder.applyShellVisibility(hidden: hidden, in: candidates)
+        EntityBuilder.applyShellVisibility(hidden: [], in: candidates)
+        #expect(!candidates.isEmpty)
+        for (name, e) in candidates { #expect(e.isEnabled, "\(name)") }
+    }
 }

@@ -57,6 +57,11 @@ public struct GridRect: Hashable, Codable, Sendable {
         return out
     }
 
+    /// X extent in metres: the low edge to the high edge.
+    public var xRangeMetres: ClosedRange<Double> { Double(minX) * cellSize ... Double(maxX) * cellSize }
+    /// Z extent in metres: the low edge to the high edge.
+    public var zRangeMetres: ClosedRange<Double> { Double(minZ) * cellSize ... Double(maxZ) * cellSize }
+
     /// Centre in metres, on the ground plane (x, z).
     public var centreMetres: SIMD2<Double> {
         SIMD2(Double(minX + maxX) / 2 * cellSize, Double(minZ + maxZ) / 2 * cellSize)

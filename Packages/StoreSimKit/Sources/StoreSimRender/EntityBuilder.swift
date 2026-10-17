@@ -56,6 +56,29 @@ public enum EntityBuilder {
         root.findEntity(named: "store_roof")?.components.set(OpacityComponent(opacity: Float(camera.roofOpacity)))
     }
 
+    private static let shellNames: Set<String> = [
+        "store_roof", "storefront_glazing", "canopy", "canopy_sign", "canopy_sign_text",
+        "store_wall_back", "store_wall_left", "store_wall_right", "tile_wall", "wood_accent",
+    ]
+
+    /// The building pieces the Inside view may hide, by name.
+    public static func shellCandidates(in root: Entity) -> [String: Entity] {
+        var out: [String: Entity] = [:]
+        guard let building = root.findEntity(named: "building") else { return out }
+        for child in building.children where shellNames.contains(child.name) || child.name.hasPrefix("mullion_") {
+            out[child.name] = child
+        }
+        return out
+    }
+
+    /// Disables the hidden pieces and enables the rest. A disabled wall also stops taking clicks.
+    public static func applyShellVisibility(hidden: Set<String>, in candidates: [String: Entity]) {
+        for (name, entity) in candidates {
+            let on = !hidden.contains(name)
+            if entity.isEnabled != on { entity.isEnabled = on }
+        }
+    }
+
     private static func size3(_ s: SIMD3<Double>) -> SIMD3<Float> { SIMD3<Float>(s) }
 
     private static func baseEntity(for node: SceneNode, loader: ModelLoader) -> Entity {
