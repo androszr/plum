@@ -123,7 +123,8 @@ exists.
 
 **Asset generation.** `Tools/assetgen` (Python, `usd-core` and `Pillow`, pinned
 by hash) builds the twenty-nine assets. `Scripts/models.sh` writes them into
-`App/Resources/Models/`. The catalogue resolves `.usdz` for fixtures and `.png`
+`App/Resources/Models/`. That folder is copied into the app whole, so it holds
+only the generated files; the note for it is `App/Resources/Models.md`. The catalogue resolves `.usdz` for fixtures and `.png`
 for signage; `ModelLoader` is the only file that loads either. Decision
 2026-10-17, plan `plans/2026-10-17-grok-models-from-asset-brief.md`: generate
 from the brief so CI can prove the shipped files match the generator
