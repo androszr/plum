@@ -96,6 +96,39 @@ def _goods(b, names, palette, y, z, width, mode="mixed"):
             _cyl(b, name, x, y, z, min(0.035, pitch * 0.32), 0.15 if i % 3 == 2 else 0.11, color, segments=segments)
 
 
+SHAPES = ("packet", "can", "bottle")
+
+
+def _shape_groups(spec: Spec, stem: str) -> dict[int, list[int]]:
+    """Facing indices per shelf for a shaped product stem (`<stem>_<shelf>_<i>_<shape>`)."""
+    groups: dict[int, set[int]] = {}
+    for name in spec.parts:
+        matched = re.fullmatch(rf"{stem}_(\d+)_(\d+)_packet", name)
+        if matched:
+            groups.setdefault(int(matched.group(1)), set()).add(int(matched.group(2)))
+    return {key: sorted(items) for key, items in groups.items()}
+
+
+def _shaped_goods(b, spec, stem, groups, palette, ys, z, width):
+    """A packet, a can and a bottle at every spot, each at most 48 triangles. The app shows one."""
+    for shelf, y in enumerate(ys):
+        facings = groups.get(shelf, [])
+        if not facings:
+            continue
+        colors = _swatches(b, palette, len(facings))
+        pitch = width / len(facings)
+        radius = min(0.035, pitch * 0.32)
+        for slot, facing in enumerate(facings):
+            x = -width / 2 + pitch * (slot + 0.5)
+            color = colors[slot]
+            base = f"{stem}_{shelf}_{facing}"
+            _box(b, f"{base}_packet", x, y, z, pitch * 0.7, 0.14, 0.06, color)
+            _cyl(b, f"{base}_can", x, y, z, radius, 0.11, color, segments=8)
+            body = primitives.cylinder(radius, 0.13, 8)
+            neck = primitives.transform(primitives.cylinder(radius * 0.4, 0.05, 6), at=(0.0, 0.13, 0.0))
+            b.part(f"{base}_bottle", primitives.merge(body, neck), color=color, at=(x, y, z))
+
+
 def _rails(b, spec, palette, textures, ys, z, width):
     tex = textures.get("price_strip")
     for name, y in zip(_have(spec, "price_rail"), ys):
@@ -124,11 +157,11 @@ def gondola_shelf(b, spec, palette, textures):
     _box(b, "back_panel", 0, 0.1, -0.02, w - 0.12, h - 0.3, 0.02, palette["cream"])
     for i, name in enumerate(_have(spec, "slot_row")):
         _box(b, name, 0, 0.35 + 0.28 * i, -0.005, w - 0.16, 0.012, 0.01, palette["charcoal"])
-    ys = _shelves(b, spec, palette, textures, "shelf", w - 0.12, d * 0.16, d * 0.42, 0.14, h - 0.28)
+    ys = _shelves(b, spec, palette, textures, "shelf", w - 0.12, 0.0, d * 0.8, 0.14, h - 0.28)
     _rails(b, spec, palette, textures, ys, d / 2 - 0.01, w - 0.14)
-    groups = _groups(spec, "product")
-    for i, y in enumerate(ys):
-        _goods(b, groups.get(i, []), palette, y + 0.03, d / 2 - 0.12, w - 0.2)
+    goods_ys = [y + 0.03 for y in ys]
+    _shaped_goods(b, spec, "product", _shape_groups(spec, "product"), palette, goods_ys, 0.3, w - 0.2)
+    _shaped_goods(b, spec, "product_back", _shape_groups(spec, "product_back"), palette, goods_ys, -0.3, w - 0.2)
 
 
 def wall_shelf(b, spec, palette, textures):
@@ -143,9 +176,7 @@ def wall_shelf(b, spec, palette, textures):
     ys = _shelves(b, spec, palette, textures, "shelf", w - 0.1, 0.02, d - 0.08, 0.16, h - 0.28)
     _rails(b, spec, palette, textures, ys, d / 2 - 0.01, w - 0.12)
     _box(b, "wall_rail", 0, h - 0.22, -d / 2 + 0.03, w - 0.04, 0.03, 0.02, palette["woodLight"])
-    groups = _groups(spec, "product")
-    for i, y in enumerate(ys):
-        _goods(b, groups.get(i, []), palette, y + 0.03, d / 2 - 0.08, w - 0.18)
+    _shaped_goods(b, spec, "product", _shape_groups(spec, "product"), palette, [y + 0.03 for y in ys], d / 2 - 0.08, w - 0.18)
 
 
 def end_cap(b, spec, palette, textures):
@@ -155,9 +186,7 @@ def end_cap(b, spec, palette, textures):
     _box(b, "back", 0, 0.1, -d / 2 + 0.02, w - 0.06, h - 0.32, 0.02, palette["cream"])
     ys = _shelves(b, spec, palette, textures, "shelf", w - 0.08, 0.0, d - 0.06, 0.16, h - 0.28)
     _rails(b, spec, palette, textures, ys, d / 2 - 0.01, w - 0.1)
-    groups = _groups(spec, "product")
-    for i, y in enumerate(ys):
-        _goods(b, groups.get(i, []), palette, y + 0.03, d / 2 - 0.08, w - 0.16)
+    _shaped_goods(b, spec, "product", _shape_groups(spec, "product"), palette, [y + 0.03 for y in ys], d / 2 - 0.08, w - 0.16)
 
 
 def wall_fridge(b, spec, palette, textures):

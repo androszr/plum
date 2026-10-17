@@ -58,6 +58,11 @@ public enum ModelVariants {
                 return material
             }
             entity.components.set(model)
+            // A shape-suffixed mesh is one of three at its spot: show the one this variant picks.
+            if let shape = part.shape {
+                entity.isEnabled = shape == ModelVariant.visibleShape(
+                    variant: variant, shelf: part.shelf, facing: part.facing)
+            }
         }
         for child in entity.children { retint(child, variant: variant, stems: stems) }
     }

@@ -174,6 +174,30 @@ def part_names(parts_line: str) -> list[str]:
     return names
 
 
+# The three shelf assets carry a packet, a can and a bottle at every spot; the app shows one.
+SHAPED_ASSETS = ("gondola_shelf", "wall_shelf", "end_cap")
+SHAPES = ("packet", "can", "bottle")
+
+
+def shaped_parts(name: str, parts: list[str]) -> list[str]:
+    """Replace each `product_<shelf>_<i>` of a shelf asset with its three shape meshes.
+
+    The gondola is double-sided, so it also gets a `product_back_<shelf>_<i>` row.
+    """
+    if name not in SHAPED_ASSETS:
+        return parts
+    out: list[str] = []
+    for part in parts:
+        matched = re.fullmatch(r"product_(\d+)_(\d+)", part)
+        if not matched:
+            out.append(part)
+            continue
+        stems = ["product", "product_back"] if name == "gondola_shelf" else ["product"]
+        for stem in stems:
+            out.extend(f"{stem}_{matched.group(1)}_{matched.group(2)}_{shape}" for shape in SHAPES)
+    return out
+
+
 def _palette_names(palette_line: str) -> list[str]:
     return re.findall(r"\b([a-z][A-Za-z0-9]*)\b", palette_line)
 
@@ -241,7 +265,7 @@ def load_brief(path: str) -> Brief:
             pixels=pixels,
             panels=panels,
             poly_budget=budget,
-            parts=part_names(parts_line),
+            parts=shaped_parts(name, part_names(parts_line)),
             format=format_line,
             palette_names=_palette_names(_line_value(body, "Palette:", name)),
             pending=status is not None and "stand-in only" in status,

@@ -101,7 +101,7 @@ enum ProductRows {
         var state = seed &+ UInt64(shelf) &* 7919
         var out: [SceneNode] = []
         for i in 0..<facings {
-            let kindRoll = Int(next(&state) % 3)
+            _ = next(&state)  // keeps the colour and height draws where they were
             let colour = palette[Int(next(&state) % UInt64(palette.count))]
             let tall = 0.05 * Double(next(&state) % 3)
             guard detail.isFull || i % 2 == 0 else { continue }
@@ -120,14 +120,14 @@ enum ProductRows {
                                          position: SIMD3(x, y + 0.16 + tall + 0.025, z), material: m))
                 }
             case .mixed:
-                switch kindRoll {
-                case 0:
+                switch ModelVariant.visibleShape(variant: variant, shelf: shelf, facing: i) {
+                case .packet:
                     out.append(SceneNode(name: name, shape: .box, size: SIMD3(pitch * 0.75, 0.15 + tall, 0.035),
                                          position: SIMD3(x, y + (0.15 + tall) / 2, z), material: m))
-                case 1:
+                case .can:
                     out.append(SceneNode(name: name, shape: .cylinder, size: SIMD3(0.065, 0.11 + tall / 2, 0.065),
                                          position: SIMD3(x, y + (0.11 + tall / 2) / 2, z), material: m))
-                default:
+                case .bottle:
                     out.append(SceneNode(name: name, shape: .cylinder, size: SIMD3(0.06, 0.15 + tall, 0.06),
                                          position: SIMD3(x, y + (0.15 + tall) / 2, z), material: m))
                     if detail.isFull {

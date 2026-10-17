@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import os
+import re
 import sys
 import zipfile
 
@@ -31,6 +32,13 @@ SIGNAGE = {
 def _fronts(name: str) -> list[str]:
     module = importlib.import_module(f"assetgen.assets.{name}")
     return list(module.FRONT_PARTS)
+
+
+# Only these assets carry a packet, a can and a bottle at every spot; the app shows one.
+SHAPED_ASSETS = {"gondola_shelf", "wall_shelf", "end_cap"}
+SHAPE_MESH = re.compile(r"^(product|product_back)_[0-9]+_[0-9]+_(packet|can|bottle)$")
+OLD_PRODUCT_MESH = re.compile(r"^(product|product_back)_[0-9]+_[0-9]+$")
+MAX_SHAPE_TRIANGLES = 48
 
 
 def _fail(asset: str, rule: str) -> None:
@@ -113,9 +121,16 @@ def _check_model(name: str, spec, models: str) -> None:
     for part in spec.parts:
         if part not in meshes:
             _fail(name, f"part {part} is missing")
+    # Every mesh counts, hidden shape meshes included: there is no visibility filter here.
     triangles = sum(_triangles(prim) for prim in meshes.values())
     if spec.poly_budget is not None and triangles > spec.poly_budget:
         _fail(name, f"{triangles} triangles over budget {spec.poly_budget}")
+    if name in SHAPED_ASSETS:
+        for part, prim in meshes.items():
+            if OLD_PRODUCT_MESH.match(part):
+                _fail(name, f"{part} is a single product mesh; use _packet, _can and _bottle meshes")
+            if SHAPE_MESH.match(part) and _triangles(prim) > MAX_SHAPE_TRIANGLES:
+                _fail(name, f"{part} has {_triangles(prim)} triangles, over {MAX_SHAPE_TRIANGLES} per shape mesh")
     for part in _fronts(name):
         if part not in meshes:
             _fail(name, f"front part {part} is missing")

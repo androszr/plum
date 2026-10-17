@@ -73,4 +73,26 @@ import StoreSimKit
         ModelVariants.apply(variant: 1, to: r2, for: .windowPoster)
         #expect(Self.offset(p1[0]) == Self.offset(p2[0]))
     }
+
+    @Test func shapeSiblingIsToggled() {
+        let names = ["product_0_0_packet", "product_0_0_can", "product_0_0_bottle", "upright_left"]
+        let (r0, p0) = Self.tree(names)
+        ModelVariants.apply(variant: 0, to: r0, for: .gondolaShelf)
+        #expect(p0.map(\.isEnabled) == [true, false, false, true])
+        let (r1, p1) = Self.tree(names)
+        ModelVariants.apply(variant: 1, to: r1, for: .gondolaShelf)
+        #expect(p1.map(\.isEnabled) == [false, true, false, true])
+    }
+
+    @Test func unsuffixedProductIsNotToggled() {
+        let (root, parts) = Self.tree(["product_0_0"])
+        ModelVariants.apply(variant: 1, to: root, for: .gondolaShelf)
+        #expect(parts[0].isEnabled)
+    }
+
+    @Test func fridgeBottleIsNotToggled() {
+        let (root, parts) = Self.tree(["bottle_0_0"])
+        ModelVariants.apply(variant: 1, to: root, for: .wallFridge)
+        #expect(parts[0].isEnabled)
+    }
 }

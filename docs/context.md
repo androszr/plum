@@ -111,7 +111,12 @@ travels on `SceneNode.variant`; the stand-in builders take it as `variant:`, and
 `Entity.load` in `ModelLoader` (poster texture offset, product recolour). USD
 variant sets were rejected: RealityKit offers no public way to select a variant
 after loading, and one file per variant would break the one-file-per-`AssetName`
-catalogue.
+catalogue. On the three shelf assets the same index also picks the shape: each spot carries a
+packet, a can and a bottle mesh (`product_<shelf>_<facing>_<shape>`), `ModelVariant.visibleShape`
+chooses one, `ModelVariants.apply` sets `isEnabled` on the three so only that one shows, and the
+code-built stand-in builds only that shape. The two fridges are not shape-switched. Hidden meshes
+count toward the brief's caps (gondola 10000, wall shelf 8500, end cap 5000; each shape mesh at
+most 48 triangles).
 
 **Camera and roof.** `OrbitCamera` is a pure value: pan, zoom, rotate and tilt
 are clamped, and `roofOpacity` is 1 below 30 degrees of pitch, 0 above 50,
@@ -205,7 +210,7 @@ coding.
     table and the name from `Brand.swift`. The written exception is a brief section with
     a `Source:` line (the five sourced street props): the generator skips it and the
     checker proves only presence and budget. *(lint gates d and h)*
-13. **Variety is derived, never stored.** `ModelVariant.index(of:in:)` is the only source of a variant index; it lives on `SceneNode.variant` and is applied by `ModelVariants.apply`; no `Codable` type carries it. *(`ModelVariantTests`, `SceneComposerTests`; verifier grep on `Fixture.swift` and `StoreLayout.swift`)*
+13. **Variety is derived, never stored.** `ModelVariant.index(of:in:)` is the only source of a variant index; it lives on `SceneNode.variant` and is applied by `ModelVariants.apply`; no `Codable` type carries it. `visibleShape` and `isEnabled` are part of that same derived index, not a second source. *(`ModelVariantTests`, `SceneComposerTests`; verifier grep on `Fixture.swift` and `StoreLayout.swift`)*
 
 ## What the tests cannot see
 
