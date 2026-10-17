@@ -5,7 +5,7 @@ import StoreSimKit
 @testable import StoreSimRender
 
 /// One test per asset file, one per fixture model, and one fallback. Swift Testing counts a
-/// parameterised test once, so each case is its own function (32 + 27 + 1, plus the pending-kind check).
+/// parameterised test once, so each case is its own function (34 + 29 + 1, plus the former-pending check).
 @MainActor
 @Suite struct ModelSanityTests {
     private static func catalogue() throws -> AssetCatalogue {
@@ -96,6 +96,8 @@ import StoreSimKit
     @Test func file_parked_car_hatchback() throws { try Self.assertPresent(.parkedCarHatchback) }
     @Test func file_parked_car_saloon() throws { try Self.assertPresent(.parkedCarSaloon) }
     @Test func file_parked_car_van() throws { try Self.assertPresent(.parkedCarVan) }
+    @Test func file_self_checkout() throws { try Self.assertPresent(.selfCheckout) }
+    @Test func file_alcohol_wall() throws { try Self.assertPresent(.alcoholWall) }
     @Test func file_tree_linden() throws { try Self.assertPresent(.treeLinden) }
     @Test func file_tree_maple() throws { try Self.assertPresent(.treeMaple) }
     @Test func file_plum_mark() throws { try Self.assertPresent(.plumMark) }
@@ -129,6 +131,8 @@ import StoreSimKit
     @Test func model_parked_car_hatchback() throws { try Self.assertMatchesBrief(.parkedCarHatchback) }
     @Test func model_parked_car_saloon() throws { try Self.assertMatchesBrief(.parkedCarSaloon) }
     @Test func model_parked_car_van() throws { try Self.assertMatchesBrief(.parkedCarVan) }
+    @Test func model_self_checkout() throws { try Self.assertMatchesBrief(.selfCheckout) }
+    @Test func model_alcohol_wall() throws { try Self.assertMatchesBrief(.alcoholWall) }
     @Test func model_tree_linden() throws { try Self.assertMatchesBrief(.treeLinden) }
     @Test func model_tree_maple() throws { try Self.assertMatchesBrief(.treeMaple) }
 
@@ -147,23 +151,28 @@ import StoreSimKit
         #expect(node.node(named: "upright_left") != nil)
     }
 
-    /// Kinds whose brief section says `Status: stand-in only` ship no file and stay code-built.
-    @Test func pendingKindsShipNoFileAndStayProcedural() throws {
+    /// The two kinds that were once `Status: stand-in only` now ship a model and keep the stand-in as `fallback`.
+    @Test func formerPendingKindsNowLoadTheirModels() throws {
         let specs = try BriefSpec.load()
         let catalogue = try Self.catalogue()
         let root = SceneComposer.compose(layout: .plumCorner, detail: .full, catalogue: catalogue)
-        let cases: [(FixtureKind, AssetName, String)] = [
-            (.selfCheckout, .selfCheckout, "screen_left"), (.alcoholWall, .alcoholWall, "shelf_4"),
-        ]
-        for (kind, name, part) in cases {
-            #expect(specs[name.rawValue]?.pending == true, "\(name.rawValue) is not marked stand-in only")
+        let cases: [(FixtureKind, AssetName)] = [(.selfCheckout, .selfCheckout), (.alcoholWall, .alcoholWall)]
+        for (kind, name) in cases {
+            #expect(specs[name.rawValue]?.pending == false, "\(name.rawValue) is still marked stand-in only")
             let file = try BriefSpec.modelsDirectory().appendingPathComponent(name.rawValue).appendingPathExtension("usdz")
-            #expect(!FileManager.default.fileExists(atPath: file.path), "\(file.lastPathComponent) should not exist")
-            #expect(catalogue.resolve(name) == .procedural)
+            #expect(FileManager.default.fileExists(atPath: file.path), "\(file.lastPathComponent) is missing")
+            guard case .model = catalogue.resolve(name) else {
+                Issue.record("\(name.rawValue) did not resolve to a model")
+                continue
+            }
             let fixture = try #require(StoreLayout.plumCorner.fixtures.first { $0.kind == kind })
             let node = try #require(root.node(named: fixture.id))
-            if case .asset = node.shape { Issue.record("\(name.rawValue) became an asset shape without a file") }
-            #expect(node.node(named: part) != nil, "\(name.rawValue) lacks \(part)")
+            guard case .asset(let assetName) = node.shape else {
+                Issue.record("\(name.rawValue) is not an asset shape")
+                continue
+            }
+            #expect(assetName == name)
+            #expect(node.node(named: "fallback") != nil, "\(name.rawValue) lost its fallback child")
         }
     }
 }

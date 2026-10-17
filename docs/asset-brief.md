@@ -13,7 +13,7 @@ This brief tells an artist, or an AI image-to-3D tool, exactly which models the 
 - Naming: the file name is the asset name below, lower snake case, e.g. `gondola_shelf.usdz`.
 - Level of detail: there is one USDZ per asset. The app drops nothing from a model, so keep the budgets below.
 - Keep the parts listed under each asset as separate named meshes where the tool allows it; the stand-in is built from exactly those parts.
-- A section whose Status line reads "stand-in only" is a kind with no model yet: the generator and the checker skip it and nothing is written for it.
+- A section whose Status line reads "stand-in only" is a kind with no model yet: the generator and the checker skip it and nothing is written for it (no section carries it today).
 - Sourced street props (`parked_car_*`, `tree_*`) are the written exception to the flat-pastel rule and to the named-parts rule: realistic proportions and textured surfaces, colours muted toward the palette, one mesh. A section with a `Source:` line is not generated; `Tools/assetgen` skips it.
 - Parts named `product_<shelf>_<facing>`, `bottle_<shelf>_<facing>` and `carton_<shelf>_<facing>` are recoloured per placed copy by the app and must carry a flat colour, no texture.
 
@@ -555,8 +555,6 @@ Description: A compact dual self-checkout: two upright pedestals on a shared dar
 
 Prompt: Low-poly flat-shaded pastel diorama model of a compact dual self-checkout: two upright pedestals on a shared dark base, each with a mint touch screen, a flat scanner on top, a card terminal and a small wooden bagging shelf, with a yellow beacon light on a thin pole at each side. Size 1.0 x 0.5 x 1.6 metres, pivot at the bottom centre, front facing +Z, at most 3000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #4A4E57, #B9C6B0, #4B4F57, #C9A27E, #E9C46A), no text, no real-world logos. Export as USDZ.
 
-Status: stand-in only — no model file yet; the app draws the code-built stand-in.
-
 ### alcohol_wall
 
 Dimensions: 2.0 x 0.5 x 2.1 m (width x depth x height)
@@ -574,8 +572,6 @@ Parts: base, upright_left, upright_right, back_panel, shelf_0-4, price_rail_0-4,
 Description: A tall open bottle wall for wine and spirits: five white shelves with yellow price rails between two dark uprights, rows of coloured bottles on every shelf and a dark grey header sign. Show bottles by colour only, no labels.
 
 Prompt: Low-poly flat-shaded pastel diorama model of a tall open bottle wall for wine and spirits: five white shelves with yellow price rails between two dark uprights, rows of coloured bottles on every shelf and a dark grey header sign. Show bottles by colour only, no labels. Size 2.0 x 0.5 x 2.1 metres, pivot at the bottom centre, front facing +Z, at most 6000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #FAFAF7, #F4F4F2, #E9C46A, #4A4E57), no text, no real-world logos. Export as USDZ.
-
-Status: stand-in only — no model file yet; the app draws the code-built stand-in.
 
 ### plum_mark
 

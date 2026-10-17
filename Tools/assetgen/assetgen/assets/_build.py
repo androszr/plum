@@ -36,6 +36,8 @@ FRONT = {
     "litter_bin": [],
     "bike_rack": [],
     "street_lamp": [],
+    "self_checkout": ["screen_left", "screen_right", "card_terminal_left", "card_terminal_right"],
+    "alcohol_wall": [f"price_rail_{i}" for i in range(5)] + ["header_sign"],
 }
 
 
@@ -395,6 +397,35 @@ def street_lamp(b, spec, palette, textures):
     _box(b, "glow", 0.26, h - 0.22, 0, 0.2, 0.04, 0.18, palette["warmLamp"], emissive=True)
 
 
+def self_checkout(b, spec, palette, textures):
+    w, d, h = spec.dimensions
+    _box(b, "base", 0, 0, 0, w - 0.05, 0.1, d, palette["charcoal"])
+    for side, x in (("left", -0.2), ("right", 0.2)):
+        _box(b, f"body_{side}", x, 0.1, 0, 0.3, 0.9, 0.4, palette["primary"])
+        _box(b, f"screen_{side}", x, 1.0, d / 2 - 0.03, 0.3, 0.3, 0.02, palette["accentMint"], emissive=True)
+        _box(b, f"scanner_{side}", x, 1.0, 0, 0.24, 0.03, 0.2, palette["asphalt"])
+        _box(b, f"card_terminal_{side}", x, 0.6, d / 2 - 0.05, 0.1, 0.05, 0.1, palette["charcoal"])
+    for side, x in (("left", -0.4), ("right", 0.4)):
+        _box(b, f"bagging_shelf_{side}", x, 0.85, 0, 0.2, 0.03, d - 0.1, palette["woodLight"])
+    for side, x in (("left", -0.2), ("right", 0.2)):
+        _cyl(b, f"light_pole_{side}", x, 1.0, -d / 2 + 0.06, 0.015, 0.5, palette["charcoal"], segments=8)
+        _cyl(b, f"beacon_{side}", x, 1.5, -d / 2 + 0.06, 0.03, 0.1, palette["priceRailYellow"], segments=8, emissive=True)
+
+
+def alcohol_wall(b, spec, palette, textures):
+    w, d, h = spec.dimensions
+    _box(b, "base", 0, 0, 0, w, 0.08, d, palette["charcoal"])
+    _box(b, "header_sign", 0, h - 0.16, 0, w, 0.16, d, palette["primary"])
+    _box(b, "upright_left", -w / 2 + 0.03, 0.08, 0, 0.04, h - 0.24, d - 0.02, palette["charcoal"])
+    _box(b, "upright_right", w / 2 - 0.03, 0.08, 0, 0.04, h - 0.24, d - 0.02, palette["charcoal"])
+    _box(b, "back_panel", 0, 0.1, -d / 2 + 0.02, w - 0.1, h - 0.3, 0.02, palette["cream"])
+    ys = _shelves(b, spec, palette, textures, "shelf", w - 0.1, 0.02, d - 0.08, 0.3, h - 0.3)
+    _rails(b, spec, palette, textures, ys, d / 2 - 0.01, w - 0.12)
+    groups = _groups(spec, "bottle")
+    for i, y in enumerate(ys):
+        _goods(b, groups.get(i, []), palette, y + 0.03, d / 2 - 0.1, w - 0.2, mode="bottle")
+
+
 BUILDERS = {
     "gondola_shelf": gondola_shelf,
     "wall_shelf": wall_shelf,
@@ -418,4 +449,6 @@ BUILDERS = {
     "litter_bin": litter_bin,
     "bike_rack": bike_rack,
     "street_lamp": street_lamp,
+    "self_checkout": self_checkout,
+    "alcohol_wall": alcohol_wall,
 }

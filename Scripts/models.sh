@@ -92,5 +92,5 @@ fi
 [[ -n "$cleanup" ]] && rm -rf "$cleanup"
 
 if [[ ${#only[@]} -eq 0 ]]; then
-  echo "27 assets generated, 22 models checked, 5 sourced"
+  echo "29 assets generated, 24 models checked, 5 sourced"
 fi

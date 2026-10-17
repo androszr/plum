@@ -139,6 +139,8 @@ let maxMeanDifference = 0.12
     @Test(.enabled(if: hasGPU)) func shot_parked_car_hatchback() async throws { try await Self.compare(.parkedCar, variant: 0) }
     @Test(.enabled(if: hasGPU)) func shot_parked_car_saloon() async throws { try await Self.compare(.parkedCar, variant: 1) }
     @Test(.enabled(if: hasGPU)) func shot_parked_car_van() async throws { try await Self.compare(.parkedCar, variant: 2) }
+    @Test(.enabled(if: hasGPU)) func shot_self_checkout() async throws { try await Self.compare(.selfCheckout) }
+    @Test(.enabled(if: hasGPU)) func shot_alcohol_wall() async throws { try await Self.compare(.alcoholWall) }
     @Test(.enabled(if: hasGPU)) func shot_tree_linden() async throws { try await Self.compare(.tree, variant: 0) }
     @Test(.enabled(if: hasGPU)) func shot_tree_maple() async throws { try await Self.compare(.tree, variant: 1) }
 
