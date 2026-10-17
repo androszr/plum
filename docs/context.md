@@ -131,8 +131,8 @@ under `NSTemporaryDirectory()/storesim-snapshots/` and skips only when no GPU
 exists.
 
 **Asset generation.** `Tools/assetgen` (Python, `usd-core` and `Pillow`, pinned
-by hash) builds twenty-seven assets (22 models and 5 pictures); five more models are sourced
-(see below). A brief section marked `Status: stand-in only` (today `self_checkout` and `alcohol_wall`) is skipped by the generator and the checker and ships only its code-built stand-in. `Scripts/models.sh` writes them into
+by hash) builds twenty-nine assets (24 models and 5 pictures); five more models are sourced
+(see below). A brief section marked `Status: stand-in only` (no section carries it today) is skipped by the generator and the checker and ships only its code-built stand-in. `Scripts/models.sh` writes them into
 `App/Resources/Models/`. That folder is copied into the app whole, so it holds
 the generated and the sourced model files and no notes; the note for it is `App/Resources/Models.md`. The catalogue resolves `.usdz` for fixtures and `.png`
 for signage; `ModelLoader` is the only file that loads either. Decision
