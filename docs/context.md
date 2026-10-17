@@ -78,6 +78,13 @@ place RealityKit, CoreGraphics images and Metal appear.
 outside the lot or in the wrong zone, unreachable interior cells and aisles
 narrower than one metre. Ceiling or wall-line kinds (`pendantLamp`, `menuScreen`,
 `windowPoster`, `entranceDoor`) take no floor cells (`FixtureKind.occupiesFloor`).
+The shipped shop follows a researched 51 m2 corner store:
+dairy chillers down the whole left wall around the back-room door; drinks fridges down the right
+wall, with beer in the back-right corner and the hot-food counter, menu screen and tobacco cabinet
+beside the tills; a labelled back wall; one island of five double-sided shelves with an end cap at
+each end and a two-cell clear loop around it, the pendant lamps hung over that loop; two tills
+facing the shop with an alcohol wall directly behind each; and a dual self-checkout, the coffee
+machine and the baskets by the door. `StoreArrangementTests` pins it.
 
 **Fixtures are composed builders.** Every `FixtureKind` has a builder in
 `Scene/Builders/` that assembles many named sub-parts and honours `DetailLevel`
@@ -122,7 +129,7 @@ under `NSTemporaryDirectory()/storesim-snapshots/` and skips only when no GPU
 exists.
 
 **Asset generation.** `Tools/assetgen` (Python, `usd-core` and `Pillow`, pinned
-by hash) builds the twenty-nine assets. `Scripts/models.sh` writes them into
+by hash) builds the twenty-nine assets. A brief section marked `Status: stand-in only` (today `self_checkout` and `alcohol_wall`) is skipped by the generator and the checker and ships only its code-built stand-in. `Scripts/models.sh` writes them into
 `App/Resources/Models/`. That folder is copied into the app whole, so it holds
 only the generated files; the note for it is `App/Resources/Models.md`. The catalogue resolves `.usdz` for fixtures and `.png`
 for signage; `ModelLoader` is the only file that loads either. Decision

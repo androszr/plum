@@ -15,10 +15,10 @@ import Testing
     }
 
     @Test func gondolaRunCountsUp() {
-        #expect(Self.variant("gondola_a1") == 0)
-        #expect(Self.variant("gondola_a2") == 1)
-        #expect(Self.variant("gondola_a3") == 2)
-        #expect(Self.variant("gondola_b1") == 0)
+        #expect(Self.variant("gondola_1") == 0)
+        #expect(Self.variant("gondola_2") == 1)
+        #expect(Self.variant("gondola_3") == 2)
+        #expect(Self.variant("gondola_4") == 0)
     }
 
     @Test func singleVariantKindsAreZero() {

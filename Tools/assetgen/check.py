@@ -154,6 +154,8 @@ def main() -> int:
     for name, spec in brief.specs.items():
         if only and name not in only:
             continue
+        if spec.pending:
+            continue
         if spec.is_signage or name in SIGNAGE:
             _check_signage(name, spec, args.models)
         else:

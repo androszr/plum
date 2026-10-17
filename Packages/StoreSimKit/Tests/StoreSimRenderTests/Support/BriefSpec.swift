@@ -9,6 +9,8 @@ struct BriefSpec: Sendable {
     var polyBudget: Int?
     var parts: [String]
     var format: String
+    /// True when the section says `Status: stand-in only`: no model file yet.
+    var pending = false
 
     var isSignage: Bool { dimensions == nil }
 
@@ -69,6 +71,7 @@ struct BriefSpec: Sendable {
             }
             if unit == "m", budget == nil { throw ParseError("\(name): missing poly budget") }
             let partsLine = try value(chunk, "Parts:", name)
+            let status = try? value(chunk, "Status:", name)
             specs[name] = BriefSpec(
                 name: name,
                 dimensions: dimensions,
@@ -76,7 +79,8 @@ struct BriefSpec: Sendable {
                 panels: panels,
                 polyBudget: budget,
                 parts: partNames(partsLine),
-                format: try value(chunk, "Format:", name))
+                format: try value(chunk, "Format:", name),
+                pending: status?.contains("stand-in only") ?? false)
         }
         return specs
     }

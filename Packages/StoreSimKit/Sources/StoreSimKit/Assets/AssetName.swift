@@ -25,6 +25,8 @@ public enum AssetName: String, CaseIterable, Sendable {
     case streetLamp = "street_lamp"
     case tree = "tree"
     case parkedCar = "parked_car"
+    case selfCheckout = "self_checkout"
+    case alcoholWall = "alcohol_wall"
     case plumMark = "plum_mark"
     case storefrontSign = "storefront_sign"
     case priceStrip = "price_strip"

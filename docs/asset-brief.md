@@ -13,6 +13,7 @@ This brief tells an artist, or an AI image-to-3D tool, exactly which models the 
 - Naming: the file name is the asset name below, lower snake case, e.g. `gondola_shelf.usdz`.
 - Level of detail: there is one USDZ per asset. The app drops nothing from a model, so keep the budgets below.
 - Keep the parts listed under each asset as separate named meshes where the tool allows it; the stand-in is built from exactly those parts.
+- A section whose Status line reads "stand-in only" is a kind with no model yet: the generator and the checker skip it and nothing is written for it.
 - Parts named `product_<shelf>_<facing>`, `bottle_<shelf>_<facing>` and `carton_<shelf>_<facing>` are recoloured per placed copy by the app and must carry a flat colour, no texture.
 
 ## Palette
@@ -470,6 +471,46 @@ Parts: body, cabin, windows (glass), wheel_0-3, headlight_left, headlight_right,
 Description: A small friendly hatchback with rounded body and cabin, glass windows, dark wheels and warm headlights. No manufacturer badges or recognisable real model.
 
 Prompt: Low-poly flat-shaded pastel diorama model of a small friendly hatchback with rounded body and cabin, glass windows, dark wheels and warm headlights. No manufacturer badges or recognisable real model. Size 4.5 x 2.0 x 1.5 metres, pivot at the bottom centre, front facing +Z, at most 6000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#D9D6CF, #B9C6B0, #E9C46A, #FAFAF7, #E6EAEE, #22252B, #FFE2B8, #2E1A47, #4B4F57), no text, no real-world logos. Export as USDZ.
+
+### self_checkout
+
+Dimensions: 1.0 x 0.5 x 1.6 m (width x depth x height)
+
+Pivot: bottom centre of the footprint, front towards +Z
+
+Poly budget: 3000 triangles
+
+Palette: charcoal #22252B, primary #4A4E57, accentMint #B9C6B0, asphalt #4B4F57, woodLight #C9A27E, priceRailYellow #E9C46A
+
+Format: USDZ, embedded textures, one 1024 x 1024 atlas
+
+Parts: base, body_left, body_right, screen_left, screen_right, scanner_left, scanner_right, card_terminal_left, card_terminal_right, bagging_shelf_left, bagging_shelf_right, light_pole_left, light_pole_right, beacon_left, beacon_right
+
+Description: A compact dual self-checkout: two upright pedestals on a shared dark base, each with a mint touch screen, a flat scanner on top, a card terminal and a small wooden bagging shelf, with a yellow beacon light on a thin pole at each side.
+
+Prompt: Low-poly flat-shaded pastel diorama model of a compact dual self-checkout: two upright pedestals on a shared dark base, each with a mint touch screen, a flat scanner on top, a card terminal and a small wooden bagging shelf, with a yellow beacon light on a thin pole at each side. Size 1.0 x 0.5 x 1.6 metres, pivot at the bottom centre, front facing +Z, at most 3000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #4A4E57, #B9C6B0, #4B4F57, #C9A27E, #E9C46A), no text, no real-world logos. Export as USDZ.
+
+Status: stand-in only — no model file yet; the app draws the code-built stand-in.
+
+### alcohol_wall
+
+Dimensions: 2.0 x 0.5 x 2.1 m (width x depth x height)
+
+Pivot: bottom centre of the footprint, front towards +Z
+
+Poly budget: 6000 triangles
+
+Palette: charcoal #22252B, cream #FAFAF7, tileWhite #F4F4F2, priceRailYellow #E9C46A, primary #4A4E57
+
+Format: USDZ, embedded textures, one 1024 x 1024 atlas
+
+Parts: base, upright_left, upright_right, back_panel, shelf_0-4, price_rail_0-4, header_sign, bottle rows on every shelf (at least 40 bottle_<shelf>_<facing>)
+
+Description: A tall open bottle wall for wine and spirits: five white shelves with yellow price rails between two dark uprights, rows of coloured bottles on every shelf and a dark grey header sign. Show bottles by colour only, no labels.
+
+Prompt: Low-poly flat-shaded pastel diorama model of a tall open bottle wall for wine and spirits: five white shelves with yellow price rails between two dark uprights, rows of coloured bottles on every shelf and a dark grey header sign. Show bottles by colour only, no labels. Size 2.0 x 0.5 x 2.1 metres, pivot at the bottom centre, front facing +Z, at most 6000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #FAFAF7, #F4F4F2, #E9C46A, #4A4E57), no text, no real-world logos. Export as USDZ.
+
+Status: stand-in only — no model file yet; the app draws the code-built stand-in.
 
 ### plum_mark
 

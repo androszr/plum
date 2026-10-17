@@ -5,7 +5,7 @@ import StoreSimKit
 @testable import StoreSimRender
 
 /// One test per asset file, one per fixture model, and one fallback. Swift Testing counts a
-/// parameterised test once, so each case is its own function (29 + 24 + 1).
+/// parameterised test once, so each case is its own function (29 + 24 + 1, plus the pending-kind check).
 @MainActor
 @Suite struct ModelSanityTests {
     private static func catalogue() throws -> AssetCatalogue {
@@ -132,5 +132,25 @@ import StoreSimKit
             Issue.record("gondola kept an asset shape without its file")
         }
         #expect(node.node(named: "upright_left") != nil)
+    }
+
+    /// Kinds whose brief section says `Status: stand-in only` ship no file and stay code-built.
+    @Test func pendingKindsShipNoFileAndStayProcedural() throws {
+        let specs = try BriefSpec.load()
+        let catalogue = try Self.catalogue()
+        let root = SceneComposer.compose(layout: .plumCorner, detail: .full, catalogue: catalogue)
+        let cases: [(FixtureKind, AssetName, String)] = [
+            (.selfCheckout, .selfCheckout, "screen_left"), (.alcoholWall, .alcoholWall, "shelf_4"),
+        ]
+        for (kind, name, part) in cases {
+            #expect(specs[name.rawValue]?.pending == true, "\(name.rawValue) is not marked stand-in only")
+            let file = try BriefSpec.modelsDirectory().appendingPathComponent(name.rawValue).appendingPathExtension("usdz")
+            #expect(!FileManager.default.fileExists(atPath: file.path), "\(file.lastPathComponent) should not exist")
+            #expect(catalogue.resolve(name) == .procedural)
+            let fixture = try #require(StoreLayout.plumCorner.fixtures.first { $0.kind == kind })
+            let node = try #require(root.node(named: fixture.id))
+            if case .asset = node.shape { Issue.record("\(name.rawValue) became an asset shape without a file") }
+            #expect(node.node(named: part) != nil, "\(name.rawValue) lacks \(part)")
+        }
     }
 }

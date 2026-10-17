@@ -41,7 +41,7 @@ import StoreSimKit
         // The catalogue says a model exists, but the file is not there: the loader throws.
         let cat = AssetCatalogue(modelURLs: [URL(fileURLWithPath: "/nonexistent").appendingPathComponent("gondola_shelf").appendingPathExtension("usdz")])
         let root = Self.root(catalogue: cat)
-        let g = root.findEntity(named: "gondola_a1")
+        let g = root.findEntity(named: "gondola_1")
         #expect(g != nil)
         #expect(g?.findEntity(named: "upright_left") != nil)
     }

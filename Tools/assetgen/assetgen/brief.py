@@ -25,6 +25,8 @@ class Spec:
     parts: list[str]
     format: str
     palette_names: list[str] = field(default_factory=list)
+    # True when the section says `Status: stand-in only`: no model yet, generator and checker skip it.
+    pending: bool = False
 
     @property
     def is_signage(self) -> bool:
@@ -47,6 +49,13 @@ def _line_value(body: str, label: str, section: str) -> str:
         if line.startswith(label):
             return line.split(":", 1)[1].strip()
     raise ValueError(f"{section}: missing {label} line")
+
+
+def _optional_line_value(body: str, label: str) -> str | None:
+    for line in body.splitlines():
+        if line.startswith(label):
+            return line.split(":", 1)[1].strip()
+    return None
 
 
 def _split_commas(text: str) -> list[str]:
@@ -215,6 +224,7 @@ def load_brief(path: str) -> Brief:
         _line_value(body, "Pivot:", name)
         _line_value(body, "Palette:", name)
         _line_value(body, "Prompt:", name)
+        status = _optional_line_value(body, "Status:")
         specs[name] = Spec(
             name=name,
             dimensions=dimensions,
@@ -224,5 +234,6 @@ def load_brief(path: str) -> Brief:
             parts=part_names(parts_line),
             format=format_line,
             palette_names=_palette_names(_line_value(body, "Palette:", name)),
+            pending=status is not None and "stand-in only" in status,
         )
     return Brief(palette=palette, specs=specs)

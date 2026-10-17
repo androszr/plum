@@ -5,6 +5,7 @@ public enum FixtureKind: String, CaseIterable, Codable, Sendable {
     case cigaretteCabinet, hotFoodCounter, coffeeMachine, menuScreen, windowLedge, highStool
     case basketStack, backRoomDoor, pendantLamp, entranceDoor, windowPoster, atmLocker
     case aFrameSign, litterBin, bikeRack, streetLamp, tree, parkedCar
+    case selfCheckout, alcoholWall
 
     /// Footprint in cells at rotation zero (width along x, depth along z).
     public var footprint: GridSize {
@@ -33,6 +34,8 @@ public enum FixtureKind: String, CaseIterable, Codable, Sendable {
         case .streetLamp: GridSize(w: 1, d: 1)
         case .tree: GridSize(w: 2, d: 2)
         case .parkedCar: GridSize(w: 9, d: 4)
+        case .selfCheckout: GridSize(w: 2, d: 1)
+        case .alcoholWall: GridSize(w: 4, d: 1)
         }
     }
 
@@ -79,6 +82,8 @@ public enum FixtureKind: String, CaseIterable, Codable, Sendable {
         case .streetLamp: "Street lamp"
         case .tree: "Tree"
         case .parkedCar: "Parked car"
+        case .selfCheckout: "Self-checkout"
+        case .alcoholWall: "Alcohol wall"
         }
     }
 
@@ -109,6 +114,8 @@ public enum FixtureKind: String, CaseIterable, Codable, Sendable {
         case .streetLamp: 0...4.5
         case .tree: 0...4.0
         case .parkedCar: 0...1.5
+        case .selfCheckout: 0...1.6
+        case .alcoholWall: 0...2.1
         }
     }
 
@@ -138,6 +145,8 @@ public enum FixtureKind: String, CaseIterable, Codable, Sendable {
         case .streetLamp: .streetLamp
         case .tree: .tree
         case .parkedCar: .parkedCar
+        case .selfCheckout: .selfCheckout
+        case .alcoholWall: .alcoholWall
         }
     }
 }

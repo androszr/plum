@@ -50,7 +50,12 @@ def main() -> int:
     brand = load_brand(args.brand)
     names = list(brief.specs)
     signage_names = [name for name in SIGNAGE_ORDER if name in brief.specs]
-    fixture_names = [name for name in names if name not in set(SIGNAGE_ORDER)]
+    fixture_names = [
+        name for name in names if name not in set(SIGNAGE_ORDER) and not brief.specs[name].pending
+    ]
+    for name in sorted(only or ()):
+        if name in brief.specs and brief.specs[name].pending:
+            raise RuntimeError(f"{name} is stand-in only; nothing to generate")
     if only and not only.issubset(set(names)):
         unknown = sorted(only.difference(names))[0]
         raise RuntimeError(f"unknown --only name {unknown}")

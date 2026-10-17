@@ -71,15 +71,18 @@ import Testing
     @Test func menuScreenSelectionBoxSitsOnItsFixture() {
         let f = Self.layout.fixtures.first { $0.kind == .menuScreen }!
         let node = Self.root.node(named: f.id)!
+        // `extent(of:)` already starts from the node's own position, so `e` is in world space.
         let e = Self.extent(of: node)
-        #expect(e.minZ >= Self.shop.minZ - 0.001)
-        let b = node.bounds!
-        #expect(node.position.z - b.size.z / 2 >= Self.shop.minZ - 0.001)
-        #expect(e.maxZ <= node.position.z + b.size.z / 2 + 0.001)
+        let r = f.occupiedRect
+        #expect(e.minX >= r.xRangeMetres.lowerBound - 0.001 && e.maxX <= r.xRangeMetres.upperBound + 0.001)
+        #expect(e.minZ >= r.zRangeMetres.lowerBound - 0.001 && e.maxZ <= r.zRangeMetres.upperBound + 0.001)
+        // Flush on the right wall it hangs on.
+        let gap = Self.shop.maxX - e.maxX
+        #expect(gap >= -0.001 && gap <= 0.08, "menu screen is \(gap) m off the right wall")
     }
 
     @Test func gondolasAreDoubleSided() {
-        let g = Self.root.node(named: "gondola_a1")!
+        let g = Self.root.node(named: "gondola_1")!
         let names = Set(g.descendants.map(\.name))
         for want in ["shelf_0", "shelf_back_0", "price_rail_0", "price_rail_back_0", "header_text_back"] {
             #expect(names.contains(want), "missing \(want)")
@@ -181,7 +184,7 @@ import Testing
             }
         }
         let wallKinds: Set<FixtureKind> = [.wallShelf, .wallFridge, .dairyChiller, .hotFoodCounter, .menuScreen,
-                                           .backRoomDoor, .cigaretteCabinet]
+                                           .backRoomDoor, .cigaretteCabinet, .alcoholWall]
         let fixtures = Self.root.node(named: "fixtures")!
         for f in Self.layout.fixtures where wallKinds.contains(f.kind) {
             let node = fixtures.children.first { $0.name == f.id }!
