@@ -85,20 +85,21 @@ import Testing
 
     @Test func gondolaHasItsNamedParts() {
         let n = names(.gondolaShelf)
-        for want in ["base", "upright_left", "upright_right", "back_panel", "slot_row_0", "shelf_0", "shelf_3",
-                     "price_rail_0", "price_rail_3", "header_sign"] {
+        for want in ["base", "upright_left", "upright_right", "back_panel", "slot_row_0", "slot_row_back_2",
+                     "header_sign", "header_text", "header_text_back"] {
             #expect(n.contains(want), "missing \(want)")
         }
-        #expect(n.contains { $0.hasPrefix("product_") })
+        // The shelf is a carcass: its shelves, rails and goods are the merchandise layer.
+        #expect(!n.contains { $0.hasPrefix("shelf_") || $0.hasPrefix("price_rail_") || $0.hasPrefix("product_") })
     }
 
     @Test func wallFridgeHasItsNamedParts() {
         let n = names(.wallFridge)
-        for want in ["frame", "door_left", "door_right", "handle_left", "handle_right", "interior_glow", "header",
-                     "shelf_0", "shelf_3", "compressor_vent"] {
+        for want in ["frame", "frame_side_left", "plinth", "door_left", "door_right", "handle_left", "handle_right",
+                     "interior_glow", "header", "compressor_vent"] {
             #expect(n.contains(want), "missing \(want)")
         }
-        #expect(n.filter { $0.hasPrefix("bottle_") }.count >= 12)
+        #expect(!n.contains { $0.hasPrefix("shelf_") || $0.hasPrefix("bottle_") })
     }
 
     @Test func hotFoodCounterHasItsNamedParts() {
@@ -122,7 +123,7 @@ import Testing
     @Test func productRowsAreDeterministicAndDifferByFixture() {
         func rows(_ id: String) -> [String] {
             let f = Fixture(id: id, kind: .gondolaShelf, cell: GridCell(x: 0, z: 0))
-            return GondolaShelfBuilder.build(f, detail: .full).descendants.compactMap { n in
+            return Merchandiser.build(f, detail: .full, variant: 0).descendants.compactMap { n in
                 guard n.name.hasPrefix("product_") else { return nil }
                 if case let .solid(c, _) = n.material { return "\(n.name):\(c.hex):\(n.size.y)" }
                 return nil
@@ -134,7 +135,7 @@ import Testing
 
     @Test func gondolaProductsUseManyColours() {
         let f = Self.fixture(.gondolaShelf)
-        let colours = Set(GondolaShelfBuilder.build(f, detail: .full).descendants.compactMap { n -> BrandColor? in
+        let colours = Set(Merchandiser.build(Self.unlabelled(f), detail: .full, variant: 0).descendants.compactMap { n -> BrandColor? in
             guard n.name.hasPrefix("product_"), case let .solid(c, _) = n.material else { return nil }
             return c
         })
@@ -152,10 +153,15 @@ import Testing
         }
     }
 
+    /// A fixture with no label has no planogram, so it gets the generic rows.
+    static func unlabelled(_ f: Fixture) -> Fixture {
+        Fixture(id: f.id, kind: f.kind, cell: f.cell, rotation: f.rotation, label: nil)
+    }
+
     @Test func gondolaVariantsChangeTheShapes() {
-        let f = Self.fixture(.gondolaShelf)
-        let v0 = GondolaShelfBuilder.build(f, detail: .full, variant: 0)
-        let v1 = GondolaShelfBuilder.build(f, detail: .full, variant: 1)
+        let f = Self.unlabelled(Self.fixture(.gondolaShelf))
+        let v0 = Merchandiser.build(f, detail: .full, variant: 0)
+        let v1 = Merchandiser.build(f, detail: .full, variant: 1)
         #expect(Self.shapeClasses(v0) != Self.shapeClasses(v1))
         let first = v0.node(named: "product_0_0")
         if case .box? = first?.shape {} else { Issue.record("product_0_0 at variant 0 is not a box") }
@@ -187,9 +193,9 @@ import Testing
     }
 
     @Test func gondolaVariantsChangeTheColourMix() {
-        let f = Self.fixture(.gondolaShelf)
+        let f = Self.unlabelled(Self.fixture(.gondolaShelf))
         func colours(_ variant: Int) -> Set<BrandColor> {
-            Set(GondolaShelfBuilder.build(f, detail: .full, variant: variant).descendants.compactMap { n -> BrandColor? in
+            Set(Merchandiser.build(f, detail: .full, variant: variant).descendants.compactMap { n -> BrandColor? in
                 guard n.name.hasPrefix("product_"), case let .solid(c, _) = n.material else { return nil }
                 return c
             })

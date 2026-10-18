@@ -8,15 +8,16 @@ This brief tells an artist, or an AI image-to-3D tool, exactly which models the 
 - The front of the item faces +Z. The grid is half a metre per cell, so footprints are multiples of 0.5 m.
 - Format: USDZ with embedded textures, one 1024 x 1024 atlas per asset at most.
 - Style: flat pastel low-poly diorama, soft rounded edges, no photographic textures and no baked shadows.
-- No baked text except on the signage assets (`plum_mark`, `storefront_sign`, `window_poster_set`, `menu_board_texture`). All text is English.
+- No baked text except on the signage assets (`plum_mark`, `storefront_sign`, `window_poster_set`, `menu_board_texture`, `pack_fronts`). All text is English.
 - No real-world brand, logo or trade dress other than the Plum brand.
 - Naming: the file name is the asset name below, lower snake case, e.g. `gondola_shelf.usdz`.
 - Level of detail: there is one USDZ per asset. The app drops nothing from a model, so keep the budgets below.
 - Keep the parts listed under each asset as separate named meshes where the tool allows it; the stand-in is built from exactly those parts.
 - A section whose Status line reads "stand-in only" is a kind with no model yet: the generator and the checker skip it and nothing is written for it (no section carries it today).
 - Sourced street props (`parked_car_*`, `tree_*`) are the written exception to the flat-pastel rule and to the named-parts rule: realistic proportions and textured surfaces, colours muted toward the palette, one mesh. A section with a `Source:` line is not generated; `Tools/assetgen` skips it.
-- On `gondola_shelf`, `wall_shelf` and `end_cap`, every facing is three meshes named `product_<shelf>_<facing>_<shape>` (and `product_back_<shelf>_<facing>_<shape>` on the gondola) with `<shape>` one of `packet`, `can`, `bottle`; each is at most 48 triangles; the app shows one per facing and hides the other two, and the checker counts every triangle, hidden ones included. `wall_fridge` and `dairy_chiller` keep their single bottle and carton meshes.
-- Parts named `product_<shelf>_<facing>_<shape>` (and `product_back_<shelf>_<facing>_<shape>` on the gondola) on the three shelf assets, `bottle_<shelf>_<facing>` on `wall_fridge` and `carton_<shelf>_<facing>` on `dairy_chiller` are recoloured per placed copy by the app and must carry a flat colour, no texture.
+- On `wall_shelf` and `end_cap`, every facing is three meshes named `product_<shelf>_<facing>_<shape>` with `<shape>` one of `packet`, `can`, `bottle`; each is at most 48 triangles; the app shows one per facing and hides the other two, and the checker counts every triangle, hidden ones included. `dairy_chiller` keeps its single carton meshes.
+- `gondola_shelf` and `wall_fridge` are empty carcasses: no shelves, price rails or goods are modelled. The app draws their shelves and goods itself from the planogram (`Packages/StoreSimKit/Sources/StoreSimKit/Resources/planograms.json`), using the `pack_fronts` picture, so an artist's replacement model must stay empty inside.
+- Parts named `product_<shelf>_<facing>_<shape>` on `wall_shelf` and `end_cap`, and `carton_<shelf>_<facing>` on `dairy_chiller`, are recoloured per placed copy by the app and must carry a flat colour, no texture.
 
 ## Palette
 
@@ -40,25 +41,97 @@ This brief tells an artist, or an AI image-to-3D tool, exactly which models the 
 
 Use only these colours (and light or dark shades of them).
 
+## Packaging palette
+
+The colours of the invented products on the shelves (flavour codes, can metal, glass). They are drawn into `pack_fronts`; no model uses them. `Brand.packaging` in `Brand.swift` holds the same names and values.
+
+| Name | Hex |
+|---|---|
+| paprikaBase | #D8331F |
+| paprikaAccent | #F4B23A |
+| onionBase | #2E8B3C |
+| onionAccent | #E8E36A |
+| saltedBase | #F2C230 |
+| saltedAccent | #1D56A8 |
+| cheeseBase | #F28C1F |
+| cheeseAccent | #7A3A12 |
+| crabBase | #E25A78 |
+| crabAccent | #1E3F8F |
+| bbqBase | #5A2A18 |
+| bbqAccent | #F2A33A |
+| maxBase | #1C1C1E |
+| maxAccent | #5BC84A |
+| maxRAccent | #E8462B |
+| puffOBase | #F07D18 |
+| puffOAccent | #2A65C8 |
+| puffBBase | #2A55B8 |
+| puffBAccent | #F5D02C |
+| milkBase | #7E5AB0 |
+| milkAccent | #F4F1FA |
+| darkBase | #4A2A1A |
+| darkAccent | #D9B27A |
+| nutBase | #C8962E |
+| nutAccent | #5A2E10 |
+| mintBase | #2EA58C |
+| pilsBase | #C9A43A |
+| pilsAccent | #1A2E5A |
+| wheatBase | #E9D9A6 |
+| wheatAccent | #2E4E9A |
+| gumBase | #E8316B |
+| gumAccent | #FFE24A |
+| waferBase | #C9372C |
+| waferAccent | #F2E3C0 |
+| cocoaBase | #3B2416 |
+| cocoaAccent | #E7C77E |
+| oatBase | #C9A76A |
+| oatAccent | #5A3A1A |
+| colaBase | #B5121B |
+| colaAccent | #F2F2F2 |
+| zeroBase | #151515 |
+| zeroAccent | #D6121B |
+| lemonBase | #E8D93A |
+| lemonAccent | #2D8B3A |
+| orangeAccent | #1E5CB0 |
+| voltBase | #1C2A22 |
+| voltAccent | #7BE04A |
+| voltBBase | #1E3A8A |
+| voltBAccent | #C9D6F2 |
+| voltWBase | #E9ECEF |
+| voltWAccent | #1A1A1A |
+| waterBase | #DCEFFA |
+| waterAccent | #1E72C8 |
+| waterGBase | #D9F2E2 |
+| waterGAccent | #2E8B4A |
+| lagerBase | #1E6A3A |
+| dark2Base | #3A1F12 |
+| dark2Accent | #D6A84A |
+| canSilver | #C9CDD2 |
+| canRim | #B8BCC2 |
+| crispWindow | #F2CF6A |
+| puffWindow | #F6A43A |
+| lagerGlass | #2F6B2A |
+| brownGlass | #5A3412 |
+| clearPet | #CFE6F4 |
+
 ## Assets
 
 ### gondola_shelf
 
-Dimensions: 1.0 x 1.0 x 1.75 m (width x depth x height)
+Dimensions: 1.0 x 1.0 x 1.85 m (width x depth x height)
 
 Pivot: bottom centre of the footprint, front towards +Z
 
 Poly budget: 10000 triangles
 
-Palette: charcoal #22252B, primaryDeep #2E1A47, cream #FAFAF7, tileWhite #F4F4F2, priceRailYellow #E9C46A, primary #4A4E57
+Palette: charcoal #22252B, primaryDeep #2E1A47, cream #FAFAF7, primary #4A4E57
 
 Format: USDZ, embedded textures, one 1024 x 1024 atlas
 
-Parts: base, upright_left, upright_right, back_panel, slot_row_0-2, shelf_0-3, price_rail_0-3 (yellow strip on every shelf edge), header_sign with category text, product rows on every shelf (at least 16 facings mixing packets, cans and bottles in at least six colours)
+Parts: base, upright_left, upright_right, back_panel, slot_row_0-2, slot_row_back_0-2, header_sign with category text
 
-Description: A free-standing metal shop shelf, 0.9 m wide, with four shelves, a yellow price strip on each shelf edge and a graphite header sign. Rows of varied packets, cans and bottles sit on every shelf. Every spot on every shelf holds three separate meshes, a packet, a can and a bottle, and the app shows one and hides the other two. Each of those meshes is at most 48 triangles.
+Description: A free-standing double-sided metal shop shelf carcass: a base, two uprights, a central back panel with slot rows on both faces and a graphite header sign. It is empty on purpose. The app places the shelves, yellow price rails and goods from the planogram, so the interior stays free from 0.08 m up to the header underside at 1.71 m.
 
-Prompt: Low-poly flat-shaded pastel diorama model of a free-standing metal shop shelf, 0.9 m wide, with four shelves, a yellow price strip on each shelf edge and a graphite header sign. Rows of varied packets, cans and bottles sit on every shelf. Size 1.0 x 1.0 x 1.75 metres, pivot at the bottom centre, front facing +Z, at most 10000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #2E1A47, #FAFAF7, #F4F4F2, #E9C46A, #4A4E57), no text, no real-world logos. Export as USDZ.
+Prompt: Low-poly flat-shaded pastel diorama model of an empty free-standing double-sided metal shop shelf carcass with two uprights, a central back panel with slot rows on both faces and a graphite header sign, no shelves and no products. Size 1.0 x 1.0 x 1.85 metres, pivot at the bottom centre, front facing +Z, at most 10000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #2E1A47, #FAFAF7, #4A4E57), no text, no real-world logos. Export as USDZ.
 
 ### wall_shelf
 
@@ -108,11 +181,11 @@ Palette: charcoal #22252B, primaryDeep #2E1A47, tileWhite #F4F4F2, skyPastel #E6
 
 Format: USDZ, embedded textures, one 1024 x 1024 atlas
 
-Parts: frame, frame_side_left, frame_side_right, plinth, interior_glow (light panel), shelf_0-3, bottle_<shelf>_<i> (at least 12 bottles behind the glass), door_left, door_right (glass), handle_left, handle_right, header (graphite), compressor_vent
+Parts: frame, frame_side_left, frame_side_right, plinth, interior_glow (light panel), door_left, door_right (glass), handle_left, handle_right, header (graphite), compressor_vent
 
-Description: A tall drinks cooler with two glass doors and long handles. The inside glows white and shows four shelves of bottles; a graphite header sits on top.
+Description: A tall drinks cooler carcass with two glass doors and long handles, built 5 mm inside its 1.0 m footprint on every side so it never touches the wall. The inside glows white and is empty on purpose: the app places the shelves and bottles from the planogram between 0.10 m and the header underside at 2.04 m, behind the doors. A graphite header sits on top.
 
-Prompt: Low-poly flat-shaded pastel diorama model of a tall drinks cooler with two glass doors and long handles. The inside glows white and shows four shelves of bottles; a graphite header sits on top. Size 1.0 x 1.0 x 2.2 metres, pivot at the bottom centre, front facing +Z, at most 7000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #2E1A47, #F4F4F2, #E6EAEE, #FAFAF7, #4A4E57), no text, no real-world logos. Export as USDZ.
+Prompt: Low-poly flat-shaded pastel diorama model of an empty tall drinks cooler carcass with two glass doors and long handles, a white glowing interior and a graphite header on top, no shelves and no bottles. Size 1.0 x 1.0 x 2.2 metres, pivot at the bottom centre, front facing +Z, at most 7000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #2E1A47, #F4F4F2, #E6EAEE, #FAFAF7, #4A4E57), no text, no real-world logos. Export as USDZ.
 
 ### dairy_chiller
 
@@ -663,3 +736,21 @@ Parts: background, six dish tiles, price labels
 Description: The hot-food menu screen image in English: six dishes in pastel tiles with prices, on a deep aubergine background.
 
 Prompt: Flat vector-style artwork, the hot-food menu screen image in English: six dishes in pastel tiles with prices, on a deep aubergine background. Size 2048 x 683 px, palette #2E1A47, #FAFAF7, #B9C6B0, #E9C46A, #D9D6CF, crisp edges, English text only, no real-world logos.
+
+### pack_fronts
+
+Dimensions: 2048 x 2048 px
+
+Pivot: not applicable (flat image), centred
+
+Poly budget: not applicable (texture)
+
+Palette: priceRailYellow #E9C46A, charcoal #22252B, cream #FAFAF7, woodLight #C9A27E, plus every colour of the packaging palette table above
+
+Format: PNG atlas, 16 x 8 cells of 128 x 256 px
+
+Parts: cells, price_labels, promo_bands
+
+Description: One simple front for every product on the shelves, in a grid of 16 x 8 cells in the order of the products in the planogram file. In each cell the top 192 px hold the pack front at its real aspect (bag with crimps and a window, tube with a lid, bar tray, tablet or box with a brand band, biscuit roll, can with rims, bottle with a neck), the next 32 px a cream price label and the last 32 px a yellow promo band, blank when the product has no promo. Brand names are invented English words in plain capitals.
+
+Prompt: Flat vector-style artwork, a grid of 16 x 8 simple shop pack fronts, each 128 x 256 px: a crisp bag, a tube, a bar tray, a chocolate tablet, a biscuit roll, a can or a bottle in flat colours with an invented English brand name in capitals, a cream price label below it and a yellow promo band below that. Size 2048 x 2048 px, palette #E9C46A, #22252B, #FAFAF7, #C9A27E, crisp edges, English text only, no real-world logos.

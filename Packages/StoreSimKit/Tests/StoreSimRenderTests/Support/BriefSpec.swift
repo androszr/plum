@@ -106,11 +106,11 @@ struct BriefSpec: Sendable {
         throw ParseError("\(section): missing \(label)")
     }
 
-    /// The three shelf assets carry a packet, a can and a bottle at every spot (the gondola on
-    /// both sides). Mirrors `shaped_parts` in `Tools/assetgen/assetgen/brief.py`.
+    /// The two wall-side shelf assets carry a packet, a can and a bottle at every spot. The island
+    /// shelf is an empty carcass. Mirrors `shaped_parts` in `Tools/assetgen/assetgen/brief.py`.
     static func shapedParts(_ name: String, _ parts: [String]) -> [String] {
-        guard ["gondola_shelf", "wall_shelf", "end_cap"].contains(name) else { return parts }
-        let stems = name == "gondola_shelf" ? ["product", "product_back"] : ["product"]
+        guard ["wall_shelf", "end_cap"].contains(name) else { return parts }
+        let stems = ["product"]
         var out: [String] = []
         for part in parts {
             guard let match = part.wholeMatch(of: /product_(\d+)_(\d+)/) else {

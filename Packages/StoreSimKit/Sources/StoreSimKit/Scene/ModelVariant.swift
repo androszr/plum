@@ -67,8 +67,9 @@ public enum ModelVariant {
 
     public static func productPartStems(for name: AssetName) -> Set<String> {
         switch name {
-        case .gondolaShelf, .wallShelf, .endCap: ["product", "product_back"]
-        case .wallFridge: ["bottle"]
+        case .wallShelf, .endCap: ["product", "product_back"]
+        // The island shelf and the drinks fridge are empty carcasses; the app draws their goods itself.
+        case .gondolaShelf, .wallFridge: []
         case .dairyChiller: ["carton"]
         default: []
         }

@@ -35,6 +35,7 @@ public enum AssetName: String, CaseIterable, Sendable {
     case priceStrip = "price_strip"
     case windowPosterSet = "window_poster_set"
     case menuBoardTexture = "menu_board_texture"
+    case packFronts = "pack_fronts"
 
     /// Fixture kinds, one model file per kind and variant.
     public static var fixtureNames: Set<AssetName> {
@@ -47,7 +48,7 @@ public enum AssetName: String, CaseIterable, Sendable {
         return names
     }
 
-    /// Pictures: the mark, the canopy, the price strip, the posters, the menu.
+    /// Pictures: the mark, the canopy, the price strip, the posters, the menu, the pack fronts.
     public static var signageNames: Set<AssetName> {
         Set(allCases).subtracting(fixtureNames)
     }

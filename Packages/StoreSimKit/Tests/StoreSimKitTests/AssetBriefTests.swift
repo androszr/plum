@@ -69,6 +69,54 @@ import Testing
     @Test func paletteHexesAppearInTheBrief() throws {
         let text = try Self.brief()
         for c in Brand.palette.all { #expect(text.contains(c.hex), "missing #\(c.hex)") }
+        for c in Brand.packaging.all { #expect(text.contains(c.hex), "missing packaging #\(c.hex)") }
+    }
+
+    /// `name -> HEX` for every `| name | #HEX |` row between two headings.
+    static func table(_ text: String, from start: String, to end: String) throws -> [String: String] {
+        let from = try #require(text.range(of: start), "no \(start) heading")
+        let upTo = try #require(text.range(of: end, range: from.upperBound..<text.endIndex), "no \(end) heading")
+        var out: [String: String] = [:]
+        for line in text[from.upperBound..<upTo.lowerBound].split(separator: "\n") {
+            let cells = line.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
+            guard cells.count == 2, cells[1].hasPrefix("#") else { continue }
+            out[cells[0]] = String(cells[1].dropFirst())
+        }
+        return out
+    }
+
+    @Test func packagingTableMatchesBrand() throws {
+        let text = try Self.brief()
+        let rows = try Self.table(text, from: "## Packaging palette", to: "## Assets")
+        let code = Brand.packaging.byName
+        #expect(rows.count == code.count, "table has \(rows.count) rows, Brand.packaging has \(code.count)")
+        #expect(Set(rows.keys) == Set(code.keys))
+        for (name, hex) in rows { #expect(code[name]?.hex == hex.uppercased(), "\(name) is #\(hex) in the brief") }
+        #expect(code.count >= 58)
+    }
+
+    @Test func packagingNamesNeverShadowThePalette() throws {
+        let text = try Self.brief()
+        let palette = try Self.table(text, from: "## Palette", to: "## Packaging palette")
+        #expect(palette.count == Brand.palette.all.count)
+        #expect(Set(palette.keys).isDisjoint(with: Brand.packaging.byName.keys))
+        #expect(Set(Brand.packaging.all.map(\.hex)).count == Brand.packaging.all.count, "two packaging names share a colour")
+    }
+
+    @Test func everyColourCodeInTheCatalogueNamesAPackagingColour() {
+        let known = Brand.packaging.byName
+        for (code, names) in PlanogramCatalogue.shipped.colourCodes {
+            #expect(known[names.base] != nil && known[names.accent] != nil, "\(code) names an unknown colour")
+        }
+        #expect(PlanogramCatalogue.shipped.colourCodes.count == 32)
+    }
+
+    @Test func packFrontsSectionDescribesTheAtlas() throws {
+        let section = try #require(Self.sections(try Self.brief())["pack_fronts"])
+        #expect(Self.line(section, "Dimensions:")?.hasPrefix("2048 x 2048 px") == true)
+        #expect(Self.line(section, "Format:")?.contains("16 x 8") == true)
+        let atlas = PlanogramCatalogue.shipped.atlas
+        #expect(atlas.pixels == (2048, 2048))
     }
 
     @Test func briefNamesNoCompetitor() throws {

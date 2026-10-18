@@ -12,6 +12,8 @@ missing() {
 [[ -f Packages/StoreSimKit/Sources/StoreSimKit/Assets/AssetName.swift ]] || missing Packages/StoreSimKit/Sources/StoreSimKit/Assets/AssetName.swift
 [[ -f Packages/StoreSimKit/Sources/StoreSimKit/Assets/AssetCatalogue.swift ]] || missing Packages/StoreSimKit/Sources/StoreSimKit/Assets/AssetCatalogue.swift
 [[ -d App/Resources/Models ]] || missing App/Resources/Models
+catalogue="Packages/StoreSimKit/Sources/StoreSimKit/Resources/planograms.json"
+[[ -f "$catalogue" ]] || missing "$catalogue"
 
 check=0
 only=()
@@ -46,10 +48,12 @@ fi
 generate_cmd=(.venv-assetgen/bin/python Tools/assetgen/generate.py
   --brief docs/asset-brief.md
   --brand Packages/StoreSimKit/Sources/StoreSimKit/Brand/Brand.swift
+  --catalogue "$catalogue"
   --out "$target")
 check_cmd=(.venv-assetgen/bin/python Tools/assetgen/check.py
   --brief docs/asset-brief.md
   --models "$target"
+  --catalogue "$catalogue"
   --shipped App/Resources/Models)
 if [[ ${#only[@]} -gt 0 ]]; then
   generate_cmd+=(--only "${only[@]}")
@@ -92,5 +96,5 @@ fi
 [[ -n "$cleanup" ]] && rm -rf "$cleanup"
 
 if [[ ${#only[@]} -eq 0 ]]; then
-  echo "29 assets generated, 24 models checked, 5 sourced"
+  echo "30 assets generated, 24 models checked, 5 sourced"
 fi

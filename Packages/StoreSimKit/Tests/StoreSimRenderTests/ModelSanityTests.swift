@@ -105,6 +105,7 @@ import StoreSimKit
     @Test func file_price_strip() throws { try Self.assertPresent(.priceStrip) }
     @Test func file_window_poster_set() throws { try Self.assertPresent(.windowPosterSet) }
     @Test func file_menu_board_texture() throws { try Self.assertPresent(.menuBoardTexture) }
+    @Test func file_pack_fronts() throws { try Self.assertPresent(.packFronts) }
 
     @Test func model_gondola_shelf() throws { try Self.assertMatchesBrief(.gondolaShelf) }
     @Test func model_wall_shelf() throws { try Self.assertMatchesBrief(.wallShelf) }
@@ -149,8 +150,8 @@ import StoreSimKit
     @Test func shelfModelTogglesShapes() throws {
         let loader = try ModelLoader(catalogue: Self.catalogue())
         for (variant, shown) in [(0, "packet"), (1, "can")] {
-            let root = try loader.load(.gondolaShelf, variant: variant)
-            for stem in ["product_0_0", "product_back_0_0"] {
+            let root = try loader.load(.wallShelf, variant: variant)
+            for stem in ["product_0_0"] {
                 let trio = try ["packet", "can", "bottle"].map { shape in
                     try #require(Self.find(root, "\(stem)_\(shape)"), "missing \(stem)_\(shape)")
                 }
@@ -161,14 +162,27 @@ import StoreSimKit
             }
         }
         // Every shape mesh, shown or hidden, stays within 48 triangles and keeps its indices.
-        let root = try loader.load(.gondolaShelf, variant: 0)
+        let root = try loader.load(.wallShelf, variant: 0)
         var seen = 0
         for entity in Self.allEntities(root) where ["_packet", "_can", "_bottle"].contains(where: entity.name.hasSuffix) {
             let triangles = Self.triangleCount(entity)
             #expect(triangles > 0 && triangles <= 48, "\(entity.name) has \(triangles)")
             seen += 1
         }
-        #expect(seen >= 96)
+        #expect(seen >= 36)
+    }
+
+    /// The island shelf and the drinks fridge ship empty: their shelves and goods are the merchandise layer.
+    @Test func islandShelfAndFridgeModelsAreEmptyCarcasses() throws {
+        let loader = try ModelLoader(catalogue: Self.catalogue())
+        for name in [AssetName.gondolaShelf, .wallFridge] {
+            let root = try loader.load(name, variant: 0)
+            for entity in Self.allEntities(root) {
+                for stem in ["shelf_", "price_rail_", "product_", "bottle_"] {
+                    #expect(!entity.name.hasPrefix(stem), "\(name.rawValue) still models \(entity.name)")
+                }
+            }
+        }
     }
 
     @Test func coolerAndChillerHaveNoShapeSiblings() throws {

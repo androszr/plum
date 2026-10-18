@@ -18,6 +18,9 @@ public struct ModelLoader {
     /// Each file is read from disk once; every caller gets its own deep copy of that entity.
     private static var loaded: [URL: Entity] = [:]
 
+    /// Each picture is read from disk once as well.
+    private static var textures: [URL: TextureResource] = [:]
+
     private func raw(_ name: AssetName) throws -> Entity {
         guard case let .model(url) = catalogue.resolve(name) else { throw ModelLoaderError(name: name) }
         if let cached = Self.loaded[url] { return cached.clone(recursive: true) }
@@ -41,6 +44,9 @@ public struct ModelLoader {
 
     public func texture(_ name: AssetName) throws -> TextureResource {
         guard case let .texture(url) = catalogue.resolve(name) else { throw Error.notInCatalogue(name) }
-        return try TextureResource.load(contentsOf: url)
+        if let cached = Self.textures[url] { return cached }
+        let texture = try TextureResource.load(contentsOf: url)
+        Self.textures[url] = texture
+        return texture
     }
 }

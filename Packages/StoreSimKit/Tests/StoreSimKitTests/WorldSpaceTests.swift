@@ -87,8 +87,9 @@ import Testing
         for want in ["shelf_0", "shelf_back_0", "price_rail_0", "price_rail_back_0", "header_text_back"] {
             #expect(names.contains(want), "missing \(want)")
         }
-        let back = g.descendants.filter { $0.name.hasPrefix("product_back_") && !$0.name.hasSuffix("_neck") }
-        let front = g.descendants.filter { $0.name.hasPrefix("product_") && !$0.name.hasPrefix("product_back_") && !$0.name.hasSuffix("_neck") }
+        func isBody(_ n: SceneNode) -> Bool { !n.name.hasSuffix("_neck") && !n.name.hasSuffix("_front") }
+        let back = g.descendants.filter { $0.name.hasPrefix("product_back_") && isBody($0) }
+        let front = g.descendants.filter { $0.name.hasPrefix("product_") && !$0.name.hasPrefix("product_back_") && isBody($0) }
         #expect(back.count >= 16 && front.count >= 16)
         #expect(back.allSatisfy { $0.position.z < 0 })
         #expect(front.allSatisfy { $0.position.z > 0 })

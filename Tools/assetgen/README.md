@@ -8,7 +8,8 @@
 
 What is read from where:
 
-- Sizes, part names, triangle budgets and colours come from `docs/asset-brief.md` (the palette table and each asset's section).
+- Sizes, part names, triangle budgets and colours come from `docs/asset-brief.md` (the palette tables and each asset's section).
+- The products on the shelves (`pack_fronts.png`) come from `Packages/StoreSimKit/Sources/StoreSimKit/Resources/planograms.json`, passed as `--catalogue`; the app reads the same file.
 - The shop name and tagline come from `Brand.swift`. The canopy picture carries no lettering; the scene draws the name.
 - A section marked `Status: stand-in only` has no model yet: the generator and the checker skip it.
 - Nothing under `Tools/` copies a colour as a hex literal.

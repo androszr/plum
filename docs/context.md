@@ -111,12 +111,33 @@ travels on `SceneNode.variant`; the stand-in builders take it as `variant:`, and
 `Entity.load` in `ModelLoader` (poster texture offset, product recolour). USD
 variant sets were rejected: RealityKit offers no public way to select a variant
 after loading, and one file per variant would break the one-file-per-`AssetName`
-catalogue. On the three shelf assets the same index also picks the shape: each spot carries a
+catalogue. On the wall shelf and the end cap the same index also picks the shape: each spot carries a
 packet, a can and a bottle mesh (`product_<shelf>_<facing>_<shape>`), `ModelVariant.visibleShape`
 chooses one, `ModelVariants.apply` sets `isEnabled` on the three so only that one shows, and the
-code-built stand-in builds only that shape. The two fridges are not shape-switched. Hidden meshes
-count toward the brief's caps (gondola 10000, wall shelf 8500, end cap 5000; each shape mesh at
-most 48 triangles).
+code-built stand-in builds only that shape. Hidden meshes count toward the brief's caps (wall shelf
+8500, end cap 5000; each shape mesh at most 48 triangles). The island shelf and the drinks fridge are
+no longer recoloured or shape-switched: their goods come from the planogram (next paragraph), and
+`ModelVariant.productPartStems` is empty for both. The dairy chiller keeps its single carton meshes.
+
+**Planograms (2026-10-18, plan `plans/2026-10-18-planogram-shelves.md`).** The island shelves and the
+drinks fridges are empty carcasses (`gondola_shelf` 1.0 x 1.0 x 1.85 m, `wall_fridge` 1.0 x 1.0 x 2.2 m,
+centred on the footprint) and their goods are a separate `merchandise` node built by the pure
+`Merchandiser` (`Planogram/`), a sibling of `fallback` under the `.asset` node (or appended to the
+procedural node), so the layer is drawn whether the model loads or not and never twice. One JSON file,
+`Resources/planograms.json` (read through `Bundle.module` by `PlanogramCatalogue` and by the generator),
+holds the pack shapes at real centimetre sizes, the flavour colour codes, about 107 invented products
+(brand, shape, price string, promo, tag) and nine planograms keyed by the fixture's `label` (a label
+with no planogram keeps the generic rows). `ShelfPacker` mirrors the concept page's `packShelf`
+(facings from weights, leftover width to the biggest block, 0.3 cm gaps, slack split to both ends) and
+`ShelfStacker` sets shelf heights from the tallest pack plus 2 cm, sharing the leftover height. Each pack
+is a body plus a front card (`.quad` with `SurfaceMaterial.atlas`) cut from the generated
+`pack_fronts.png` (2048 x 2048, 16 x 8 cells; art, price label and promo band per cell); a gondola's back
+face is the same planogram turned a half turn (`_back` names, yaw pi). `AtlasRegion.v` counts from the
+bottom; `Materials` converts it because RealityKit's `textureCoordinateTransform.offset` counts from the
+top. Packaging colours are `Brand.packaging` (also the brief's `## Packaging palette`). Reduced detail
+keeps every second facing and drops the lane boxes. Bags lean up to 2 degrees, seeded from the fixture id.
+The fill rule: a shelf is 95 percent full or has less room left than its narrowest pack (wide family
+packs cannot fill a shelf more evenly than whole packs allow); `PlanogramTests` pins both.
 
 **Camera and roof.** `OrbitCamera` is a pure value: pan, zoom, rotate and tilt
 are clamped, and `roofOpacity` is 1 below 30 degrees of pitch, 0 above 50,
@@ -136,7 +157,7 @@ under `NSTemporaryDirectory()/storesim-snapshots/` and skips only when no GPU
 exists.
 
 **Asset generation.** `Tools/assetgen` (Python, `usd-core` and `Pillow`, pinned
-by hash) builds twenty-nine assets (24 models and 5 pictures); five more models are sourced
+by hash) builds thirty assets (24 models and 6 pictures); five more models are sourced
 (see below). A brief section marked `Status: stand-in only` (no section carries it today) is skipped by the generator and the checker and ships only its code-built stand-in. `Scripts/models.sh` writes them into
 `App/Resources/Models/`. That folder is copied into the app whole, so it holds
 the generated and the sourced model files and no notes; the note for it is `App/Resources/Models.md`. The catalogue resolves `.usdz` for fixtures and `.png`
@@ -207,7 +228,8 @@ coding.
 12. **Shipped models are generated, except the sourced ones.** `App/Resources/Models/` is never hand-edited;
     `bash Scripts/models.sh --check` in CI proves the committed files equal the
     generator's output. The generator reads colours from the brief's palette
-    table and the name from `Brand.swift`. The written exception is a brief section with
+    tables (`## Palette` and `## Packaging palette`), the name from `Brand.swift` and the products from
+    `Resources/planograms.json`. The written exception is a brief section with
     a `Source:` line (the five sourced street props): the generator skips it and the
     checker proves only presence and budget. *(lint gates d and h)*
 13. **Variety is derived, never stored.** `ModelVariant.index(of:in:)` is the only source of a variant index; it lives on `SceneNode.variant` and is applied by `ModelVariants.apply`; no `Codable` type carries it. `visibleShape` and `isEnabled` are part of that same derived index, not a second source. *(`ModelVariantTests`, `SceneComposerTests`; verifier grep on `Fixture.swift` and `StoreLayout.swift`)*
