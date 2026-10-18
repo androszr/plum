@@ -29,14 +29,9 @@ public enum LayoutValidator {
         }
 
         // Walkability of the store interior.
-        var blocked = Set<GridCell>()
-        for f in solid { blocked.formUnion(f.occupiedRect.cells) }
         var staff = Set<GridCell>()
         for f in solid { staff.formUnion(f.staffCells) }
-        var free = Set<GridCell>()
-        for zone in lot.zones(of: .storeInterior) {
-            for c in zone.rect.cells where !blocked.contains(c) { free.insert(c) }
-        }
+        let free = WalkableFloor.freeInteriorCells(of: layout)
 
         var reached = Set<GridCell>()
         if free.contains(lot.entrance) {

@@ -75,14 +75,16 @@ let hasGPU = MTLCreateSystemDefaultDevice() != nil
         let lot = StoreLayout.plumCorner.lot
         let node = SceneComposer.compose(layout: .plumCorner, detail: .full, catalogue: catalogue)
         let root = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: catalogue))
-        let camera = OrbitCamera.preset(for: .inside, lot: lot)
+        let pose = WalkCamera.preset(lot: lot, floor: WalkableFloor(layout: .plumCorner)).pose
         let candidates = EntityBuilder.shellCandidates(in: root)
         let hidden = InteriorVisibility.hiddenNames(
-            mode: .inside, candidates: Array(candidates.keys), camera: camera, lot: lot)
+            mode: .inside, candidates: Array(candidates.keys), eye: pose.eye, lot: lot)
         EntityBuilder.applyShellVisibility(hidden: hidden, in: candidates)
-        let image = try await OffscreenRenderer().render(root: root, camera: camera, size: (512, 512))
-        try Self.write(image, name: "inside-512x512.png")
+        let image = try await OffscreenRenderer().render(root: root, pose: pose, size: (512, 512))
+        try Self.write(image, name: "inside-walk-512x512.png")
         #expect(image.width == 512 && image.height == 512)
-        #expect(Self.stats(image).distinct >= 16)
+        let s = Self.stats(image)
+        #expect(s.distinct >= 16)
+        #expect(s.centre != s.corner)
     }
 }

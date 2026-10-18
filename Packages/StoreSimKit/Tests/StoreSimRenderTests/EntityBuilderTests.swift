@@ -85,12 +85,14 @@ import StoreSimKit
         let candidates = EntityBuilder.shellCandidates(in: root)
         let lot = Self.layout.lot
         let hidden = InteriorVisibility.hiddenNames(
-            mode: .inside, candidates: Array(candidates.keys), camera: .preset(for: .inside, lot: lot), lot: lot)
+            mode: .inside, candidates: Array(candidates.keys), eye: WalkCamera.preset(lot: lot, floor: WalkableFloor(layout: Self.layout)).pose.eye, lot: lot)
         EntityBuilder.applyShellVisibility(hidden: hidden, in: candidates)
         for n in ["store_roof", "storefront_glazing", "canopy", "mullion_0"] {
             #expect(candidates[n]?.isEnabled == false, "\(n)")
         }
-        #expect(candidates["store_wall_right"]?.isEnabled == true)
+        for wall in ["store_wall_left", "store_wall_right", "store_wall_back"] {
+            #expect(candidates[wall]?.isEnabled == true, "\(wall)")
+        }
     }
 
     @Test func switchingBackToOutsideReEnablesEverything() {
@@ -98,7 +100,7 @@ import StoreSimKit
         let candidates = EntityBuilder.shellCandidates(in: root)
         let lot = Self.layout.lot
         let hidden = InteriorVisibility.hiddenNames(
-            mode: .inside, candidates: Array(candidates.keys), camera: .preset(for: .inside, lot: lot), lot: lot)
+            mode: .inside, candidates: Array(candidates.keys), eye: WalkCamera.preset(lot: lot, floor: WalkableFloor(layout: Self.layout)).pose.eye, lot: lot)
         EntityBuilder.applyShellVisibility(hidden: hidden, in: candidates)
         EntityBuilder.applyShellVisibility(hidden: [], in: candidates)
         #expect(!candidates.isEmpty)

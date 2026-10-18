@@ -139,11 +139,19 @@ keeps every second facing and drops the lane boxes. Bags lean up to 2 degrees, s
 The fill rule: a shelf is 95 percent full or has less room left than its narrowest pack (wide family
 packs cannot fill a shelf more evenly than whole packs allow); `PlanogramTests` pins both.
 
-**Camera and roof.** `OrbitCamera` is a pure value: pan, zoom, rotate and tilt
+**Camera and roof.** Outside is `OrbitCamera`, a pure value: pan, zoom, rotate and tilt
 are clamped, and `roofOpacity` is 1 below 30 degrees of pitch, 0 above 50,
 linear between. `EntityBuilder.applyRoofOpacity` sets the `store_roof`
 `OpacityComponent` on every camera change. The roof carries no collision shape,
-so it never swallows a click.
+so it never swallows a click. Inside is a first-person walk: `WalkCamera` (position, yaw, pitch,
+eye height 1.6 m) over `WalkableFloor`. The floor holds `free`, the free interior cells (the set
+`LayoutValidator` uses), and `walkable`, which is `free` minus the entrance-edge row where the front
+wall and the door stand. Standing is tested with a 0.2 m clearance on the four axes and the four
+diagonals; movement slides along walls, and tap-to-stroll routes by BFS over `walkable`. Entering
+Inside lands just inside the door (within 1.5 m of the entrance, off the entrance row) and faces
+along an aisle, axis-aligned (a multiple of 90 degrees), with the longest open view, at least 3 m. Both cameras reduce to a `CameraPose` (eye + target) that drives the
+camera entity; mode switches glide with `PoseTween`, with the roof, shop front and entrance door hidden
+for the whole glide.
 
 **Name tag.** The floating tag is an in-scene entity (`NameTagEntity`), because
 `RealityView` attachments are not available on macOS or iOS. Tried and not
@@ -179,6 +187,11 @@ arbitrary size and facing.
   sourced from Meshy and fitted in code (`SourcedModelFit` + `ModelFit`), because the
   project has no Blender and `EntityBuilder.align` moves position only; the brief's
   `Source:` line is what the generator, the checker and the tests key off.
+- 2026-10-18, plan `plans/2026-10-18-inside-walk-through-camera.md`: the Inside orbit was replaced by a
+  walk-through because the orbit only clamped its target, never the eye, so the eye sat behind walls and
+  inside fixtures and the walls were hidden after the fact. Tap-to-walk unprojects through the pure
+  camera maths (`WalkCamera.floorPoint`) rather than RealityKit hit positions, so it is testable and
+  needs nothing from the view.
 - XcodeGen over a hand-kept `.xcodeproj` (a pbxproj is opaque and merge-hostile;
   `project.yml` is readable), over Tuist (a Swift manifest toolchain for no gain
   at this size) and over a package-only app (SwiftPM cannot produce an iOS app
@@ -242,6 +255,8 @@ the domain reviewers and the audit skill exist:
 - **How it looks and feels on a real screen.** Colour balance, gesture speed and
   frame rate on a phone are judgements; the snapshot test only proves a real
   picture comes out.
+- **Walking speed and look sensitivity.** Pace, drag sensitivity and the stick's response are feel,
+  judged on a real screen with a real keyboard or touch surface.
 - **The signed, archived app.** CI and local builds are ad-hoc signed.
 - **The Xcode version on the CI runner.** It may lag the local one.
 - **Which way a sourced model faces.** Bounds are symmetric, so a car facing -X passes
@@ -257,7 +272,7 @@ the domain reviewers and the audit skill exist:
 Branches that the architecture above already settles should be answered from
 this file rather than asked.
 
-- Camera: isometric orbit, no first-person.
+- Camera: isometric orbit Outside, first-person walk Inside (plan `plans/2026-10-18-inside-walk-through-camera.md`).
 - Platform: macOS first, iOS present.
 - Style: procedural shapes with a USDZ drop-in.
 - Language: English.

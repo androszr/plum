@@ -14,44 +14,24 @@ import simd
         #expect(OrbitCamera.preset(for: .outside, lot: Self.lot) == .isoPreset)
     }
 
-    @Test func insidePresetSitsAtHeadHeight() {
-        let y = OrbitCamera.preset(for: .inside, lot: Self.lot).position.y
-        #expect(y >= 1.5 && y <= 2.6)
+    static var floor: WalkableFloor { WalkableFloor(layout: .plumCorner) }
+    static var walk: WalkCamera { .preset(lot: lot, floor: floor) }
+
+    @Test func walkPresetEyeIsInsideTheShopAtEyeHeight() {
+        let eye = Self.walk.pose.eye
+        #expect(Self.shop.xRangeMetres.contains(eye.x) && Self.shop.zRangeMetres.contains(eye.z))
+        #expect(eye.y == WalkCamera.eyeHeight)
     }
 
-    @Test func insidePresetTargetIsOnTheShopFloor() {
-        let t = OrbitCamera.preset(for: .inside, lot: Self.lot).target
-        #expect(Self.shop.xRangeMetres.contains(t.x))
-        #expect(Self.shop.zRangeMetres.contains(t.z))
-        #expect(t.y == 1)
+    @Test func walkPresetFacesTheAisles() {
+        let w = Self.walk
+        #expect(Self.floor.clearDistance(from: w.position, heading: w.yaw, limit: 10) >= 3)
     }
 
-    @Test func insidePanIsConfinedToTheShop() {
-        var c = OrbitCamera.preset(for: .inside, lot: Self.lot)
-        let x = Self.shop.xRangeMetres, z = Self.shop.zRangeMetres
-        for delta in [SIMD2(100.0, 100.0), SIMD2(-100.0, -100.0)] {
-            c.pan(by: delta)
-            #expect(c.target.x >= x.lowerBound + 0.5 - 1e-9 && c.target.x <= x.upperBound - 0.5 + 1e-9)
-            #expect(c.target.z >= z.lowerBound + 0.5 - 1e-9 && c.target.z <= z.upperBound - 0.5 + 1e-9)
-        }
-    }
-
-    @Test func insideZoomAndTiltClamp() {
-        var c = OrbitCamera.preset(for: .inside, lot: Self.lot)
-        c.zoom(by: 1000)
-        #expect(c.distance == 9)
-        c.zoom(by: 0.0001)
-        #expect(c.distance == 2.5)
-        c.tilt(by: 5)
-        #expect(abs(c.pitch - 35 * .pi / 180) < 1e-12)
-        c.tilt(by: -5)
-        #expect(abs(c.pitch - 3 * .pi / 180) < 1e-12)
-    }
-
-    @Test func interiorAlwaysHidesRoofAndFront() {
+    @Test func walkPresetHidesRoofAndFrontOnly() {
         let names = Self.candidates
         let hidden = InteriorVisibility.hiddenNames(
-            mode: .inside, candidates: names, camera: .preset(for: .inside, lot: Self.lot), lot: Self.lot)
+            mode: .inside, candidates: names, eye: Self.walk.pose.eye, lot: Self.lot)
         for n in ["store_roof", "storefront_glazing", "canopy", "canopy_sign", "canopy_sign_text"] {
             #expect(hidden.contains(n), "\(n)")
         }
@@ -62,19 +42,20 @@ import simd
                 && !hidden.contains("store_wall_back"))
     }
 
-    @Test func nearWallHidesWhenTheCameraCrossesIt() {
-        let base = OrbitCamera.preset(for: .inside, lot: Self.lot)
-        func hidden(_ turn: Double) -> Set<String> {
-            var c = base
-            c.rotate(by: turn)
-            return InteriorVisibility.interiorHiddenNames(candidates: Self.candidates, camera: c, lot: Self.lot)
+    @Test func interiorAlwaysHidesRoofAndFront() {
+        let hidden = InteriorVisibility.interiorHiddenNames(
+            candidates: Self.candidates, eye: Self.walk.pose.eye, lot: Self.lot)
+        #expect(hidden.contains("store_roof") && hidden.contains("storefront_glazing"))
+    }
+
+    @Test func eyeBeyondAWallStillHidesIt() {
+        let x = Self.shop.xRangeMetres, z = Self.shop.zRangeMetres
+        func hidden(_ eye: SIMD3<Double>) -> Set<String> {
+            InteriorVisibility.interiorHiddenNames(candidates: Self.candidates, eye: eye, lot: Self.lot)
         }
-        let a = hidden(.pi / 2)
-        #expect(a.contains("store_wall_right") && !a.contains("store_wall_left"))
-        let b = hidden(-.pi / 2)
-        #expect(b.contains("store_wall_left") && !b.contains("store_wall_right"))
-        let c = hidden(.pi)
-        #expect(c.isSuperset(of: ["store_wall_back", "tile_wall", "wood_accent"]))
+        #expect(hidden(SIMD3(x.lowerBound - 1, 1.6, 4)).contains("store_wall_left"))
+        #expect(hidden(SIMD3(x.upperBound + 1, 1.6, 4)).contains("store_wall_right"))
+        #expect(hidden(SIMD3(14, 1.6, z.lowerBound - 1)).isSuperset(of: ["store_wall_back", "tile_wall", "wood_accent"]))
     }
 
     @Test func outsideHidesNothing() {

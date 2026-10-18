@@ -14,6 +14,10 @@ public final class OffscreenRenderer {
     public init() {}
 
     public func render(root: Entity, camera: OrbitCamera, size: (Int, Int)) async throws -> CGImage {
+        try await render(root: root, pose: camera.pose, size: size)
+    }
+
+    public func render(root: Entity, pose: CameraPose, size: (Int, Int)) async throws -> CGImage {
         guard let device = MTLCreateSystemDefaultDevice() else { throw OffscreenRenderError(description: "no GPU") }
         let renderer = try RealityRenderer()
         renderer.entities.append(root)
@@ -21,7 +25,7 @@ public final class OffscreenRenderer {
         let cam = PerspectiveCamera()
         cam.camera.fieldOfViewInDegrees = 45
         cam.camera.far = 400
-        cam.look(at: SIMD3<Float>(camera.target), from: SIMD3<Float>(camera.position), relativeTo: nil as Entity?)
+        cam.look(at: SIMD3<Float>(pose.target), from: SIMD3<Float>(pose.eye), relativeTo: nil as Entity?)
         renderer.entities.append(cam)
         renderer.activeCamera = cam
         let sky = Brand.palette.skyPastel

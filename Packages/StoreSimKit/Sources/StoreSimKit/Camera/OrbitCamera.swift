@@ -87,6 +87,8 @@ public struct OrbitCamera: Equatable, Sendable {
         ))
     }
 
+    public var pose: CameraPose { CameraPose(eye: position, target: target) }
+
     /// 1 below 30 degrees of pitch, 0 above 50, linear between.
     public var roofOpacity: Double {
         let deg = pitch * 180 / .pi
