@@ -1,8 +1,9 @@
 import Foundation
 
-/// How a pack is drawn as a solid: a box, a cylinder, or a cylinder with a neck.
+/// How a pack is drawn as a solid: a box, a cylinder, a cylinder with a neck, or (a flat spirits flask)
+/// a box with a neck.
 public enum PackForm: String, Sendable {
-    case box, cylinder, bottle
+    case box, cylinder, bottle, flask
 }
 
 /// A pack shape at its real size, in centimetres.
@@ -42,6 +43,13 @@ public struct PlanogramBlock: Sendable, Equatable {
 
 public struct PlanogramShelf: Sendable, Equatable {
     public var blocks: [PlanogramBlock]
+    /// What the shelf holds ("vodka 0.5", "gum"), for tests and readers of the file. The merchandiser ignores it.
+    public var band: String?
+
+    public init(blocks: [PlanogramBlock], band: String? = nil) {
+        self.blocks = blocks
+        self.band = band
+    }
 }
 
 /// The shelves of one category, listed top to bottom.
@@ -177,8 +185,26 @@ extension PlanogramCatalogue {
         var product: String?
         var weight: Int?
     }
+    /// A shelf is either a bare list of blocks (the older shape) or an object with a `band` and its `blocks`.
+    private struct RawShelf: Decodable {
+        var band: String?
+        var blocks: [RawBlock]
+
+        private enum Keys: String, CodingKey { case band, blocks }
+
+        init(from decoder: Decoder) throws {
+            if let list = try? decoder.singleValueContainer().decode([RawBlock].self) {
+                band = nil
+                blocks = list
+                return
+            }
+            let c = try decoder.container(keyedBy: Keys.self)
+            band = try c.decodeIfPresent(String.self, forKey: .band)
+            blocks = try c.decodeIfPresent([RawBlock].self, forKey: .blocks) ?? []
+        }
+    }
     private struct RawPlanogram: Decodable {
-        var shelves: [[RawBlock]]?
+        var shelves: [RawShelf]?
     }
 
     /// Decodes leniently: a missing key takes its default, a product whose shape or colour is unknown is
@@ -215,11 +241,11 @@ extension PlanogramCatalogue {
         let known = Set(products.map(\.id))
         var planograms: [String: Planogram] = [:]
         for (label, p) in raw.planograms ?? [:] {
-            let shelves = (p.shelves ?? []).map { blocks in
-                PlanogramShelf(blocks: blocks.compactMap { b -> PlanogramBlock? in
+            let shelves = (p.shelves ?? []).map { shelf in
+                PlanogramShelf(blocks: shelf.blocks.compactMap { b -> PlanogramBlock? in
                     guard let id = b.product, known.contains(id) else { return nil }
                     return PlanogramBlock(productID: id, weight: b.weight ?? 1)
-                })
+                }, band: shelf.band)
             }
             planograms[label] = Planogram(label: label, shelves: shelves)
         }

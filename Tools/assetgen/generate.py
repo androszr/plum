@@ -25,7 +25,7 @@ SIGNAGE_ORDER = (
 
 # Fixtures embed these pictures, so a partial run still has to draw them.
 TEXTURE_USERS = {
-    "price_strip": {"wall_shelf", "end_cap", "alcohol_wall"},
+    "price_strip": {"wall_shelf", "end_cap"},
     "window_poster_set": {"window_poster"},
     "menu_board_texture": {"menu_screen"},
     "plum_mark": {"wall_fridge", "dairy_chiller", "a_frame_sign"},

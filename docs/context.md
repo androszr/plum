@@ -83,7 +83,7 @@ dairy chillers down the whole left wall around the back-room door; drinks fridge
 wall, with beer in the back-right corner and the hot-food counter, menu screen and tobacco cabinet
 beside the tills; a labelled back wall; one island of five double-sided shelves with an end cap at
 each end and a two-cell clear loop around it, the pendant lamps hung over that loop; two tills
-facing the shop with a one-cell cashier lane behind them, the alcohol wall across the lane and the tobacco cabinet opening onto its end; and a dual self-checkout, the coffee
+facing the shop with a one-cell cashier lane behind them, the alcohol wall (two bays, one four-metre spirits display) across the lane and the tobacco cabinet opening onto its end; and a dual self-checkout, the coffee
 machine and the baskets by the door. `StoreArrangementTests` pins it.
 
 **Fixtures are composed builders.** Every `FixtureKind` has a builder in
@@ -131,13 +131,31 @@ with no planogram keeps the generic rows). `ShelfPacker` mirrors the concept pag
 (facings from weights, leftover width to the biggest block, 0.3 cm gaps, slack split to both ends) and
 `ShelfStacker` sets shelf heights from the tallest pack plus 2 cm, sharing the leftover height. Each pack
 is a body plus a front card (`.quad` with `SurfaceMaterial.atlas`) cut from the generated
-`pack_fronts.png` (2048 x 2048, 16 x 8 cells; art, price label and promo band per cell); a gondola's back
+`pack_fronts.png` (2048 x 4096, 16 x 16 cells; art, price label and promo band per cell); a gondola's back
 face is the same planogram turned a half turn (`_back` names, yaw pi). `AtlasRegion.v` counts from the
 bottom; `Materials` converts it because RealityKit's `textureCoordinateTransform.offset` counts from the
 top. Packaging colours are `Brand.packaging` (also the brief's `## Packaging palette`). Reduced detail
 keeps every second facing and drops the lane boxes. Bags lean up to 2 degrees, seeded from the fixture id.
 The fill rule: a shelf is 95 percent full or has less room left than its narrowest pack (wide family
 packs cannot fill a shelf more evenly than whole packs allow); `PlanogramTests` pins both.
+
+**Till zone (2026-10-18, plan `plans/2026-10-18-planogram-till-zone.md`).** The same planogram machinery stocks the
+till end, in `Planogram/TillZone.swift`. The two alcohol walls are one display of two bays: both carry the label
+"Vodka & whisky" and the planogram of that name (seven shelves, each with a `band`: vodka 0.2, 0.5, 0.7, flavoured
+vodka, whisky premium, whisky, rum gin liqueur), `ModelVariant.count(for: .alcoholWall)` is 2 and the derived variant
+index is the bay (the model file count stays 1). Shelf heights come from the whole planogram so they line up; each
+shelf's blocks are split into contiguous runs per bay (`PlanogramShelf.bayBlocks`). The wall model is a thin empty
+frame (2.0 x 0.2 x 2.6, one bottle deep, `verticalExtent` 0...2.6); shelves, rails, bottles and labels are the
+merchandise layer. The tobacco cabinet is a front, not a planogram: solid doors, a cream price board on each, and
+six plain text lines (two at reduced detail) written by the app; no packs, as Polish law requires. Each till gets a
+stepped three-tier "Till impulse" rack (bars at the back, mints, gum at the front) from the same planogram file;
+the card terminal and belt moved aside, and the model carries no sweets. `atlas.rows` is 16 and new products are
+appended, so no earlier atlas cell moved. Counter trays are 4.5 cm tall and 8 cm deep and the tiers step 6 cm,
+so every tier's price rail and labels stand clear above the trays in front and the rack top stays under the
+1.2 m till extent (the bar tray art is one field of the product colour with a small name band, so the four
+bar brands read apart). The tobacco price boards are 0.50 m wide and the cabinet is 0.45 m deep, which moved the
+lottery screen and scratch-card rack forward (stand-in and model agree). A planogram shelf is a bare block list or `{band, blocks}`; the `flask`
+pack form is a box with a neck.
 
 **Street traffic (2026-10-18, plan `plans/2026-10-18-street-traffic.md`).** Cars drive past and
 people walk the pavements while the app is open. It is derived, not stored: `Traffic` (pure, in
@@ -148,7 +166,15 @@ on one clears the selection rather than picking what stands behind it) under a `
 in `SceneNode.mover`. `TrafficDriver` and `TrafficSystem` (in `StoreSimRender`) are the only per-frame
 code: a RealityKit `System` adds the frame time to each `MoverComponent` and sets its transform, and
 `startWalkCycles` starts each walker's built-in animation at its own `walkCyclePhase`, so the street
-does not march in step. Rules: two car lanes in the street zone,
+does not march in step. Timing is a timetable, not a loop: time is cut into slots per lane (each long
+enough for the slowest crossing), and a seeded hash of the lane id and the slot decides whether anyone
+crosses, at what speed (cars 3.5–6 m/s, walkers 1.1–1.6 m/s), when, and whether a second follows at
+the same speed; so arrivals are irregular, sometimes paired, and a lane never holds two movers that
+could meet. A mover fades in and out over the last metres inside the lot edge (`visibility`, an
+`OpacityComponent`) and waits off the lot shrunk to `TrafficDriver.hiddenScale`, never disabled,
+because a disabled entity's walk clip stops. The walk clip walks in place at 1.45 m/s
+(`Traffic.walkClipSpeed`, measured from the planted foot), so each walker plays it at
+`walkCycleRate(at:)` = its speed / 1.45 and the feet do not slide. Rules: two car lanes in the street zone,
 the near one driving -X and the far one +X (right-hand traffic, front of a car is +X); a walker uses
 `Traffic.walkingLines`: the clear bands between the fixture bodies on a pavement (from
 `solidMetres`; a bin, lamp or tree blocks only its body). The two widest bands get a line down their
@@ -158,6 +184,14 @@ the parked cars' three models, continuing their variant count, so it is not repa
 `pedestrian_a|b|c.usdz` (Meshy, rigged with the walk cycle) in `App/Resources/Characters/`.
 
 **Camera and roof.** Outside is `OrbitCamera`, a pure value: pan, zoom, rotate and tilt
+are clamped. Moving it is drag and drop: `drag(from:to:viewSize:)` keeps the ground point under the
+pointer under it (a ray onto the ground plane, capped at half the distance per event), and two fingers
+on a Mac trackpad do the same from the middle of the view, in the system's scroll direction; pinch and a
+mouse wheel zoom, Option-drag orbits. Inside is kept simple: looking and walking are separate. Two fingers on
+the trackpad look around (sideways turns, up and down tilts within `WalkCamera.tiltLimit`), a drag turns,
+both exactly as far as the hand moves with the shop following it as Outside; W, A, S, D and the arrows walk
+and sidestep (the iPhone stick the same), and a tap on the floor strolls there. The trackpad never walks,
+and the view starts level with a slight look down (`viewPitch`). Pan, zoom, rotate and tilt
 are clamped, and `roofOpacity` is 1 below 30 degrees of pitch, 0 above 50,
 linear between. `EntityBuilder.applyRoofOpacity` sets the `store_roof`
 `OpacityComponent` on every camera change. The roof carries no collision shape,

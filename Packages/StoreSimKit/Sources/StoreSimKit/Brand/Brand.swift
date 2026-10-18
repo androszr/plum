@@ -101,6 +101,39 @@ public struct PackagingPalette: Sendable {
     public var lagerGlass: BrandColor
     public var brownGlass: BrandColor
     public var clearPet: BrandColor
+    public var frostClearBase: BrandColor
+    public var frostClearAccent: BrandColor
+    public var birchBase: BrandColor
+    public var birchAccent: BrandColor
+    public var northBlueBase: BrandColor
+    public var ryeRedBase: BrandColor
+    public var amberFieldBase: BrandColor
+    public var amberFieldAccent: BrandColor
+    public var pineBase: BrandColor
+    public var pineAccent: BrandColor
+    public var cherryBase: BrandColor
+    public var cherryAccent: BrandColor
+    public var quinceBase: BrandColor
+    public var currantBase: BrandColor
+    public var amberBase: BrandColor
+    public var ginBlueBase: BrandColor
+    public var herbalBase: BrandColor
+    public var cherryLiqBase: BrandColor
+    public var amberGreenBase: BrandColor
+    public var amberGreenAccent: BrandColor
+    public var bourbonBase: BrandColor
+    public var blackGoldAccent: BrandColor
+    public var amberDeepBase: BrandColor
+    public var navyGoldBase: BrandColor
+    public var oakGoldBase: BrandColor
+    public var oakGoldAccent: BrandColor
+    public var rumDarkBase: BrandColor
+    public var rumGoldBase: BrandColor
+    public var creamLiqBase: BrandColor
+    public var coffeeLiqBase: BrandColor
+    public var gumGreenBase: BrandColor
+    public var mintBlueBase: BrandColor
+    public var caramelBase: BrandColor
 
     /// Every colour, in declaration order (used by the asset brief test).
     public var all: [BrandColor] {
@@ -169,7 +202,40 @@ public struct PackagingPalette: Sendable {
             puffWindow,
             lagerGlass,
             brownGlass,
-            clearPet
+            clearPet,
+            frostClearBase,
+            frostClearAccent,
+            birchBase,
+            birchAccent,
+            northBlueBase,
+            ryeRedBase,
+            amberFieldBase,
+            amberFieldAccent,
+            pineBase,
+            pineAccent,
+            cherryBase,
+            cherryAccent,
+            quinceBase,
+            currantBase,
+            amberBase,
+            ginBlueBase,
+            herbalBase,
+            cherryLiqBase,
+            amberGreenBase,
+            amberGreenAccent,
+            bourbonBase,
+            blackGoldAccent,
+            amberDeepBase,
+            navyGoldBase,
+            oakGoldBase,
+            oakGoldAccent,
+            rumDarkBase,
+            rumGoldBase,
+            creamLiqBase,
+            coffeeLiqBase,
+            gumGreenBase,
+            mintBlueBase,
+            caramelBase
         ]
     }
 
@@ -239,7 +305,40 @@ public struct PackagingPalette: Sendable {
         "puffWindow",
         "lagerGlass",
         "brownGlass",
-        "clearPet"
+        "clearPet",
+        "frostClearBase",
+        "frostClearAccent",
+        "birchBase",
+        "birchAccent",
+        "northBlueBase",
+        "ryeRedBase",
+        "amberFieldBase",
+        "amberFieldAccent",
+        "pineBase",
+        "pineAccent",
+        "cherryBase",
+        "cherryAccent",
+        "quinceBase",
+        "currantBase",
+        "amberBase",
+        "ginBlueBase",
+        "herbalBase",
+        "cherryLiqBase",
+        "amberGreenBase",
+        "amberGreenAccent",
+        "bourbonBase",
+        "blackGoldAccent",
+        "amberDeepBase",
+        "navyGoldBase",
+        "oakGoldBase",
+        "oakGoldAccent",
+        "rumDarkBase",
+        "rumGoldBase",
+        "creamLiqBase",
+        "coffeeLiqBase",
+        "gumGreenBase",
+        "mintBlueBase",
+        "caramelBase"
     ]
 
     public var byName: [String: BrandColor] {
@@ -335,7 +434,40 @@ public enum Brand {
         puffWindow: BrandColor(rgb: 0xF6A43A),
         lagerGlass: BrandColor(rgb: 0x2F6B2A),
         brownGlass: BrandColor(rgb: 0x5A3412),
-        clearPet: BrandColor(rgb: 0xCFE6F4)
+        clearPet: BrandColor(rgb: 0xCFE6F4),
+        frostClearBase: BrandColor(rgb: 0xE4EEF3),
+        frostClearAccent: BrandColor(rgb: 0x1B2A49),
+        birchBase: BrandColor(rgb: 0xEEF4F1),
+        birchAccent: BrandColor(rgb: 0x2F6B4F),
+        northBlueBase: BrandColor(rgb: 0xDCE6F5),
+        ryeRedBase: BrandColor(rgb: 0xF2ECE6),
+        amberFieldBase: BrandColor(rgb: 0xF3EBD9),
+        amberFieldAccent: BrandColor(rgb: 0x8A5A1A),
+        pineBase: BrandColor(rgb: 0xE8F1EC),
+        pineAccent: BrandColor(rgb: 0x1D4D3A),
+        cherryBase: BrandColor(rgb: 0xA3122E),
+        cherryAccent: BrandColor(rgb: 0xF7E1C3),
+        quinceBase: BrandColor(rgb: 0xE8B24A),
+        currantBase: BrandColor(rgb: 0x4B1F5E),
+        amberBase: BrandColor(rgb: 0xC2772A),
+        ginBlueBase: BrandColor(rgb: 0xDCE6EA),
+        herbalBase: BrandColor(rgb: 0x3A4A2A),
+        cherryLiqBase: BrandColor(rgb: 0x7A1026),
+        amberGreenBase: BrandColor(rgb: 0xB86B22),
+        amberGreenAccent: BrandColor(rgb: 0x2E5E3A),
+        bourbonBase: BrandColor(rgb: 0xA85A1E),
+        blackGoldAccent: BrandColor(rgb: 0xD4AF37),
+        amberDeepBase: BrandColor(rgb: 0x8A4B1C),
+        navyGoldBase: BrandColor(rgb: 0x1E2A44),
+        oakGoldBase: BrandColor(rgb: 0x6B3A1A),
+        oakGoldAccent: BrandColor(rgb: 0xE8C170),
+        rumDarkBase: BrandColor(rgb: 0x4A2410),
+        rumGoldBase: BrandColor(rgb: 0xB8732A),
+        creamLiqBase: BrandColor(rgb: 0xEFE3CF),
+        coffeeLiqBase: BrandColor(rgb: 0x2E1A12),
+        gumGreenBase: BrandColor(rgb: 0x1F9D6B),
+        mintBlueBase: BrandColor(rgb: 0x5BB8E8),
+        caramelBase: BrandColor(rgb: 0xD98E2B)
     )
 
     public static let mark = PlumMark(

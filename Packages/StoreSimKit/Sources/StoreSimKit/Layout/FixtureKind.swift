@@ -126,7 +126,7 @@ public enum FixtureKind: String, CaseIterable, Codable, Sendable {
         case .tree: 0...4.0
         case .parkedCar: 0...1.5
         case .selfCheckout: 0...1.6
-        case .alcoholWall: 0...2.1
+        case .alcoholWall: 0...2.6
         }
     }
 

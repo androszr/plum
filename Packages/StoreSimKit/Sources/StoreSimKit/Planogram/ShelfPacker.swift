@@ -98,6 +98,18 @@ public enum ShelfPacker {
     }
 }
 
+extension PlanogramShelf {
+    /// The contiguous run of blocks bay `bay` of `bays` shows: the blocks are split by count, and the first
+    /// runs take the remainder, so no block is cut by the gap between two units.
+    public func bayBlocks(bay: Int, of bays: Int) -> [PlanogramBlock] {
+        guard bays > 0, bay >= 0, bay < bays else { return [] }
+        let base = blocks.count / bays, extra = blocks.count % bays
+        let start = bay * base + min(bay, extra)
+        let length = base + (bay < extra ? 1 : 0)
+        return Array(blocks[start..<(start + length)])
+    }
+}
+
 /// The vertical room a planogram has to fit in, in metres.
 public struct ShelfInterior: Sendable, Equatable {
     public var deck: Double

@@ -108,15 +108,15 @@ import Testing
         for (code, names) in PlanogramCatalogue.shipped.colourCodes {
             #expect(known[names.base] != nil && known[names.accent] != nil, "\(code) names an unknown colour")
         }
-        #expect(PlanogramCatalogue.shipped.colourCodes.count == 32)
+        #expect(PlanogramCatalogue.shipped.colourCodes.count == 64)
     }
 
     @Test func packFrontsSectionDescribesTheAtlas() throws {
         let section = try #require(Self.sections(try Self.brief())["pack_fronts"])
-        #expect(Self.line(section, "Dimensions:")?.hasPrefix("2048 x 2048 px") == true)
-        #expect(Self.line(section, "Format:")?.contains("16 x 8") == true)
+        #expect(Self.line(section, "Dimensions:")?.hasPrefix("2048 x 4096 px") == true)
+        #expect(Self.line(section, "Format:")?.contains("16 x 16") == true)
         let atlas = PlanogramCatalogue.shipped.atlas
-        #expect(atlas.pixels == (2048, 2048))
+        #expect(atlas.pixels == (2048, 4096))
     }
 
     @Test func briefNamesNoCompetitor() throws {

@@ -8,6 +8,8 @@ public enum ModelVariant {
         switch kind {
         case .windowPoster, .gondolaShelf, .wallShelf, .endCap, .wallFridge, .dairyChiller, .parkedCar: 3
         case .tree: 2
+        // The spirits wall is two bays side by side; the variant index is the bay (derived, never stored).
+        case .alcoholWall: 2
         default: 1
         }
     }

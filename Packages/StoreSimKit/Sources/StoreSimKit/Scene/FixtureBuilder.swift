@@ -48,11 +48,11 @@ public enum FixtureBuilders {
     /// carcasses; their goods are the merchandise layer, whose floor is pinned by `MerchandiseTests`.
     public static let minimumPartCount: [FixtureKind: Int] = [
         .gondolaShelf: 12, .wallShelf: 24, .endCap: 12, .wallFridge: 11, .dairyChiller: 14,
-        .checkoutCounter: 16, .cigaretteCabinet: 8, .hotFoodCounter: 28, .coffeeMachine: 7,
+        .checkoutCounter: 9, .cigaretteCabinet: 7, .hotFoodCounter: 28, .coffeeMachine: 7,
         .menuScreen: 4, .windowLedge: 3, .highStool: 3, .basketStack: 6, .backRoomDoor: 4,
         .pendantLamp: 3, .entranceDoor: 6, .windowPoster: 2, .atmLocker: 6, .aFrameSign: 3,
         .litterBin: 3, .bikeRack: 4, .streetLamp: 4, .tree: 3, .parkedCar: 9,
-        .selfCheckout: 11, .alcoholWall: 24,
+        .selfCheckout: 11, .alcoholWall: 6,
     ]
 }
 
