@@ -91,7 +91,7 @@ extension StoreLayout {
         // the tobacco cabinet on the right wall opens onto the lane's end.
         shop("checkout_1", .checkoutCounter, 12, 10, 2)
         shop("checkout_2", .checkoutCounter, 16, 10, 2)
-        shop("alcohol_wall_1", .alcoholWall, 12, 13, 2, label: "Wine & spirits")
+        shop("alcohol_wall_1", .alcoholWall, 12, 13, 2, label: "Vodka & whisky")
         shop("alcohol_wall_2", .alcoholWall, 16, 13, 2, label: "Vodka & whisky")
         shop("self_checkout_1", .selfCheckout, 10, 11)
         shop("basket_stack_1", .basketStack, 9, 11)

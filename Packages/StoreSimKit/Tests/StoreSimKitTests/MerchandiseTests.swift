@@ -14,7 +14,8 @@ import simd
         return Merchandiser.build(f, detail: detail, variant: ModelVariant.index(of: f, in: layout))
     }
 
-    static var stocked: [Fixture] { layout.fixtures.filter { Merchandiser.kinds.contains($0.kind) } }
+    /// The shelving kinds whose goods follow the shelf bays; the till zone has its own `TillZoneTests`.
+    static var stocked: [Fixture] { layout.fixtures.filter { [.gondolaShelf, .wallFridge].contains($0.kind) } }
 
     /// Product bodies: `product_<shelf>_<facing>` with no suffix, on either face.
     static func bodies(_ node: SceneNode) -> [SceneNode] {

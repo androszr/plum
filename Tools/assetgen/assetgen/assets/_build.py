@@ -20,7 +20,7 @@ FRONT = {
     "wall_fridge": ["door_left", "door_right", "handle_left", "handle_right"],
     "dairy_chiller": ["open_front_lip"],
     "checkout_counter": ["front_stripe", "card_terminal"],
-    "cigarette_cabinet": ["door_left", "door_right"],
+    "cigarette_cabinet": ["door_left", "door_right", "price_board_left", "price_board_right"],
     "hot_food_counter": ["kick_strip", "case_glass"],
     "coffee_machine": ["screen", "spout_left", "spout_right"],
     "menu_screen": ["screen"],
@@ -37,7 +37,7 @@ FRONT = {
     "bike_rack": [],
     "street_lamp": [],
     "self_checkout": ["screen_left", "screen_right", "card_terminal_left", "card_terminal_right"],
-    "alcohol_wall": [f"price_rail_{i}" for i in range(5)] + ["header_sign"],
+    "alcohol_wall": ["header_sign"],
 }
 
 
@@ -227,32 +227,31 @@ def dairy_chiller(b, spec, palette, textures):
 
 
 def checkout_counter(b, spec, palette, textures):
+    """The counter without its sweets rack: the app draws the stepped rack on the counter top."""
     w, d, h = spec.dimensions
     _box(b, "counter", 0, 0, 0, w, 0.96, d, palette["primary"])
     _box(b, "counter_top", 0, 0.96, 0, w - 0.02, 0.045, d - 0.02, palette["woodLight"])
     _box(b, "front_stripe", 0, 0.32, d / 2 - 0.012, w - 0.12, 0.1, 0.016, palette["accentMint"])
-    _box(b, "conveyor_belt", -0.42, 1.005, 0.08, 0.7, 0.02, 0.32, palette["charcoal"])
+    _box(b, "conveyor_belt", -0.42, 1.005, -0.02, 0.7, 0.02, 0.32, palette["charcoal"])
     _box(b, "till", 0.35, 1.005, -0.12, 0.36, 0.1, 0.28, palette["charcoal"])
     _box(b, "till_screen", 0.35, h - 0.2, -0.16, 0.22, 0.2, 0.02, palette["accentMint"], emissive=True)
-    _box(b, "card_terminal", 0.15, 1.005, d / 2 - 0.12, 0.1, 0.05, 0.14, palette["asphalt"])
+    _box(b, "card_terminal", 0.50, 1.005, 0.28, 0.1, 0.05, 0.14, palette["asphalt"])
     _box(b, "receipt_printer", 0.72, 1.005, -0.08, 0.12, 0.1, 0.14, palette["cream"])
     _box(b, "bag_dispenser", 0.78, 1.005, 0.16, 0.1, 0.16, 0.1, palette["mintDeep"])
-    _box(b, "impulse_rack", -0.05, 1.005, d / 2 - 0.1, 0.55, 0.06, 0.1, palette["charcoal"])
-    items = _have(spec, "impulse_item")
-    colors = _swatches(b, palette, len(items))
-    for i, name in enumerate(items):
-        _box(b, name, -0.26 + 0.09 * i, 1.065, d / 2 - 0.1, 0.05, 0.1, 0.04, colors[i])
 
 
 def cigarette_cabinet(b, spec, palette, textures):
+    """Closed and plain: solid doors, nothing inside, a cream price board on each door.
+
+    Laid out like the code-built stand-in (the app's price lines are written on the boards at the same depth)."""
     w, d, h = spec.dimensions
-    _box(b, "cabinet", 0, 0, -0.01, w, h, d - 0.02, palette["charcoal"])
-    _box(b, "door_left", -w / 4 + 0.02, 0.55, d / 2 - 0.012, w / 2 - 0.08, h * 0.55, 0.02, palette["skyPastel"], opacity=0.35, roughness=0.1)
-    _box(b, "door_right", w / 4 - 0.02, 0.55, d / 2 - 0.012, w / 2 - 0.08, h * 0.55, 0.02, palette["skyPastel"], opacity=0.35, roughness=0.1)
-    for i, name in enumerate(_have(spec, "shelf")):
-        _box(b, name, 0, 0.7 + 0.28 * i, 0.0, w - 0.12, 0.02, d * 0.45, palette["primaryLight"])
-    _box(b, "lottery_screen", 0, 0.18, d / 2 - 0.02, w * 0.36, 0.28, 0.02, palette["priceRailYellow"], emissive=True)
-    _box(b, "scratchcard_rack", -w * 0.28, 0.16, d / 2 - 0.025, 0.22, 0.24, 0.02, palette["warmLamp"])
+    _box(b, "cabinet", 0, 0, -0.025, w - 0.05, h, d - 0.05, palette["charcoal"])
+    _box(b, "door_left", -0.36, 0.9, 0.21, 0.7, 0.95, 0.02, palette["primary"])
+    _box(b, "door_right", 0.36, 0.9, 0.21, 0.7, 0.95, 0.02, palette["primary"])
+    _box(b, "price_board_left", -0.36, 1.05, 0.225, 0.5, 0.4, 0.01, palette["cream"])
+    _box(b, "price_board_right", 0.36, 1.05, 0.225, 0.5, 0.4, 0.01, palette["cream"])
+    _box(b, "lottery_screen", 0, 0.35, 0.21, w * 0.34, 0.3, 0.02, palette["priceRailYellow"], emissive=True)
+    _box(b, "scratchcard_rack", -0.5, 0.35, 0.22, 0.3, 0.3, 0.03, palette["warmLamp"])
 
 
 def hot_food_counter(b, spec, palette, textures):
@@ -444,17 +443,15 @@ def self_checkout(b, spec, palette, textures):
 
 
 def alcohol_wall(b, spec, palette, textures):
+    """A thin empty frame, one bottle deep. The app draws the shelves, rails, bottles and labels from the planogram."""
     w, d, h = spec.dimensions
-    _box(b, "base", 0, 0, 0, w, 0.08, d, palette["charcoal"])
-    _box(b, "header_sign", 0, h - 0.16, 0, w, 0.16, d, palette["primary"])
-    _box(b, "upright_left", -w / 2 + 0.03, 0.08, 0, 0.04, h - 0.24, d - 0.02, palette["charcoal"])
-    _box(b, "upright_right", w / 2 - 0.03, 0.08, 0, 0.04, h - 0.24, d - 0.02, palette["charcoal"])
-    _box(b, "back_panel", 0, 0.1, -d / 2 + 0.02, w - 0.1, h - 0.3, 0.02, palette["cream"])
-    ys = _shelves(b, spec, palette, textures, "shelf", w - 0.1, 0.02, d - 0.08, 0.3, h - 0.3)
-    _rails(b, spec, palette, textures, ys, d / 2 - 0.01, w - 0.12)
-    groups = _groups(spec, "bottle")
-    for i, y in enumerate(ys):
-        _goods(b, groups.get(i, []), palette, y + 0.03, d / 2 - 0.1, w - 0.2, mode="bottle")
+    header = 0.16
+    top = h - header
+    _box(b, "base", 0, 0, 0, w, 0.10, d, palette["charcoal"])
+    _box(b, "upright_left", -w / 2 + 0.02, 0.10, 0, 0.04, top - 0.10, d, palette["charcoal"])
+    _box(b, "upright_right", w / 2 - 0.02, 0.10, 0, 0.04, top - 0.10, d, palette["charcoal"])
+    _box(b, "back_panel", 0, 0.10, -d / 2 + 0.01, w - 0.08, top - 0.10, 0.02, palette["cream"])
+    _box(b, "header_sign", 0, top, 0, w, header, d, palette["primary"])
 
 
 BUILDERS = {

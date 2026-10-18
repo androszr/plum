@@ -5,7 +5,7 @@ import simd
 /// fixture's planogram. It is a sibling of the shell (the model or its stand-in), never part of it.
 public enum Merchandiser {
     /// The fixture kinds whose goods are drawn by the app rather than baked into the model.
-    public static let kinds: [FixtureKind] = [.gondolaShelf, .wallFridge]
+    public static let kinds: [FixtureKind] = [.gondolaShelf, .wallFridge, .alcoholWall, .checkoutCounter, .cigaretteCabinet]
 
     /// Where the goods of one fixture kind may stand, in metres.
     public struct Bay: Sendable {
@@ -46,6 +46,12 @@ public enum Merchandiser {
     /// The `merchandise` node for a fixture. Without a planogram for its label it is today's generic rows.
     public static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int,
                              catalogue: PlanogramCatalogue = .shipped) -> SceneNode {
+        switch fixture.kind {
+        case .alcoholWall, .checkoutCounter, .cigaretteCabinet:
+            return TillZone.build(fixture, detail: detail, variant: variant, catalogue: catalogue)
+        default:
+            break
+        }
         guard let bay = bay(for: fixture.kind) else { return SceneNode(name: "merchandise") }
         if let plan = catalogue.planogram(forLabel: fixture.label),
            let levels = ShelfStacker.stack(planogram: plan, interior: bay.interior, catalogue: catalogue) {

@@ -17,6 +17,7 @@ This brief tells an artist, or an AI image-to-3D tool, exactly which models the 
 - Sourced street props (`parked_car_*`, `tree_*`) are the written exception to the flat-pastel rule and to the named-parts rule: realistic proportions and textured surfaces, colours muted toward the palette, one mesh. A section with a `Source:` line is not generated; `Tools/assetgen` skips it.
 - A section whose Status line starts with `external` is a walking character made outside the generator with Meshy and shipped in `App/Resources/Characters/` (not `Models/`): the generator and the checker skip it, `Scripts/models.sh --check` never looks at it, and the app turns it to the section's size on load. Its Prompt line is the prompt actually used.
 - On `wall_shelf` and `end_cap`, every facing is three meshes named `product_<shelf>_<facing>_<shape>` with `<shape>` one of `packet`, `can`, `bottle`; each is at most 48 triangles; the app shows one per facing and hides the other two, and the checker counts every triangle, hidden ones included. `dairy_chiller` keeps its single carton meshes.
+- `alcohol_wall` is an empty frame, one bottle deep, and the tills carry no sweets: the app draws the two-bay spirits display, the stepped impulse rack on each counter and the plain tobacco price lines itself (the cabinet shows no packs and no brands). An artist's replacement model must stay empty in those places.
 - `gondola_shelf` and `wall_fridge` are empty carcasses: no shelves, price rails or goods are modelled. The app draws their shelves and goods itself from the planogram (`Packages/StoreSimKit/Sources/StoreSimKit/Resources/planograms.json`), using the `pack_fronts` picture, so an artist's replacement model must stay empty inside.
 - Parts named `product_<shelf>_<facing>_<shape>` on `wall_shelf` and `end_cap`, and `carton_<shelf>_<facing>` on `dairy_chiller`, are recoloured per placed copy by the app and must carry a flat colour, no texture.
 
@@ -113,6 +114,39 @@ The colours of the invented products on the shelves (flavour codes, can metal, g
 | lagerGlass | #2F6B2A |
 | brownGlass | #5A3412 |
 | clearPet | #CFE6F4 |
+| frostClearBase | #E4EEF3 |
+| frostClearAccent | #1B2A49 |
+| birchBase | #EEF4F1 |
+| birchAccent | #2F6B4F |
+| northBlueBase | #DCE6F5 |
+| ryeRedBase | #F2ECE6 |
+| amberFieldBase | #F3EBD9 |
+| amberFieldAccent | #8A5A1A |
+| pineBase | #E8F1EC |
+| pineAccent | #1D4D3A |
+| cherryBase | #A3122E |
+| cherryAccent | #F7E1C3 |
+| quinceBase | #E8B24A |
+| currantBase | #4B1F5E |
+| amberBase | #C2772A |
+| ginBlueBase | #DCE6EA |
+| herbalBase | #3A4A2A |
+| cherryLiqBase | #7A1026 |
+| amberGreenBase | #B86B22 |
+| amberGreenAccent | #2E5E3A |
+| bourbonBase | #A85A1E |
+| blackGoldAccent | #D4AF37 |
+| amberDeepBase | #8A4B1C |
+| navyGoldBase | #1E2A44 |
+| oakGoldBase | #6B3A1A |
+| oakGoldAccent | #E8C170 |
+| rumDarkBase | #4A2410 |
+| rumGoldBase | #B8732A |
+| creamLiqBase | #EFE3CF |
+| coffeeLiqBase | #2E1A12 |
+| gumGreenBase | #1F9D6B |
+| mintBlueBase | #5BB8E8 |
+| caramelBase | #D98E2B |
 
 ## Assets
 
@@ -218,11 +252,11 @@ Palette: primary #4A4E57, woodLight #C9A27E, accentMint #B9C6B0, charcoal #22252
 
 Format: USDZ, embedded textures, one 1024 x 1024 atlas
 
-Parts: counter, counter_top, front_stripe, conveyor_belt, till, till_screen, card_terminal, receipt_printer, bag_dispenser, impulse_rack with at least 6 impulse_item_<i> (gum and sweets)
+Parts: counter, counter_top, front_stripe, conveyor_belt, till, till_screen, card_terminal, receipt_printer, bag_dispenser
 
-Description: A wood-topped checkout counter with a mint stripe, a till with a glowing screen, a card terminal and a rack of small sweets at the front.
+Description: A wood-topped checkout counter with a mint stripe, a till with a glowing screen and a card terminal. The counter top is left clear between the belt and the card terminal on purpose: the app draws a stepped three-tier rack of gum, mints and chocolate bars there from the planogram, so a replacement model must carry no sweets.
 
-Prompt: Low-poly flat-shaded pastel diorama model of a wood-topped checkout counter with a mint stripe, a till with a glowing screen, a card terminal and a rack of small sweets at the front. Size 2.0 x 1.0 x 1.3 metres, pivot at the bottom centre, front facing +Z, at most 5000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#4A4E57, #C9A27E, #B9C6B0, #22252B, #6E8B74, #FAFAF7, #E9C46A), no text, no real-world logos. Export as USDZ.
+Prompt: Low-poly flat-shaded pastel diorama model of a wood-topped checkout counter with a mint stripe, a till with a glowing screen and a card terminal, with the counter top clear between the belt and the card terminal and no sweets. Size 2.0 x 1.0 x 1.3 metres, pivot at the bottom centre, front facing +Z, at most 5000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#4A4E57, #C9A27E, #B9C6B0, #22252B, #6E8B74, #FAFAF7, #E9C46A), no text, no real-world logos. Export as USDZ.
 
 ### cigarette_cabinet
 
@@ -232,15 +266,15 @@ Pivot: bottom centre of the footprint, front towards +Z
 
 Poly budget: 3500 triangles
 
-Palette: charcoal #22252B, skyPastel #E6EAEE, primaryLight #D9D6CF, priceRailYellow #E9C46A, warmLamp #FFE2B8
+Palette: charcoal #22252B, primary #4A4E57, cream #FAFAF7, priceRailYellow #E9C46A, warmLamp #FFE2B8
 
 Format: USDZ, embedded textures, one 1024 x 1024 atlas
 
-Parts: cabinet, door_left, door_right (glass), shelf_0-2, lottery_screen, scratchcard_rack
+Parts: cabinet, door_left, door_right, price_board_left, price_board_right, lottery_screen, scratchcard_rack
 
-Description: A tall dark cabinet with two glass doors for tobacco and lottery tickets, with a yellow lottery screen and a small rack of scratch cards. Show packs by colour only, no brand text.
+Description: A tall dark cabinet for tobacco and lottery tickets, closed and plain as Polish law requires: two solid grey doors, nothing visible inside, a small cream price board on each door and, below them, a yellow lottery screen and a small rack of scratch cards. No packs, no brands and no baked text: the app writes the plain price lines on the boards. The cabinet body is 0.45 m deep (not the full 0.5 m footprint), each price board is 0.50 m wide and 0.40 m tall, and the doors, boards, lottery screen and scratch-card rack stand forward of the body exactly as in the code-built stand-in, so the app's text sits on the boards whichever of the two is shown.
 
-Prompt: Low-poly flat-shaded pastel diorama model of a tall dark cabinet with two glass doors for tobacco and lottery tickets, with a yellow lottery screen and a small rack of scratch cards. Show packs by colour only, no brand text. Size 1.5 x 0.5 x 1.9 metres, pivot at the bottom centre, front facing +Z, at most 3500 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #E6EAEE, #D9D6CF, #E9C46A, #FFE2B8), no text, no real-world logos. Export as USDZ.
+Prompt: Low-poly flat-shaded pastel diorama model of a tall dark cabinet for tobacco and lottery tickets with two solid grey doors, nothing visible inside, a small blank cream price board on each door, a yellow lottery screen and a small rack of scratch cards. No packs, no brands. Size 1.5 x 0.5 x 1.9 metres, pivot at the bottom centre, front facing +Z, at most 3500 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #4A4E57, #FAFAF7, #E9C46A, #FFE2B8), no text, no real-world logos. Export as USDZ.
 
 ### hot_food_counter
 
@@ -632,21 +666,21 @@ Prompt: Low-poly flat-shaded pastel diorama model of a compact dual self-checkou
 
 ### alcohol_wall
 
-Dimensions: 2.0 x 0.5 x 2.1 m (width x depth x height)
+Dimensions: 2.0 x 0.2 x 2.6 m (width x depth x height)
 
 Pivot: bottom centre of the footprint, front towards +Z
 
-Poly budget: 6000 triangles
+Poly budget: 1500 triangles
 
-Palette: charcoal #22252B, cream #FAFAF7, tileWhite #F4F4F2, priceRailYellow #E9C46A, primary #4A4E57
+Palette: charcoal #22252B, cream #FAFAF7, primary #4A4E57
 
 Format: USDZ, embedded textures, one 1024 x 1024 atlas
 
-Parts: base, upright_left, upright_right, back_panel, shelf_0-4, price_rail_0-4, header_sign, bottle rows on every shelf (at least 40 bottle_<shelf>_<facing>)
+Parts: base, upright_left, upright_right, back_panel, header_sign
 
-Description: A tall open bottle wall for wine and spirits: five white shelves with yellow price rails between two dark uprights, rows of coloured bottles on every shelf and a dark grey header sign. Show bottles by colour only, no labels.
+Description: A thin, tall, empty spirits frame for the wall behind the tills: a dark plinth, two dark uprights, a cream back panel and a dark grey header sign, one bottle deep. No shelves, rails or bottles are modelled: the app draws seven shelves of true-size bottles, the price rails and the labels from the planogram between 0.10 m and the header underside at 2.44 m, so a replacement model must stay empty inside. Two of these stand side by side as one four-metre display.
 
-Prompt: Low-poly flat-shaded pastel diorama model of a tall open bottle wall for wine and spirits: five white shelves with yellow price rails between two dark uprights, rows of coloured bottles on every shelf and a dark grey header sign. Show bottles by colour only, no labels. Size 2.0 x 0.5 x 2.1 metres, pivot at the bottom centre, front facing +Z, at most 6000 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #FAFAF7, #F4F4F2, #E9C46A, #4A4E57), no text, no real-world logos. Export as USDZ.
+Prompt: Low-poly flat-shaded pastel diorama model of a thin tall empty spirits display frame, one bottle deep, with a dark plinth, two dark uprights, a cream back panel and a dark grey header sign on top, no shelves and no bottles. Size 2.0 x 0.2 x 2.6 metres, pivot at the bottom centre, front facing +Z, at most 1500 triangles, one 1024 x 1024 texture atlas, only the Plum palette (#22252B, #FAFAF7, #4A4E57), no text, no real-world logos. Export as USDZ.
 
 ### plum_mark
 
@@ -740,7 +774,7 @@ Prompt: Flat vector-style artwork, the hot-food menu screen image in English: si
 
 ### pack_fronts
 
-Dimensions: 2048 x 2048 px
+Dimensions: 2048 x 4096 px
 
 Pivot: not applicable (flat image), centred
 
@@ -748,13 +782,13 @@ Poly budget: not applicable (texture)
 
 Palette: priceRailYellow #E9C46A, charcoal #22252B, cream #FAFAF7, woodLight #C9A27E, plus every colour of the packaging palette table above
 
-Format: PNG atlas, 16 x 8 cells of 128 x 256 px
+Format: PNG atlas, 16 x 16 cells of 128 x 256 px
 
 Parts: cells, price_labels, promo_bands
 
-Description: One simple front for every product on the shelves, in a grid of 16 x 8 cells in the order of the products in the planogram file. In each cell the top 192 px hold the pack front at its real aspect (bag with crimps and a window, tube with a lid, bar tray, tablet or box with a brand band, biscuit roll, can with rims, bottle with a neck), the next 32 px a cream price label and the last 32 px a yellow promo band, blank when the product has no promo. Brand names are invented English words in plain capitals.
+Description: One simple front for every product on the shelves, in a grid of 16 x 16 cells in the order of the products in the planogram file. In each cell the top 192 px hold the pack front at its real aspect (bag with crimps and a window, tube with a lid, bar tray, tablet or box with a brand band, biscuit roll, can with rims, bottle with a neck, spirits bottle or flask with a label band and its size, counter tray of gum, mints or bars), the next 32 px a cream price label and the last 32 px a yellow promo band, blank when the product has no promo. Brand names are invented English words in plain capitals.
 
-Prompt: Flat vector-style artwork, a grid of 16 x 8 simple shop pack fronts, each 128 x 256 px: a crisp bag, a tube, a bar tray, a chocolate tablet, a biscuit roll, a can or a bottle in flat colours with an invented English brand name in capitals, a cream price label below it and a yellow promo band below that. Size 2048 x 2048 px, palette #E9C46A, #22252B, #FAFAF7, #C9A27E, crisp edges, English text only, no real-world logos.
+Prompt: Flat vector-style artwork, a grid of 16 x 16 simple shop pack fronts, each 128 x 256 px: a crisp bag, a tube, a bar tray, a chocolate tablet, a biscuit roll, a can or a bottle in flat colours with an invented English brand name in capitals, a cream price label below it and a yellow promo band below that. Size 2048 x 4096 px, palette #E9C46A, #22252B, #FAFAF7, #C9A27E, crisp edges, English text only, no real-world logos.
 
 ## Characters
 

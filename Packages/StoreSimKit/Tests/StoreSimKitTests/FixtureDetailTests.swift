@@ -113,11 +113,23 @@ import Testing
 
     @Test func checkoutHasItsNamedParts() {
         let n = names(.checkoutCounter)
-        for want in ["counter", "counter_top", "till", "till_screen", "card_terminal", "impulse_rack",
-                     "bag_dispenser", "receipt_printer"] {
+        for want in ["counter", "counter_top", "till", "till_screen", "card_terminal", "bag_dispenser", "receipt_printer"] {
             #expect(n.contains(want), "missing \(want)")
         }
-        #expect(n.filter { $0.hasPrefix("impulse_item_") }.count >= 6)
+        // The impulse rack is the merchandise layer now.
+        #expect(!n.contains { $0.hasPrefix("impulse") || $0 == "rack_frame" })
+    }
+
+    @Test func cigaretteCabinetHasPlainDoorsAndBoards() {
+        let node = FixtureBuilders.builder(for: .cigaretteCabinet).build(Self.fixture(.cigaretteCabinet), detail: .full)
+        let n = Set(node.allNodes().map(\.name))
+        for want in ["cabinet", "door_left", "door_right", "price_board_left", "price_board_right", "lottery_screen", "scratchcard_rack"] {
+            #expect(n.contains(want), "missing \(want)")
+        }
+        #expect(!n.contains { $0.hasPrefix("shelf_") })
+        for door in ["door_left", "door_right"] {
+            if case .glass = node.node(named: door)!.material { Issue.record("\(door) is see-through") }
+        }
     }
 
     @Test func productRowsAreDeterministicAndDifferByFixture() {
@@ -217,33 +229,10 @@ import Testing
 
     @Test func alcoholWallHasItsNamedParts() {
         let names = FixtureBuilders.builder(for: .alcoholWall).build(Self.fixture(.alcoholWall), detail: .full).descendants.map(\.name)
-        for want in ["shelf_0", "shelf_4", "price_rail_4", "header_text"] {
+        for want in ["base", "upright_left", "upright_right", "back_panel", "header_sign", "header_text"] {
             #expect(names.contains(want), "missing \(want)")
         }
-        #expect(names.filter { $0.hasPrefix("bottle_") }.count >= 40)
-    }
-
-    @Test func alcoholWallKeepsEverythingBelowItsHeaderAndInsideItsExtent() {
-        for detail in [DetailLevel.full, .reduced] {
-            let node = FixtureBuilders.builder(for: .alcoholWall).build(Self.fixture(.alcoholWall), detail: detail)
-            let parts = node.descendants
-            let header = parts.first { $0.name == "header_sign" }!
-            let headerBottom = header.position.y - header.size.y / 2
-            for p in parts where p.name.hasPrefix("bottle_") || p.name.hasPrefix("shelf_") || p.name.hasPrefix("price_rail_") {
-                #expect(p.position.y + p.size.y / 2 <= headerBottom + 1e-9, "\(p.name) reaches the header")
-            }
-            for s in 0..<4 {
-                let next = parts.first { $0.name == "shelf_\(s + 1)" }!
-                let nextBottom = next.position.y - next.size.y / 2
-                for p in parts where p.name.hasPrefix("bottle_\(s)_") {
-                    #expect(p.position.y + p.size.y / 2 <= nextBottom + 1e-9, "\(p.name) pokes into shelf_\(s + 1)")
-                }
-            }
-            let ceiling = FixtureKind.alcoholWall.verticalExtent.upperBound
-            for p in parts {
-                if case .text = p.shape { continue }
-                #expect(p.position.y + p.size.y / 2 <= ceiling + 1e-9, "\(p.name) pokes above the extent")
-            }
-        }
+        // An empty frame: shelves, rails and bottles are the merchandise layer.
+        #expect(!names.contains { $0.hasPrefix("shelf_") || $0.hasPrefix("price_rail_") || $0.hasPrefix("bottle_") })
     }
 }

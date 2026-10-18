@@ -43,6 +43,15 @@ let maxMeanDifference = 0.12
         return entity
     }
 
+    /// Moves the picture's subject onto the origin in x and z, so a thin wall built against the back of its
+    /// footprint is compared like for like with the centred model (the app's `align` does the same shift).
+    private static func centred(_ entity: Entity) -> Entity {
+        let bounds = entity.visualBounds(relativeTo: nil)
+        entity.position.x -= (bounds.min.x + bounds.max.x) / 2
+        entity.position.z -= (bounds.min.z + bounds.max.z) / 2
+        return entity
+    }
+
     private static func write(_ image: CGImage, _ name: String) throws -> URL {
         let dir = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("storesim-snapshots").appendingPathComponent("models")
@@ -99,9 +108,9 @@ let maxMeanDifference = 0.12
         let spec = try #require(BriefSpec.load()[assetName.rawValue])
         let dim = try #require(spec.dimensions)
         let proceduralNode = FixtureBuilders.builder(for: kind).build(fixture, detail: .full, variant: variant)
-        let procedural = grounded(EntityBuilder.entity(for: proceduralNode, loader: ModelLoader(catalogue: .empty)))
+        let procedural = centred(grounded(EntityBuilder.entity(for: proceduralNode, loader: ModelLoader(catalogue: .empty))))
         let urls = try FileManager.default.contentsOfDirectory(at: BriefSpec.modelsDirectory(), includingPropertiesForKeys: nil)
-        let model = grounded(try ModelLoader(catalogue: AssetCatalogue(modelURLs: urls)).load(assetName, variant: variant))
+        let model = centred(grounded(try ModelLoader(catalogue: AssetCatalogue(modelURLs: urls)).load(assetName, variant: variant)))
         let camera = camera(extent: max(dim.w, dim.d, dim.h), height: dim.h)
         let renderer = OffscreenRenderer()
         let left = try await renderer.render(root: lit(procedural), camera: camera, size: (256, 256))

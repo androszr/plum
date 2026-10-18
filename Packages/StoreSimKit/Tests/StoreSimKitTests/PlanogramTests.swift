@@ -7,7 +7,7 @@ import Testing
 
     /// The label of every fixture the merchandiser stocks, as the shop lays them out.
     static var stockedFixtures: [Fixture] {
-        StoreLayout.plumCorner.fixtures.filter { Merchandiser.kinds.contains($0.kind) }
+        StoreLayout.plumCorner.fixtures.filter { [.gondolaShelf, .wallFridge].contains($0.kind) }
     }
 
     static func packed(_ plan: Planogram, width: Double) -> [PackedShelf] {
@@ -19,10 +19,10 @@ import Testing
     @Test func shippedCatalogueDecodes() {
         let c = Self.catalogue
         #expect(c.version == 1)
-        #expect(c.planograms.count == 9)
+        #expect(c.planograms.count == 11)
         #expect(c.products.count > 90)
-        #expect(c.shapes.count == 20)
-        #expect(c.atlas.cellCount == 128)
+        #expect(c.shapes.count == 29)
+        #expect(c.atlas.cellCount == 256)
     }
 
     @Test func everyPlanogramdLabelMapsToAPlanogram() {
@@ -307,13 +307,14 @@ import Testing
     @Test func atlasRegionIsInsideItsCell() throws {
         let c = Self.catalogue
         let total = Double(c.atlas.columns * c.atlas.cellWidth)
+        let totalHeight = Double(c.atlas.rows * c.atlas.cellHeight)
         for p in c.products {
             let r = try #require(c.atlasRegion(for: p.id))
             let col = Double(p.cell % c.atlas.columns), row = Double(p.cell / c.atlas.columns)
             let left = col * Double(c.atlas.cellWidth) / total
             let right = (col + 1) * Double(c.atlas.cellWidth) / total
-            let rowTop = 1 - row * Double(c.atlas.cellHeight) / total
-            let rowBottom = 1 - (row + 1) * Double(c.atlas.cellHeight) / total
+            let rowTop = 1 - row * Double(c.atlas.cellHeight) / totalHeight
+            let rowBottom = 1 - (row + 1) * Double(c.atlas.cellHeight) / totalHeight
             for region in [r.art, r.label, r.promo] {
                 #expect(region.u >= left - 1e-9 && region.u + region.width <= right + 1e-9, "\(p.id) u")
                 #expect(region.v >= rowBottom - 1e-9 && region.v + region.height <= rowTop + 1e-9, "\(p.id) v")
@@ -329,8 +330,8 @@ import Testing
         let second = try #require(c.atlasRegion(for: c.products[c.atlas.columns].id))
         // Row 0 is the top of the picture, so its v is the highest; the next row is lower.
         #expect(first.art.v > second.art.v)
-        #expect(abs(first.promo.v - (1 - 256.0 / 2048)) < 1e-9)
-        #expect(abs(first.label.v + first.label.height - (1 - 192.0 / 2048)) < 1e-9)
+        #expect(abs(first.promo.v - (1 - 256.0 / Double(c.atlas.rows * c.atlas.cellHeight))) < 1e-9)
+        #expect(abs(first.label.v + first.label.height - (1 - 192.0 / Double(c.atlas.rows * c.atlas.cellHeight))) < 1e-9)
     }
 
     @Test func artRectangleIsWholePixelsAndKeepsTheAspect() throws {

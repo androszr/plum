@@ -83,7 +83,7 @@ dairy chillers down the whole left wall around the back-room door; drinks fridge
 wall, with beer in the back-right corner and the hot-food counter, menu screen and tobacco cabinet
 beside the tills; a labelled back wall; one island of five double-sided shelves with an end cap at
 each end and a two-cell clear loop around it, the pendant lamps hung over that loop; two tills
-facing the shop with a one-cell cashier lane behind them, the alcohol wall across the lane and the tobacco cabinet opening onto its end; and a dual self-checkout, the coffee
+facing the shop with a one-cell cashier lane behind them, the alcohol wall (two bays, one four-metre spirits display) across the lane and the tobacco cabinet opening onto its end; and a dual self-checkout, the coffee
 machine and the baskets by the door. `StoreArrangementTests` pins it.
 
 **Fixtures are composed builders.** Every `FixtureKind` has a builder in
@@ -131,13 +131,31 @@ with no planogram keeps the generic rows). `ShelfPacker` mirrors the concept pag
 (facings from weights, leftover width to the biggest block, 0.3 cm gaps, slack split to both ends) and
 `ShelfStacker` sets shelf heights from the tallest pack plus 2 cm, sharing the leftover height. Each pack
 is a body plus a front card (`.quad` with `SurfaceMaterial.atlas`) cut from the generated
-`pack_fronts.png` (2048 x 2048, 16 x 8 cells; art, price label and promo band per cell); a gondola's back
+`pack_fronts.png` (2048 x 4096, 16 x 16 cells; art, price label and promo band per cell); a gondola's back
 face is the same planogram turned a half turn (`_back` names, yaw pi). `AtlasRegion.v` counts from the
 bottom; `Materials` converts it because RealityKit's `textureCoordinateTransform.offset` counts from the
 top. Packaging colours are `Brand.packaging` (also the brief's `## Packaging palette`). Reduced detail
 keeps every second facing and drops the lane boxes. Bags lean up to 2 degrees, seeded from the fixture id.
 The fill rule: a shelf is 95 percent full or has less room left than its narrowest pack (wide family
 packs cannot fill a shelf more evenly than whole packs allow); `PlanogramTests` pins both.
+
+**Till zone (2026-10-18, plan `plans/2026-10-18-planogram-till-zone.md`).** The same planogram machinery stocks the
+till end, in `Planogram/TillZone.swift`. The two alcohol walls are one display of two bays: both carry the label
+"Vodka & whisky" and the planogram of that name (seven shelves, each with a `band`: vodka 0.2, 0.5, 0.7, flavoured
+vodka, whisky premium, whisky, rum gin liqueur), `ModelVariant.count(for: .alcoholWall)` is 2 and the derived variant
+index is the bay (the model file count stays 1). Shelf heights come from the whole planogram so they line up; each
+shelf's blocks are split into contiguous runs per bay (`PlanogramShelf.bayBlocks`). The wall model is a thin empty
+frame (2.0 x 0.2 x 2.6, one bottle deep, `verticalExtent` 0...2.6); shelves, rails, bottles and labels are the
+merchandise layer. The tobacco cabinet is a front, not a planogram: solid doors, a cream price board on each, and
+six plain text lines (two at reduced detail) written by the app; no packs, as Polish law requires. Each till gets a
+stepped three-tier "Till impulse" rack (bars at the back, mints, gum at the front) from the same planogram file;
+the card terminal and belt moved aside, and the model carries no sweets. `atlas.rows` is 16 and new products are
+appended, so no earlier atlas cell moved. Counter trays are 4.5 cm tall and 8 cm deep and the tiers step 6 cm,
+so every tier's price rail and labels stand clear above the trays in front and the rack top stays under the
+1.2 m till extent (the bar tray art is one field of the product colour with a small name band, so the four
+bar brands read apart). The tobacco price boards are 0.50 m wide and the cabinet is 0.45 m deep, which moved the
+lottery screen and scratch-card rack forward (stand-in and model agree). A planogram shelf is a bare block list or `{band, blocks}`; the `flask`
+pack form is a box with a neck.
 
 **Street traffic (2026-10-18, plan `plans/2026-10-18-street-traffic.md`).** Cars drive past and
 people walk the pavements while the app is open. It is derived, not stored: `Traffic` (pure, in

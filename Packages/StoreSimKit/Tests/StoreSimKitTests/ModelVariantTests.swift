@@ -21,6 +21,14 @@ import Testing
         #expect(Self.variant("gondola_4") == 0)
     }
 
+    @Test func alcoholWallHasTwoBays() {
+        #expect(ModelVariant.count(for: FixtureKind.alcoholWall) == 2)
+        #expect(Self.variant("alcohol_wall_1") == 0)
+        #expect(Self.variant("alcohol_wall_2") == 1)
+        // One model file, so the early return in the render side's variant pass stays.
+        #expect(ModelVariant.count(for: AssetName.alcoholWall) == 1)
+    }
+
     @Test func singleVariantKindsAreZero() {
         for f in Self.layout.fixtures where ModelVariant.count(for: f.kind) == 1 {
             #expect(ModelVariant.index(of: f, in: Self.layout) == 0, "\(f.id)")
