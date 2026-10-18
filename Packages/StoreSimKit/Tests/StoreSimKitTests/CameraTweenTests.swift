@@ -7,7 +7,7 @@ import simd
     static let deg = Double.pi / 180
 
     @Test func tweenEndsExactlyOnTheDestination() {
-        let to = OrbitCamera.preset(for: .inside, lot: Self.lot)
+        let to = OrbitCamera.isoPreset.turned(by: 2)
         let tween = CameraTween(from: .isoPreset, to: to, duration: 0.6)
         #expect(tween.value(at: 0.6) == to)
         #expect(tween.value(at: 1.2) == to)
@@ -15,7 +15,7 @@ import simd
     }
 
     @Test func tweenMidpointLiesBetweenTheEndpoints() {
-        let limits = CameraLimits.inside(lot: Self.lot)
+        let limits = CameraLimits(distance: 2.5...9, pitch: (3 * Self.deg)...(35 * Self.deg))
         let from = OrbitCamera(target: .zero, distance: 40, yaw: 0, pitch: 40 * Self.deg)
         let to = OrbitCamera(target: .zero, distance: 6, yaw: 0, pitch: 10 * Self.deg, limits: limits)
         let mid = CameraTween(from: from, to: to, duration: 1).value(at: 0.5)

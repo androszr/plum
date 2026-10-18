@@ -13,6 +13,7 @@ struct StoreView: View {
     @GestureState private var lastDrag: CGSize = .zero
     @GestureState private var lastMagnification: Double = 1
     @GestureState private var lastRotation: Angle = .zero
+    @State private var viewSize: CGSize = .zero
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var compact: Bool { sizeClass == .compact }
@@ -60,12 +61,26 @@ struct StoreView: View {
         .gesture(
             SpatialTapGesture().targetedToAnyEntity().onEnded { value in
                 controller.select(value.entity)
+                // Inside, a tap that selected nothing (bare floor, a wall) strolls there.
+                if controller.mode == .inside, controller.selection == nil {
+                    controller.tapFloor(at: SIMD2(Double(value.location.x), Double(value.location.y)),
+                                        viewSize: SIMD2(Double(viewSize.width), Double(viewSize.height)))
+                }
             }
         )
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { viewSize = $0 }
         .simultaneousGesture(dragGesture)
         .simultaneousGesture(magnifyGesture)
         .simultaneousGesture(rotateGesture)
         .background(platformInputCatchers)
+        #if os(macOS)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+            controller.releaseAllInput()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
+            controller.releaseAllInput()
+        }
+        #endif
     }
 
     // MARK: Gestures
@@ -108,6 +123,8 @@ struct StoreView: View {
     @ViewBuilder private var platformInputCatchers: some View {
         #if os(macOS)
         ScrollZoomCatcher { dy in controller.scroll(by: dy) }
+        KeyWalkCatcher(isInside: { controller.mode == .inside },
+                       onKey: { key, pressed in controller.setKey(key, pressed: pressed) })
         #elseif os(iOS)
         TwoFingerTiltCatcher { dy in controller.tilt(by: dy) }
             .allowsHitTesting(false)
@@ -141,6 +158,69 @@ struct ScrollZoomCatcher: NSViewRepresentable {
                 let dy = Double(event.scrollingDeltaY)
                 MainActor.assumeIsolated { self?.onScroll?(event.hasPreciseScrollingDeltas ? dy * 0.4 : dy) }
                 return event
+            }
+        }
+
+        deinit { if let monitor { NSEvent.removeMonitor(monitor) } }
+    }
+}
+
+/// W, A, S, D and the arrow keys walk while Inside; a handled key is swallowed so it does not beep.
+struct KeyWalkCatcher: NSViewRepresentable {
+    var isInside: @MainActor () -> Bool
+    var onKey: @MainActor (CameraController.WalkKey, Bool) -> Void
+
+    func makeNSView(context: Context) -> MonitorView {
+        let view = MonitorView()
+        view.isInside = isInside
+        view.onKey = onKey
+        return view
+    }
+
+    func updateNSView(_ nsView: MonitorView, context: Context) {
+        nsView.isInside = isInside
+        nsView.onKey = onKey
+    }
+
+    final class MonitorView: NSView {
+        var isInside: (@MainActor () -> Bool)?
+        var onKey: (@MainActor (CameraController.WalkKey, Bool) -> Void)?
+        nonisolated(unsafe) private var monitor: Any?
+
+        private static func walkKey(for code: UInt16) -> CameraController.WalkKey? {
+            switch code {
+            case 13, 126: .forward   // W, up arrow
+            case 1, 125: .back       // S, down arrow
+            case 0, 123: .left       // A, left arrow
+            case 2, 124: .right      // D, right arrow
+            default: nil
+            }
+        }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if let monitor { NSEvent.removeMonitor(monitor) }
+            monitor = nil
+            guard window != nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
+                guard let key = Self.walkKey(for: event.keyCode) else { return event }
+                let down = event.type == .keyDown
+                // Command, Control and Option chords belong to the menus (Cmd-W closes the window).
+                if !event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
+                    if !down { MainActor.assumeIsolated { self?.onKey?(key, false) } }
+                    return event
+                }
+                let repeated = event.isARepeat
+                let handled = MainActor.assumeIsolated { () -> Bool in
+                    guard let self, self.isInside?() == true else {
+                        // Leaving Inside with a key held must not leave it stuck.
+                        if !down { self?.onKey?(key, false) }
+                        return false
+                    }
+                    if !repeated { self.onKey?(key, down) }
+                    return true
+                }
+                return handled ? nil : event
             }
         }
 

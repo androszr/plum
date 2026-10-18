@@ -12,4 +12,10 @@ import Testing
         let p = HUDPlacement(compact: true)
         #expect(p.brand == .topLeading && p.selection == .bottom && p.controls == .bottom)
     }
+
+    @Test func stickSitsBottomLeadingInBothShells() {
+        #expect(HUDPlacement(compact: true).stick == .bottomLeading)
+        let d = HUDPlacement(compact: false)
+        #expect(d.stick == .bottomLeading && d.stick != d.controls)
+    }
 }
