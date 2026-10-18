@@ -56,7 +56,9 @@ struct StoreView: View {
 
             let tag = NameTagEntity()
             content.add(tag)
-            controller.attach(camera: camera, root: root, tag: tag)
+            let marker = FloorMarkerEntity()
+            content.add(marker)
+            controller.attach(camera: camera, root: root, tag: tag, marker: marker)
         } update: { _ in
             // Camera moves also apply from the controller itself (didSet); reading it here is a backstop.
             _ = controller.camera
