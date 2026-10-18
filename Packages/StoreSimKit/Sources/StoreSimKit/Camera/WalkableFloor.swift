@@ -10,6 +10,9 @@ public struct WalkableFloor: Sendable {
     /// The cells a person may stand in: `free` minus the row (or column) of the shop edge that
     /// holds the entrance, which is where the front wall, the glazing and the door leaves stand.
     public let walkable: Set<GridCell>
+    /// The staff strips behind the tills and in front of the cabinets: walkable, but not a
+    /// customer's first view.
+    public let staff: Set<GridCell>
 
     /// How far the eye stays clear of every wall and fixture, in metres.
     public static let clearance = 0.2
@@ -26,6 +29,19 @@ public struct WalkableFloor: Sendable {
             if e.x <= rect.minX { return c.x > rect.minX }
             return true
         }
+        staff = Set(layout.fixtures.filter { $0.kind.occupiesFloor }.flatMap(\.staffCells)).intersection(walkable)
+    }
+
+    private init(shop: GridRect, free: Set<GridCell>, walkable: Set<GridCell>, staff: Set<GridCell>) {
+        self.shop = shop
+        self.free = free
+        self.walkable = walkable
+        self.staff = staff
+    }
+
+    /// The same floor with the staff strips taken out: what a customer walking in can see.
+    public var customerFloor: WalkableFloor {
+        WalkableFloor(shop: shop, free: free, walkable: walkable.subtracting(staff), staff: [])
     }
 
     /// Every interior cell not covered by a floor-standing fixture. The layout validator uses

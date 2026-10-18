@@ -30,6 +30,13 @@ import simd
         #expect(Self.floor.clearDistance(from: cam.position, heading: cam.yaw, limit: 10) >= 3)
     }
 
+    @Test func presetNeverLooksDownTheStaffLane() {
+        let cam = Self.preset
+        #expect(!Self.floor.staff.isEmpty)
+        #expect(!Self.floor.staff.contains(Self.floor.cell(at: cam.position)))
+        #expect(Self.floor.customerFloor.clearDistance(from: cam.position, heading: cam.yaw, limit: 10) >= 3)
+    }
+
     @Test func everyWalkableCellIsReachableFromThePreset() {
         let start = Self.preset.position
         for c in Self.floor.walkable {

@@ -117,6 +117,8 @@ public struct WalkCamera: Equatable, Sendable {
     public static let minimumView = 3.0
 
     public static func preset(lot: Lot, floor: WalkableFloor) -> WalkCamera {
+        // Aim along the customer floor, so the first view never runs down a staff strip.
+        let aim = floor.customerFloor
         let shop = floor.shop
         let entrance = floor.centre(of: lot.entrance)
         let centre = shop.centreMetres
@@ -141,11 +143,11 @@ public struct WalkCamera: Equatable, Sendable {
             for offset in [0.0, 0.5, -0.5, 1.0, -1.0] {
                 let position = entrance + inward * (cellSize * Double(steps)) + tangent * offset
                 let distance = simd_length(position - entrance)
-                guard distance <= 1.5, floor.isWalkable(position) else { continue }
+                guard distance <= 1.5, aim.isWalkable(position) else { continue }
                 let toCentre = atan2(-(centre.x - position.x), -(centre.y - position.y))
                 for k in 0..<4 {
                     let yaw = OrbitCamera.wrap(Double(k) * .pi / 2)
-                    let view = floor.clearDistance(from: position, heading: yaw, limit: 10)
+                    let view = aim.clearDistance(from: position, heading: yaw, limit: 10)
                     let gap = angleGap(yaw, toCentre)
                     let better: Bool
                     if let b = best {
