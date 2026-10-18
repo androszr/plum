@@ -67,21 +67,70 @@ import Testing
         for f in Self.fixtures(.dairyChiller) { #expect(f.occupiedRect.maxX != Self.shop.maxX, "\(f.id)") }
     }
 
-    @Test(.tags(.successCriterion)) func twoTillsFaceTheShopWithTheAlcoholWallBehind() {
+    /// Every cell along the staff side of a till, the alcohol wall or the tobacco cabinet.
+    static var lane: Set<GridCell> {
+        let kinds: [FixtureKind] = [.checkoutCounter, .alcoholWall, .cigaretteCabinet]
+        return Set(kinds.flatMap { fixtures($0).flatMap(\.staffCells) })
+    }
+
+    /// Free interior cells reachable from `start` over `cells`, 4-neighbour.
+    static func reachable(from start: GridCell, over cells: Set<GridCell>) -> Set<GridCell> {
+        guard cells.contains(start) else { return [] }
+        var seen: Set<GridCell> = [start]
+        var stack = [start]
+        while let cur = stack.popLast() {
+            for d in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
+                let n = GridCell(x: cur.x + d.0, z: cur.z + d.1)
+                if cells.contains(n), !seen.contains(n) {
+                    seen.insert(n)
+                    stack.append(n)
+                }
+            }
+        }
+        return seen
+    }
+
+    @Test(.tags(.successCriterion)) func twoTillsFaceTheShopWithACashierLaneAndTheAlcoholWallBehind() {
         let tills = Self.fixtures(.checkoutCounter)
         #expect(tills.count == 2)
         let walls = Self.fixtures(.alcoholWall)
         for till in tills {
             #expect(till.rotation == QuarterTurn(2), "\(till.id)")
             let t = till.occupiedRect
-            #expect(walls.contains { $0.occupiedRect.minZ == t.maxZ && $0.occupiedRect.minX == t.minX && $0.occupiedRect.maxX == t.maxX },
-                    "\(till.id) has no alcohol wall directly behind it")
+            let wall = walls.first { $0.occupiedRect.minZ == t.maxZ + 1 && $0.occupiedRect.minX == t.minX && $0.occupiedRect.maxX == t.maxX }
+            #expect(wall != nil, "\(till.id) has no alcohol wall with exactly one free cell behind it")
+            let row = Set((t.minX..<t.maxX).map { GridCell(x: $0, z: t.maxZ) })
+            #expect(row.allSatisfy { !Self.floorCovered($0) }, "\(till.id) lane is blocked")
+            #expect(row == Set(wall?.staffCells ?? []), "\(till.id) lane is not the wall's staff row")
         }
+    }
+
+    @Test(.tags(.successCriterion)) func cashierLaneIsOneEmptyWalkableStrip() {
+        let lane = Self.lane
+        #expect(lane.count == 11)
+        let free = Set(Self.shop.cells.filter { !Self.floorCovered($0) })
+        let fromDoor = Self.reachable(from: Self.layout.lot.entrance, over: free)
+        for c in lane {
+            #expect(Self.shop.contains(c), "\(c) outside the shop")
+            #expect(!Self.floorCovered(c), "\(c) is covered")
+            #expect(fromDoor.contains(c), "\(c) cannot be reached from the door")
+        }
+        if let first = lane.first {
+            #expect(Self.reachable(from: first, over: lane).count == lane.count, "the lane is not one strip")
+        }
+    }
+
+    @Test(.tags(.successCriterion)) func tobaccoCabinetOpensOntoTheCashierLane() {
         let cabinet = Self.fixtures(.cigaretteCabinet)
         #expect(cabinet.count == 1)
-        #expect(cabinet.allSatisfy { c in
-            (walls.map(\.occupiedRect) + tills.map(\.occupiedRect)).contains { Self.touches(c.occupiedRect, $0) }
-        })
+        guard let c = cabinet.first else { return }
+        #expect(!c.staffCells.isEmpty)
+        let blockers = (Self.fixtures(.checkoutCounter) + Self.fixtures(.alcoholWall)).map(\.occupiedRect)
+        for cell in c.staffCells {
+            #expect(Self.lane.contains(cell))
+            #expect(!Self.floorCovered(cell))
+            #expect(!blockers.contains { Self.covers($0, cell) })
+        }
     }
 
     @Test(.tags(.successCriterion)) func selfCheckoutStandsBesideTheTills() {

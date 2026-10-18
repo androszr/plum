@@ -76,14 +76,14 @@ place RealityKit, CoreGraphics images and Metal appear.
 **Layout is data.** `StoreLayout.plumCorner` lists every fixture on a 0.5 m grid
 (a 56 x 42 cell lot: 28 m x 21 m). `LayoutValidator` refuses overlaps, fixtures
 outside the lot or in the wrong zone, unreachable interior cells and aisles
-narrower than one metre. Ceiling or wall-line kinds (`pendantLamp`, `menuScreen`,
+narrower than one metre, except the half-metre cells along a fixture's staff side (`FixtureKind.staffSide`: behind a till, in front of the tobacco cabinet and the alcohol wall), which must still be reachable. Ceiling or wall-line kinds (`pendantLamp`, `menuScreen`,
 `windowPoster`, `entranceDoor`) take no floor cells (`FixtureKind.occupiesFloor`).
 The shipped shop follows a researched 51 m2 corner store:
 dairy chillers down the whole left wall around the back-room door; drinks fridges down the right
 wall, with beer in the back-right corner and the hot-food counter, menu screen and tobacco cabinet
 beside the tills; a labelled back wall; one island of five double-sided shelves with an end cap at
 each end and a two-cell clear loop around it, the pendant lamps hung over that loop; two tills
-facing the shop with an alcohol wall directly behind each; and a dual self-checkout, the coffee
+facing the shop with a one-cell cashier lane behind them, the alcohol wall across the lane and the tobacco cabinet opening onto its end; and a dual self-checkout, the coffee
 machine and the baskets by the door. `StoreArrangementTests` pins it.
 
 **Fixtures are composed builders.** Every `FixtureKind` has a builder in

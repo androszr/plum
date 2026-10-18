@@ -47,6 +47,17 @@ public enum FixtureKind: String, CaseIterable, Codable, Sendable {
         }
     }
 
+    /// The side a member of staff works from; cells along it may be half a metre wide.
+    public enum StaffSide: Sendable { case front, back }
+
+    public var staffSide: StaffSide? {
+        switch self {
+        case .checkoutCounter: .back
+        case .cigaretteCabinet, .alcoholWall: .front
+        default: nil
+        }
+    }
+
     public var zoneKinds: Set<Zone.Kind> {
         switch self {
         case .atmLocker, .aFrameSign, .litterBin, .bikeRack: [.sidewalk]
