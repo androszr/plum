@@ -96,7 +96,7 @@ a hash of our own, never `hashValue`.
 equals an `AssetName` raw value; the app builds it from the `Models` folder
 reference (`App/Resources/Models`, `type: folder` in `project.yml`). A fixture
 with a model becomes `.asset(name)` and keeps its procedural tree as a child
-named `fallback`, used when loading throws. `ModelLoader` is the only file that
+named `fallback`, used when loading throws. `EntityBuilder.align` sets the loaded model on the stand-in's bounds and keeps a floor fixture's model inside its footprint (2026-10-18, plan `plans/2026-10-18-alcohol-wall-window-poke.md`). `ModelLoader` is the only file that
 loads a model (lint rule g). The brief for the artist is `docs/asset-brief.md`.
 
 **Per-instance variety (2026-10-17, plan `plans/2026-10-17-per-instance-model-variety.md`).**

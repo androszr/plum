@@ -164,9 +164,11 @@ public enum EntityBuilder {
     }
 
     /// Moves `loaded` so its visual bounds sit on the fallback's. Pitch and roll are in the
-    /// built stand-in, which is what a lying wheel needs. Floor fixtures share the stand-in's
-    /// bottom; anything above the floor shares its top, so a taller pendant stays under the roof.
-    /// X and Z follow the stand-in's centre, which is where a wall-hung piece actually is.
+    /// built stand-in, which is what a lying wheel needs. Three rules: in y, a floor fixture
+    /// shares the stand-in's bottom and anything above the floor shares its top, so a taller
+    /// pendant stays under the roof; in x and z the model follows the stand-in's centre, which is
+    /// where a wall-hung piece actually is; and a floor fixture's model never leaves its footprint
+    /// (`node.bounds`), unless it is wider than the footprint by design (tree crown, lamp arm).
     private static func align(_ loaded: Entity, toStandInOf node: SceneNode, loader: ModelLoader) {
         guard let fallback = node.children.first(where: { $0.name == "fallback" }) else { return }
         let standIn = entity(for: fallback, loader: loader)
@@ -187,10 +189,26 @@ public enum EntityBuilder {
         var shift = standCenter - modelCenter
         if stand.min.y <= 0.05 {
             shift.y = stand.min.y - model.min.y
+            if let fp = node.bounds?.size {
+                shift.x = footprintShift(modelMin: model.min.x, modelMax: model.max.x,
+                                         shift: shift.x, half: Float(fp.x) / 2)
+                shift.z = footprintShift(modelMin: model.min.z, modelMax: model.max.z,
+                                         shift: shift.z, half: Float(fp.z) / 2)
+            }
         } else {
             shift.y = stand.max.y - model.max.y
         }
         loaded.position += shift
+    }
+
+    /// The horizontal shift that keeps a model inside its footprint: `shift` unchanged when the model
+    /// already lands inside, the nearest in-bounds shift when it would stray, and `shift` untouched
+    /// when the model is wider than the footprint (a tree crown, a lamp arm) because then the
+    /// stand-in's placement is the design.
+    static func footprintShift(modelMin: Float, modelMax: Float, shift: Float, half: Float) -> Float {
+        guard modelMax - modelMin <= 2 * half + 0.01 else { return shift }
+        let lo = -half - modelMin, hi = half - modelMax
+        return min(max(shift, lo), hi)
     }
 
     private static func lightEntity(_ kind: LightKind) -> Entity {

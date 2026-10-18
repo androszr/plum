@@ -265,4 +265,67 @@ import StoreSimKit
         let built = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: .empty))
         #expect(built.components[ModelComponent.self]?.materials.first is SimpleMaterial)
     }
+
+    /// The full-catalogue shop: every model in the `Models` folder, loaded through the real loader.
+    static func fullCatalogueRoot(detail: DetailLevel) throws -> Entity {
+        let dir = try BriefSpec.modelsDirectory()
+        let urls = try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "usdz" }
+        let catalogue = AssetCatalogue(modelURLs: urls)
+        return EntityBuilder.entity(
+            for: SceneComposer.compose(layout: layout, detail: detail, catalogue: catalogue),
+            loader: ModelLoader(catalogue: catalogue))
+    }
+
+    /// The two bottle walls sit against the storefront. Their loaded model must stay inside the
+    /// 0.5 m footprint, so its back ends behind the glass instead of poking through it.
+    @Test func alcoholWallsStayBehindTheStorefrontGlass() throws {
+        let root = try Self.fullCatalogueRoot(detail: .full)
+        let glass = try #require(root.findEntity(named: "storefront_glazing"))
+        let glassOuter = glass.visualBounds(relativeTo: root).max.z
+        let walls = Self.layout.fixtures.filter { $0.kind == .alcoholWall }
+        #expect(walls.count == 2)
+        for f in walls {
+            let entity = try #require(root.findEntity(named: f.id))
+            let local = entity.visualBounds(relativeTo: entity)
+            #expect(local.min.z >= -0.25 - 0.01, "\(f.id) back at \(local.min.z) is outside its 0.5 m footprint")
+            let world = entity.visualBounds(relativeTo: root)
+            #expect(world.max.z <= glassOuter,
+                    "\(f.id) world max z \(world.max.z) is past the glazing outer face \(glassOuter)")
+        }
+    }
+
+    /// Every floor fixture's loaded model stays in its floor space on both shells (Mac `.full`,
+    /// phone `.reduced`). The tree's brief is a 1.4 m crown over a 1.0 m footprint and the lamp's
+    /// 0.8 m arm reaches over the parking lane from a 0.5 m footprint: both by design, and both
+    /// do so in the stand-in too.
+    @Test func placedFloorModelsStayInsideTheirFootprints() throws {
+        for detail in [DetailLevel.full, .reduced] {
+            let root = try Self.fullCatalogueRoot(detail: detail)
+            var visited = 0
+            for f in Self.layout.fixtures
+            where f.kind.occupiesFloor && ![FixtureKind.tree, .streetLamp].contains(f.kind) {
+                let entity = try #require(root.findEntity(named: f.id))
+                let box = entity.visualBounds(relativeTo: entity)
+                let w = Double(f.kind.footprint.w) * cellSize, d = Double(f.kind.footprint.d) * cellSize
+                let tol: Float = 0.01
+                #expect(box.min.x >= Float(-w / 2) - tol && box.max.x <= Float(w / 2) + tol
+                        && box.min.z >= Float(-d / 2) - tol && box.max.z <= Float(d / 2) + tol,
+                        "\(f.id) \(detail) spans x \(box.min.x)...\(box.max.x) z \(box.min.z)...\(box.max.z) in a \(w) x \(d) footprint")
+                visited += 1
+            }
+            #expect(visited >= 40, "only \(visited) fixtures visited at \(detail)")
+        }
+    }
+
+    @Test func footprintShiftClampsAFittingModelAndLeavesAWideOneAlone() {
+        func shift(_ lo: Float, _ hi: Float, _ s: Float, _ half: Float) -> Float {
+            EntityBuilder.footprintShift(modelMin: lo, modelMax: hi, shift: s, half: half)
+        }
+        #expect(abs(shift(-0.25, 0.25, -0.0665, 0.25) - 0) < 1e-6)
+        #expect(abs(shift(-0.1, 0.1, -0.192, 0.25) - -0.15) < 1e-6)
+        #expect(abs(shift(-0.2, 0.2, 0.01, 0.25) - 0.01) < 1e-6)
+        #expect(shift(-0.7, 0.7, 0.0, 0.5) == 0.0)
+        #expect(abs(shift(-0.7, 0.7, 0.03, 0.5) - 0.03) < 1e-6)
+    }
 }
