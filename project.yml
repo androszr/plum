@@ -25,9 +25,13 @@ targets:
       - path: App
         excludes:
           - Resources/Models
+          - Resources/Characters
           - Info.plist
       # A folder reference, so a dropped .usdz ships without a project change.
       - path: App/Resources/Models
+        type: folder
+      # Walking characters made outside the generator; a sibling of Models so Models stays generated-only.
+      - path: App/Resources/Characters
         type: folder
     dependencies:
       - package: StoreSimKit

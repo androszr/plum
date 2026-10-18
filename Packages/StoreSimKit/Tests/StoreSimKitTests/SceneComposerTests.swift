@@ -73,6 +73,53 @@ import Testing
         #expect(abs(n.yaw - .pi / 2) < 1e-9)
     }
 
+    @Test func trafficGroupHoldsEveryMoverUnselectableAtItsStartPose() throws {
+        for detail in [DetailLevel.full, .reduced] {
+            let root = SceneComposer.compose(layout: Self.layout, detail: detail, catalogue: .empty)
+            let traffic = try #require(root.node(named: "traffic"))
+            let movers = Traffic.movers(for: Self.layout, detail: detail)
+            #expect(traffic.children.count == movers.count)
+            for (node, mover) in zip(traffic.children, movers) {
+                let start = Traffic.pose(of: mover, at: 0)
+                #expect(node.name == mover.id)
+                #expect(!node.selectable)
+                #expect(node.bounds == nil)
+                #expect(!node.blocksPicking)
+                #expect(node.mover == mover)
+                #expect(node.position == start.position)
+                #expect(node.yaw == start.yaw)
+            }
+        }
+    }
+
+    @Test func carMoverUsesTheParkedCarModelAndKeepsItsFallback() throws {
+        let urls = [AssetName.parkedCarHatchback, .parkedCarSaloon, .parkedCarVan].map { modelURL($0.rawValue) }
+        let root = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: AssetCatalogue(modelURLs: urls))
+        let cars = try #require(root.node(named: "traffic")).children.filter { $0.mover?.kind == .car }
+        #expect(!cars.isEmpty)
+        for car in cars {
+            guard case let .asset(name) = car.shape else { Issue.record("\(car.name) is not an asset"); continue }
+            #expect(name == car.mover?.asset)
+            #expect(car.children.first?.name == "fallback")
+        }
+    }
+
+    @Test func walkerStandInIsProceduralWhenNoCharacterFileExists() throws {
+        let root = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: .empty)
+        let walkers = try #require(root.node(named: "traffic")).children.filter { $0.mover?.kind == .pedestrian }
+        #expect(!walkers.isEmpty)
+        for w in walkers {
+            if case .asset = w.shape { Issue.record("\(w.name) is an asset without a file") }
+            #expect(w.node(named: "torso") != nil)
+        }
+        let cat = AssetCatalogue(modelURLs: AssetName.characterNames.map { modelURL($0.rawValue) })
+        let withFiles = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: cat)
+        for w in try #require(withFiles.node(named: "traffic")).children where w.mover?.kind == .pedestrian {
+            guard case .asset = w.shape else { Issue.record("\(w.name) ignored its file"); continue }
+            #expect(w.children.first?.name == "fallback")
+        }
+    }
+
     @Test func nodeNamesDoNotClashWithFixtureIds() {
         let root = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: .empty)
         let ids = Set(Self.layout.fixtures.map(\.id))

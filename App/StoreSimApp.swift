@@ -1,7 +1,13 @@
+import StoreSimRender
 import SwiftUI
 
 @main
 struct StoreSimApp: App {
+    init() {
+        // Before any RealityView builds its scene, so the system is there from the first frame.
+        TrafficDriver.register()
+    }
+
     var body: some Scene {
         WindowGroup {
             #if os(macOS)

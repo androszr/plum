@@ -45,6 +45,14 @@ public enum ModelVariant {
         return wrap(ordinal, count: count(for: fixture.kind))
     }
 
+    /// A moving car continues the count where the parked cars stop, so its model follows theirs;
+    /// a walker has one look per character file and its variant is 0.
+    public static func index(of mover: Mover, in layout: StoreLayout) -> Int {
+        guard mover.kind == .car else { return 0 }
+        let parked = layout.fixtures.filter { $0.kind == .parkedCar }.count
+        return wrap(parked + mover.ordinal, count: count(for: .parkedCar))
+    }
+
     /// In atlas order.
     public static let posterHeadlines: [String] = ["Hot coffee?", "Hungry?", "Open 6-23"]
 

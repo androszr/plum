@@ -8,16 +8,16 @@ public struct OffscreenRenderError: Error, CustomStringConvertible {
     public let description: String
 }
 
-/// Renders an entity tree to an image without a window.
+/// Renders an entity tree to an image without a window. It advances the scene by two frames of `frameDelta` seconds.
 @MainActor
 public final class OffscreenRenderer {
     public init() {}
 
-    public func render(root: Entity, camera: OrbitCamera, size: (Int, Int)) async throws -> CGImage {
-        try await render(root: root, pose: camera.pose, size: size)
+    public func render(root: Entity, camera: OrbitCamera, size: (Int, Int), frameDelta: TimeInterval = 0.5) async throws -> CGImage {
+        try await render(root: root, pose: camera.pose, size: size, frameDelta: frameDelta)
     }
 
-    public func render(root: Entity, pose: CameraPose, size: (Int, Int)) async throws -> CGImage {
+    public func render(root: Entity, pose: CameraPose, size: (Int, Int), frameDelta: TimeInterval = 0.5) async throws -> CGImage {
         guard let device = MTLCreateSystemDefaultDevice() else { throw OffscreenRenderError(description: "no GPU") }
         let renderer = try RealityRenderer()
         renderer.entities.append(root)
@@ -45,7 +45,7 @@ public final class OffscreenRenderer {
         for _ in 0..<2 {
             try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
                 do {
-                    try renderer.updateAndRender(deltaTime: 0.5, cameraOutput: output, whenScheduled: nil, onComplete: { _ in
+                    try renderer.updateAndRender(deltaTime: frameDelta, cameraOutput: output, whenScheduled: nil, onComplete: { _ in
                         cont.resume()
                     })
                 } catch {

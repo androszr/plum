@@ -11,7 +11,7 @@ public struct AssetCatalogue: Sendable {
     private let models: [AssetName: URL]
     private let textures: [AssetName: URL]
 
-    /// Keeps a `.usdz` whose basename is a fixture name, and a `.png` whose basename is a signage name.
+    /// Keeps a `.usdz` whose basename is a fixture or character name, and a `.png` whose basename is a signage name.
     /// A picture named like a fixture, or a model named like signage, is ignored.
     public init(modelURLs: [URL]) {
         var foundModels: [AssetName: URL] = [:]
@@ -19,7 +19,7 @@ public struct AssetCatalogue: Sendable {
         for url in modelURLs {
             let base = url.deletingPathExtension().lastPathComponent
             guard let name = AssetName(rawValue: base) else { continue }
-            if url.pathExtension == "usdz", AssetName.fixtureNames.contains(name) {
+            if url.pathExtension == "usdz", AssetName.fixtureNames.contains(name) || AssetName.characterNames.contains(name) {
                 foundModels[name] = url
             } else if url.pathExtension == "png", AssetName.signageNames.contains(name) {
                 foundTextures[name] = url

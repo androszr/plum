@@ -12,6 +12,8 @@ struct BriefSpec: Sendable {
     /// True when the section says `Status: stand-in only`: no model file yet.
     var pending = false
     var sourced: Bool
+    /// True when the section says `Status: external ...`: made outside the generator, shipped in `Characters/`.
+    var external = false
 
     var isSignage: Bool { dimensions == nil }
 
@@ -26,6 +28,12 @@ struct BriefSpec: Sendable {
         var url = URL(fileURLWithPath: #filePath)
         for _ in 0..<6 { url.deleteLastPathComponent() }
         return url.appendingPathComponent("App/Resources/Models")
+    }
+
+    static func charactersDirectory() throws -> URL {
+        var url = URL(fileURLWithPath: #filePath)
+        for _ in 0..<6 { url.deleteLastPathComponent() }
+        return url.appendingPathComponent("App/Resources/Characters")
     }
 
     static func parse(_ text: String) throws -> [String: BriefSpec] {
@@ -82,7 +90,8 @@ struct BriefSpec: Sendable {
                 parts: shapedParts(name, partNames(partsLine)),
                 format: try value(chunk, "Format:", name),
                 pending: status?.contains("stand-in only") ?? false,
-                sourced: sourced(chunk))
+                sourced: sourced(chunk),
+                external: status?.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("external") ?? false)
         }
         return specs
     }

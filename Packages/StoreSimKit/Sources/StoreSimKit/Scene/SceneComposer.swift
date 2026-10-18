@@ -38,6 +38,7 @@ public struct SceneComposer {
                                 carRects: layout.fixtures.filter { $0.kind == .parkedCar }.map(\.occupiedRect)).renamed("ground"),
             BuildingBuilder.build(lot: layout.lot, detail: detail),
             SceneNode(name: "fixtures", children: fixtureNodes),
+            SceneNode(name: "traffic", children: TrafficComposer.nodes(layout: layout, detail: detail, catalogue: catalogue)),
             SceneNode(name: "lighting", children: Lighting.nodes(for: layout)),
             SceneNode(name: "camera_target", position: SIMD3(centre.x, 0, centre.y)),
         ])

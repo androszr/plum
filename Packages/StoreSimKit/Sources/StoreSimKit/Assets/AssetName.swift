@@ -30,6 +30,9 @@ public enum AssetName: String, CaseIterable, Sendable {
     case treeMaple = "tree_maple"
     case selfCheckout = "self_checkout"
     case alcoholWall = "alcohol_wall"
+    case pedestrianA = "pedestrian_a"
+    case pedestrianB = "pedestrian_b"
+    case pedestrianC = "pedestrian_c"
     case plumMark = "plum_mark"
     case storefrontSign = "storefront_sign"
     case priceStrip = "price_strip"
@@ -48,14 +51,18 @@ public enum AssetName: String, CaseIterable, Sendable {
         return names
     }
 
+    /// Walking characters made outside the generator and shipped in `App/Resources/Characters/`.
+    public static let characterNames: Set<AssetName> = [.pedestrianA, .pedestrianB, .pedestrianC]
+
     /// Pictures: the mark, the canopy, the price strip, the posters, the menu, the pack fronts.
     public static var signageNames: Set<AssetName> {
-        Set(allCases).subtracting(fixtureNames)
+        Set(allCases).subtracting(fixtureNames).subtracting(characterNames)
     }
 
     /// Extensions the generator writes for this name. The mark is both a drawing and a picture.
     public var expectedFileExtensions: [String] {
         if self == .plumMark { return ["svg", "png"] }
+        if Self.characterNames.contains(self) { return ["usdz"] }
         if Self.signageNames.contains(self) { return ["png"] }
         return ["usdz"]
     }

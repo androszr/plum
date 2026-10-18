@@ -69,6 +69,43 @@ let hasGPU = MTLCreateSystemDefaultDevice() != nil
         #expect(s.centre != s.corner)
     }
 
+    /// The success criterion: two frames two seconds apart differ where the traffic is, and the parked cars do not move.
+    @Test(.enabled(if: hasGPU))
+    func trafficMovesBetweenTwoFrames() async throws {
+        let catalogue = AssetCatalogue.empty
+        let node = SceneComposer.compose(layout: .plumCorner, detail: .full, catalogue: catalogue)
+        let root = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: catalogue))
+        EntityBuilder.applyRoofOpacity(root: root, camera: .isoPreset)
+        TrafficDriver.place(in: root, at: 0)
+        let first = try await OffscreenRenderer().render(root: root, camera: .isoPreset, size: (512, 512))
+        try Self.write(first, name: "traffic-t0-512x512.png")
+        TrafficDriver.place(in: root, at: 2)
+        let second = try await OffscreenRenderer().render(root: root, camera: .isoPreset, size: (512, 512))
+        try Self.write(second, name: "traffic-t2-512x512.png")
+        let a = Self.pixels(first), b = Self.pixels(second)
+        #expect(a.count == b.count && !a.isEmpty)
+        var differing = 0
+        for i in stride(from: 0, to: min(a.count, b.count), by: 4)
+        where a[i] != b[i] || a[i + 1] != b[i + 1] || a[i + 2] != b[i + 2] { differing += 1 }
+        #expect(differing >= 50, "only \(differing) pixels changed")
+        // The parked cars never move: their entities sit where they were.
+        for car in StoreLayout.plumCorner.fixtures where car.kind == .parkedCar {
+            let e = try #require(root.findEntity(named: car.id))
+            let m = car.occupiedRect.centreMetres
+            #expect(e.position == SIMD3<Float>(Float(m.x), 0, Float(m.y)))
+        }
+    }
+
+    static func pixels(_ image: CGImage) -> [UInt8] {
+        let w = image.width, h = image.height
+        var data = [UInt8](repeating: 0, count: w * h * 4)
+        let ctx = CGContext(data: &data, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
+                            space: CGColorSpaceCreateDeviceRGB(),
+                            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+        return data
+    }
+
     @Test(.enabled(if: hasGPU))
     func insideViewSnapshot() async throws {
         let catalogue = AssetCatalogue.empty

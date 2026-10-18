@@ -139,6 +139,22 @@ keeps every second facing and drops the lane boxes. Bags lean up to 2 degrees, s
 The fill rule: a shelf is 95 percent full or has less room left than its narrowest pack (wide family
 packs cannot fill a shelf more evenly than whole packs allow); `PlanogramTests` pins both.
 
+**Street traffic (2026-10-18, plan `plans/2026-10-18-street-traffic.md`).** Cars drive past and
+people walk the pavements while the app is open. It is derived, not stored: `Traffic` (pure, in
+`StoreSimKit`) takes the street zone and the pavement zones of the lot and makes lanes, movers and
+`pose(of:at:)` from a time value; `TrafficComposer` turns each mover into a `SceneNode` (named
+`moving_car_N` / `walker_N`, never selectable, no bounds) under a `traffic` group, carrying its route
+in `SceneNode.mover`. `TrafficDriver` and `TrafficSystem` (in `StoreSimRender`) are the only per-frame
+code: a RealityKit `System` adds the frame time to each `MoverComponent` and sets its transform, and
+`startWalkCycles` starts each walker's built-in animation. Rules: two car lanes in the street zone,
+the near one driving -X and the far one +X (right-hand traffic, front of a car is +X); a walker uses
+`Traffic.walkingLines`: the clear bands between the fixture bodies on a pavement (from
+`solidMetres`; a bin, lamp or tree blocks only its body). The two widest bands get a line down their
+middle each, otherwise both lines share the one band, as far apart as it allows, as on the near
+pavement; one line each way; the phone shows fewer movers through `DetailLevel.reduced`. A moving car reuses
+the parked cars' three models, continuing their variant count, so it is not repainted. The walkers are
+`pedestrian_a|b|c.usdz` (Meshy, rigged with the walk cycle) in `App/Resources/Characters/`.
+
 **Camera and roof.** Outside is `OrbitCamera`, a pure value: pan, zoom, rotate and tilt
 are clamped, and `roofOpacity` is 1 below 30 degrees of pitch, 0 above 50,
 linear between. `EntityBuilder.applyRoofOpacity` sets the `store_roof`
@@ -168,7 +184,7 @@ exists.
 by hash) builds thirty assets (24 models and 6 pictures); five more models are sourced
 (see below). A brief section marked `Status: stand-in only` (no section carries it today) is skipped by the generator and the checker and ships only its code-built stand-in. `Scripts/models.sh` writes them into
 `App/Resources/Models/`. That folder is copied into the app whole, so it holds
-the generated and the sourced model files and no notes; the note for it is `App/Resources/Models.md`. The catalogue resolves `.usdz` for fixtures and `.png`
+the generated and the sourced model files and no notes; the note for it is `App/Resources/Models.md`. The walking characters live in a sibling folder, `App/Resources/Characters/` (a second folder reference in `project.yml`, note in `App/Resources/Characters.md`); they are made with Meshy and never generated. The catalogue resolves `.usdz` for fixtures and `.png`
 for signage; `ModelLoader` is the only file that loads either. Decision
 2026-10-17, plan `plans/2026-10-17-grok-models-from-asset-brief.md`: generate
 from the brief so CI can prove the shipped files match the generator
@@ -244,7 +260,10 @@ coding.
     tables (`## Palette` and `## Packaging palette`), the name from `Brand.swift` and the products from
     `Resources/planograms.json`. The written exception is a brief section with
     a `Source:` line (the five sourced street props): the generator skips it and the
-    checker proves only presence and budget. *(lint gates d and h)*
+    checker proves only presence and budget. A second exception is a section with `Status: external`
+    (the three walking characters): shipped in `App/Resources/Characters/`, a folder that is copied
+    whole like `Models/` and holds nothing but `.usdz`; the generator and the checker skip it, and
+    its note is `App/Resources/Characters.md`. *(lint gates d and h)*
 13. **Variety is derived, never stored.** `ModelVariant.index(of:in:)` is the only source of a variant index; it lives on `SceneNode.variant` and is applied by `ModelVariants.apply`; no `Codable` type carries it. `visibleShape` and `isEnabled` are part of that same derived index, not a second source. *(`ModelVariantTests`, `SceneComposerTests`; verifier grep on `Fixture.swift` and `StoreLayout.swift`)*
 
 ## What the tests cannot see

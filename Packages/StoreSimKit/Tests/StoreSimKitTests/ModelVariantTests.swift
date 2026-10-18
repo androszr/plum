@@ -35,6 +35,20 @@ import Testing
                 == [.parkedCarHatchback, .parkedCarSaloon, .parkedCarVan])
     }
 
+    @Test func parkedCarsCountUpThroughTheirModels() {
+        #expect(["parked_car_1", "parked_car_2", "parked_car_3"].map { Self.variant($0) } == [0, 1, 2])
+    }
+
+    @Test func movingCarsContinueAfterTheParkedOnes() {
+        let cars = Traffic.movers(for: Self.layout, detail: .full).filter { $0.kind == .car }
+        let indices = cars.map { ModelVariant.index(of: $0, in: Self.layout) }
+        #expect(Array(indices.prefix(4)) == [0, 1, 2, 0])
+        #expect(cars.first?.ordinal == 0)
+        for m in Traffic.movers(for: Self.layout, detail: .full) where m.kind == .pedestrian {
+            #expect(ModelVariant.index(of: m, in: Self.layout) == 0)
+        }
+    }
+
     @Test func sixTreesAlternate() {
         let trees = Self.layout.fixtures.filter { $0.kind == .tree }
         let indices = trees.map { ModelVariant.index(of: $0, in: Self.layout) }

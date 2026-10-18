@@ -17,7 +17,7 @@ xcodebuild -project StoreSim.xcodeproj -scheme StoreSim_macOS -destination 'plat
 xcodebuild -project StoreSim.xcodeproj -scheme StoreSim_iOS -destination 'platform=iOS Simulator,name=iPhone 16' \
     -configuration Debug -derivedDataPath .build/DerivedData CODE_SIGNING_ALLOWED=NO build -quiet
 
-# The Models folder is copied whole. A note or a placeholder in it would ship.
+# The model folders are copied whole. A note or a placeholder in it would ship.
 forbid_extra() {
     local dir="$1"
     if [[ -e "$dir/README.md" || -e "$dir/.gitkeep" ]]; then
@@ -27,5 +27,7 @@ forbid_extra() {
 }
 forbid_extra .build/DerivedData/Build/Products/Debug/StoreSim.app/Contents/Resources/Models
 forbid_extra .build/DerivedData/Build/Products/Debug-iphonesimulator/StoreSim.app/Models
+forbid_extra .build/DerivedData/Build/Products/Debug/StoreSim.app/Contents/Resources/Characters
+forbid_extra .build/DerivedData/Build/Products/Debug-iphonesimulator/StoreSim.app/Characters
 
 echo "build: ok (Mac app under .build/DerivedData/Build/Products/Debug/, simulator app under Debug-iphonesimulator/)"
