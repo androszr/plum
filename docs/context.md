@@ -192,6 +192,8 @@ available: attachments (closure takes one argument) and
 `.realityViewCameraControls(.orbit)` (exposes no camera state, so the roof fade
 could not follow it), hence the hand-rolled orbit camera.
 
+The Inside tap marker is the same kind of in-scene entity (`FloorMarkerEntity`); its fade is the pure `FloorMarker.opacity(remaining:)` over the last metre of a stroll, applied through an `OpacityComponent` like the roof.
+
 **Headless snapshots.** `OffscreenRenderer` wraps `RealityRenderer` and renders
 into a Metal texture without a window; `SnapshotRenderTests` writes two PNGs
 under `NSTemporaryDirectory()/storesim-snapshots/` and skips only when no GPU

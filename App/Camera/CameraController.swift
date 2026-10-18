@@ -24,6 +24,8 @@ final class CameraController {
     var walk: WalkCamera = .preset(lot: StoreLayout.plumCorner.lot, floor: WalkableFloor(layout: .plumCorner)) {
         didSet { apply() }
     }
+    /// The ring where the current stroll will stop; shown only while that stroll lasts.
+    private(set) var marker: FloorMarker?
     var selection: Selection?
     /// The Picker binds to this; changing it glides the camera to that view's preset.
     var mode: ViewMode = .outside {
@@ -33,6 +35,7 @@ final class CameraController {
     @ObservationIgnored private var cameraEntity: PerspectiveCamera?
     @ObservationIgnored private var root: Entity?
     @ObservationIgnored private var tag: NameTagEntity?
+    @ObservationIgnored private var markerEntity: FloorMarkerEntity?
     @ObservationIgnored private var selectedEntity: Entity?
     @ObservationIgnored private var shellCandidates: [String: Entity] = [:]
     @ObservationIgnored private var entranceDoor: Entity?
@@ -57,8 +60,9 @@ final class CameraController {
     private let panFactor = 0.0022
     #endif
 
-    func attach(camera entity: PerspectiveCamera, root: Entity, tag: NameTagEntity) {
+    func attach(camera entity: PerspectiveCamera, root: Entity, tag: NameTagEntity, marker: FloorMarkerEntity) {
         cameraEntity = entity
+        markerEntity = marker
         self.root = root
         self.tag = tag
         shellCandidates = EntityBuilder.shellCandidates(in: root)
@@ -163,6 +167,7 @@ final class CameraController {
     }
 
     private func switchMode(from oldMode: ViewMode) {
+        marker = nil
         walkInput = .zero
         heldKeys = []
         stick = .zero
@@ -316,7 +321,13 @@ final class CameraController {
     func tapFloor(at tap: SIMD2<Double>, viewSize: SIMD2<Double>) {
         guard mode == .inside, glide == nil,
               let point = WalkCamera.floorPoint(pose: walk.pose, tap: tap, viewSize: viewSize) else { return }
-        if walk.stroll(to: point, on: floor) { startWalkLoopIfNeeded() }
+        if walk.stroll(to: point, on: floor) {
+            marker = FloorMarker.placed(after: walk)
+            startWalkLoopIfNeeded()
+        } else {
+            marker = nil
+        }
+        applyMarker()
     }
 
     // MARK: Selection
@@ -357,6 +368,17 @@ final class CameraController {
             if door.isEnabled != on { door.isEnabled = on }
         }
         updateTag()
+        applyMarker()
+    }
+
+    private func applyMarker() {
+        guard let markerEntity else { return }
+        if let marker, let p = marker.presentation(camera: walk, mode: mode) {
+            markerEntity.show(at: p.position, opacity: p.opacity)
+        } else {
+            markerEntity.hide()
+            if !walk.isStrolling { marker = nil }
+        }
     }
 
     private func updateTag() {
