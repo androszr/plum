@@ -10,7 +10,7 @@ let package = Package(
     ],
     targets: [
         // Pure scene logic: Foundation + simd only (enforced by Scripts/lint.sh).
-        .target(name: "StoreSimKit"),
+        .target(name: "StoreSimKit", resources: [.copy("Resources/planograms.json")]),
         // RealityKit side: turns the pure scene tree into entities.
         .target(name: "StoreSimRender", dependencies: ["StoreSimKit"]),
         .testTarget(name: "StoreSimKitTests", dependencies: ["StoreSimKit"]),

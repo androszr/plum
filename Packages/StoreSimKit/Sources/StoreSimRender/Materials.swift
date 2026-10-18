@@ -10,6 +10,13 @@ public typealias PlatformColor = UIColor
 #endif
 
 public enum Materials {
+    @MainActor private static var cache: [CacheKey: RealityKit.Material] = [:]
+
+    private struct CacheKey: Hashable {
+        var material: SurfaceMaterial
+        var hasPicture: Bool
+    }
+
     public static func platformColor(_ c: BrandColor) -> PlatformColor {
         PlatformColor(red: c.r, green: c.g, blue: c.b, alpha: c.a)
     }
@@ -26,7 +33,11 @@ public enum Materials {
         case .none:
             return nil
         case let .solid(color, roughness):
-            return SimpleMaterial(color: platformColor(color), roughness: .float(Float(roughness)), isMetallic: false)
+            let key = CacheKey(material: m, hasPicture: false)
+            if let hit = cache[key] { return hit }
+            let made = SimpleMaterial(color: platformColor(color), roughness: .float(Float(roughness)), isMetallic: false)
+            cache[key] = made
+            return made
         case let .emissive(color):
             return UnlitMaterial(color: platformColor(color))
         case let .glass(color, opacity):
@@ -42,6 +53,25 @@ public enum Materials {
                 return unlit
             }
             return UnlitMaterial(color: platformColor(fallback))
+        case let .atlas(name, region, fallback):
+            let texture = loader.flatMap { try? $0.texture(name) }
+            let key = CacheKey(material: m, hasPicture: texture != nil)
+            if let hit = cache[key] { return hit }
+            let made: RealityKit.Material
+            if let texture {
+                var pbr = PhysicallyBasedMaterial()
+                pbr.baseColor = .init(tint: .white, texture: .init(texture))
+                pbr.roughness = .init(floatLiteral: 0.6)
+                // `AtlasRegion.v` counts up from the bottom of the picture; RealityKit's transform measures the
+                // offset from the picture's top (after the plane's own flip), so convert once here.
+                pbr.textureCoordinateTransform.offset = SIMD2<Float>(Float(region.u), Float(1 - region.v - region.height))
+                pbr.textureCoordinateTransform.scale = SIMD2<Float>(Float(region.width), Float(region.height))
+                made = pbr
+            } else {
+                made = SimpleMaterial(color: platformColor(fallback), roughness: .float(0.6), isMetallic: false)
+            }
+            cache[key] = made
+            return made
         }
     }
 }

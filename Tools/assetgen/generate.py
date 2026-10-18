@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import inspect
 import os
 import sys
 
@@ -19,11 +20,12 @@ SIGNAGE_ORDER = (
     "price_strip",
     "window_poster_set",
     "menu_board_texture",
+    "pack_fronts",
 )
 
 # Fixtures embed these pictures, so a partial run still has to draw them.
 TEXTURE_USERS = {
-    "price_strip": {"gondola_shelf", "wall_shelf", "end_cap", "alcohol_wall"},
+    "price_strip": {"wall_shelf", "end_cap", "alcohol_wall"},
     "window_poster_set": {"window_poster"},
     "menu_board_texture": {"menu_screen"},
     "plum_mark": {"wall_fridge", "dairy_chiller", "a_frame_sign"},
@@ -43,6 +45,7 @@ def main() -> int:
     parser.add_argument("--brief", required=True)
     parser.add_argument("--brand", required=True)
     parser.add_argument("--out", required=True)
+    parser.add_argument("--catalogue", help="planograms.json, read by the pack-fronts picture")
     parser.add_argument("--only", nargs="*")
     args = parser.parse_args()
     only = set(args.only) if args.only else None
@@ -81,7 +84,11 @@ def main() -> int:
         if name not in chosen_signage and only:
             continue
         spec = brief.specs[name]
-        _signage(name).build(spec, brief.palette, brand, args.out)
+        builder = _signage(name).build
+        if "catalogue_path" in inspect.signature(builder).parameters:
+            builder(spec, brief.palette, brand, args.out, catalogue_path=args.catalogue)
+        else:
+            builder(spec, brief.palette, brand, args.out)
         png = os.path.join(args.out, f"{name}.png")
         textures[name] = png
         if not only or name in only:

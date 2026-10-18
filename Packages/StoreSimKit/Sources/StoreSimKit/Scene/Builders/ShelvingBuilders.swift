@@ -45,11 +45,32 @@ enum Shelving {
     }
 }
 
+/// The island shelf's empty carcass: 1.0 x 1.0 x 1.85 m with a central back panel. Its shelves, rails and
+/// goods are the merchandise layer (`Merchandiser`), laid out from the planogram.
 enum GondolaShelfBuilder: FixtureBuilding {
+    static let width = 1.0, depth = 1.0, height = 1.85, headerHeight = 0.14
+
     static func build(_ fixture: Fixture, detail: DetailLevel, variant: Int) -> SceneNode {
-        fixtureGroup(fixture, Shelving.parts(fixture, width: 0.9, depth: 0.5, height: 1.5,
-                                              header: fixture.label ?? "Shelf", detail: detail, variant: variant,
-                                              doubleSided: true))
+        let c = Brand.palette
+        let w = width, d = depth
+        let top = height - headerHeight
+        var p = Parts()
+        p.box("base", 0, 0, 0, w, 0.08, d, .paint(c.charcoal))
+        p.box("upright_left", -w / 2 + 0.025, 0.08, 0, 0.05, top - 0.08, d - 0.04, .paint(c.primaryDeep))
+        p.box("upright_right", w / 2 - 0.025, 0.08, 0, 0.05, top - 0.08, d - 0.04, .paint(c.primaryDeep))
+        p.box("back_panel", 0, 0.08, 0, w - 0.1, top - 0.08, 0.02, .paint(c.cream))
+        if detail.isFull {
+            for i in 0..<3 {
+                let y = 0.5 + 0.4 * Double(i)
+                p.box("slot_row_\(i)", 0, y, 0.015, w - 0.12, 0.012, 0.01, .paint(c.charcoal))
+                p.box("slot_row_back_\(i)", 0, y, -0.015, w - 0.12, 0.012, 0.01, .paint(c.charcoal))
+            }
+        }
+        p.box("header_sign", 0, top, 0, w, headerHeight, d, .paint(c.primary))
+        let label = fixture.label ?? "Shelf"
+        p.text("header_text", label, 0, top + headerHeight / 2, d / 2 + 0.012, 0.1, .paint(c.cream))
+        p.text("header_text_back", label, 0, top + headerHeight / 2, -d / 2 - 0.012, 0.1, .paint(c.cream), yaw: .pi)
+        return fixtureGroup(fixture, p)
     }
 }
 

@@ -13,18 +13,36 @@ public enum NodeShape: Sendable {
     case roundedBox(radius: Double)
     case cylinder
     case plane
+    /// A flat rectangle in the XY plane facing +Z, `size.x` by `size.y`.
+    case quad
     case text(String)
     case light(LightKind)
     case asset(AssetName)
     case group
 }
 
-public enum SurfaceMaterial: Sendable {
+/// A rectangle of a picture, in 0...1 with `v` measured from the bottom as RealityKit does.
+public struct AtlasRegion: Hashable, Sendable {
+    public var u: Double
+    public var v: Double
+    public var width: Double
+    public var height: Double
+    public init(u: Double, v: Double, width: Double, height: Double) {
+        self.u = u
+        self.v = v
+        self.width = width
+        self.height = height
+    }
+}
+
+public enum SurfaceMaterial: Hashable, Sendable {
     case solid(BrandColor, roughness: Double)
     case glass(BrandColor, opacity: Double)
     case emissive(BrandColor)
     /// A picture from the catalogue, or the fallback colour when that picture is absent.
     case textured(AssetName, fallback: BrandColor)
+    /// One rectangle of a picture (a pack front, a price label), or the fallback colour when the picture is absent.
+    case atlas(AssetName, region: AtlasRegion, fallback: BrandColor)
     case none
 
     public static func paint(_ c: BrandColor) -> SurfaceMaterial { .solid(c, roughness: 0.6) }

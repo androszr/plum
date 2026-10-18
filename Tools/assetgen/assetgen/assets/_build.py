@@ -14,7 +14,7 @@ SWATCH = [
 ]
 
 FRONT = {
-    "gondola_shelf": [f"price_rail_{i}" for i in range(4)] + ["header_sign"],
+    "gondola_shelf": ["header_sign"],
     "wall_shelf": [f"price_rail_{i}" for i in range(4)] + ["header_sign"],
     "end_cap": [f"price_rail_{i}" for i in range(3)] + ["promo_sign"],
     "wall_fridge": ["door_left", "door_right", "handle_left", "handle_right"],
@@ -151,19 +151,19 @@ def _shelves(b, spec, palette, textures, count_prefix, x_span, z, depth, y0, y1)
 
 
 def gondola_shelf(b, spec, palette, textures):
+    """An empty double-sided carcass. The app draws the shelves, rails and goods from the planogram."""
     w, d, h = spec.dimensions
+    header = 0.14
+    top = h - header
     _box(b, "base", 0, 0, 0, w, 0.08, d, palette["charcoal"])
-    _box(b, "header_sign", 0, h - 0.16, 0, w, 0.16, d, palette["primary"])
-    _box(b, "upright_left", -w / 2 + 0.03, 0.08, 0, 0.05, h - 0.24, d - 0.04, palette["primaryDeep"])
-    _box(b, "upright_right", w / 2 - 0.03, 0.08, 0, 0.05, h - 0.24, d - 0.04, palette["primaryDeep"])
-    _box(b, "back_panel", 0, 0.1, -0.02, w - 0.12, h - 0.3, 0.02, palette["cream"])
-    for i, name in enumerate(_have(spec, "slot_row")):
-        _box(b, name, 0, 0.35 + 0.28 * i, -0.005, w - 0.16, 0.012, 0.01, palette["charcoal"])
-    ys = _shelves(b, spec, palette, textures, "shelf", w - 0.12, 0.0, d * 0.8, 0.14, h - 0.28)
-    _rails(b, spec, palette, textures, ys, d / 2 - 0.01, w - 0.14)
-    goods_ys = [y + 0.03 for y in ys]
-    _shaped_goods(b, spec, "product", _shape_groups(spec, "product"), palette, goods_ys, 0.3, w - 0.2)
-    _shaped_goods(b, spec, "product_back", _shape_groups(spec, "product_back"), palette, goods_ys, -0.3, w - 0.2)
+    _box(b, "upright_left", -w / 2 + 0.025, 0.08, 0, 0.05, top - 0.08, d - 0.04, palette["primaryDeep"])
+    _box(b, "upright_right", w / 2 - 0.025, 0.08, 0, 0.05, top - 0.08, d - 0.04, palette["primaryDeep"])
+    _box(b, "back_panel", 0, 0.08, 0, w - 0.1, top - 0.08, 0.02, palette["cream"])
+    for i in range(3):
+        y = 0.5 + 0.4 * i
+        _box(b, f"slot_row_{i}", 0, y, 0.015, w - 0.12, 0.012, 0.01, palette["charcoal"])
+        _box(b, f"slot_row_back_{i}", 0, y, -0.015, w - 0.12, 0.012, 0.01, palette["charcoal"])
+    _box(b, "header_sign", 0, top, 0, w, header, d, palette["primary"])
 
 
 def wall_shelf(b, spec, palette, textures):
@@ -192,23 +192,25 @@ def end_cap(b, spec, palette, textures):
 
 
 def wall_fridge(b, spec, palette, textures):
+    """An empty carcass centred on its footprint. The app draws the shelves and bottles from the planogram.
+
+    It is built 5 mm inside the brief's footprint on every side, so it never shares a face with the wall."""
     w, d, h = spec.dimensions
-    _box(b, "plinth", 0, 0, 0, w, 0.1, d, palette["primaryDeep"])
-    _box(b, "header", 0, h - 0.16, 0, w, 0.16, d, palette["primary"], texture=textures.get("plum_mark"), texture_background=palette["primary"])
-    _box(b, "frame", 0, 0.1, -d / 2 + 0.04, w - 0.08, h - 0.28, 0.04, palette["charcoal"])
-    _box(b, "frame_side_left", -w / 2 + 0.03, 0.1, 0, 0.05, h - 0.26, d - 0.08, palette["charcoal"])
-    _box(b, "frame_side_right", w / 2 - 0.03, 0.1, 0, 0.05, h - 0.26, d - 0.08, palette["charcoal"])
-    _box(b, "interior_glow", 0, 0.16, -d / 2 + 0.1, w - 0.16, h - 0.4, 0.02, palette["tileWhite"], emissive=True)
-    ys = _shelves(b, spec, palette, textures, "shelf", w - 0.16, -0.04, d * 0.55, 0.22, h - 0.36)
-    groups = _groups(spec, "bottle")
-    for i, y in enumerate(ys):
-        _goods(b, groups.get(i, []), palette, y + 0.03, -0.02, w - 0.22, mode="bottle")
-    door_h = h - 0.32
-    _box(b, "door_left", -w / 4, 0.12, d / 2 - 0.012, w / 2 - 0.06, door_h, 0.02, palette["skyPastel"], opacity=0.35, roughness=0.1)
-    _box(b, "door_right", w / 4, 0.12, d / 2 - 0.012, w / 2 - 0.06, door_h, 0.02, palette["skyPastel"], opacity=0.35, roughness=0.1)
-    _box(b, "handle_left", -0.04, 0.7, d / 2 - 0.02, 0.02, 0.45, 0.02, palette["cream"], roughness=0.3)
-    _box(b, "handle_right", 0.04, 0.7, d / 2 - 0.02, 0.02, 0.45, 0.02, palette["cream"], roughness=0.3)
-    _box(b, "compressor_vent", 0, 0.02, d / 2 - 0.02, w - 0.3, 0.06, 0.015, palette["charcoal"])
+    w, d = w - 0.01, d - 0.01
+    header = 0.16
+    top = h - header
+    _box(b, "plinth", 0, 0, 0, w, 0.10, d, palette["primaryDeep"])
+    _box(b, "header", 0, top, 0, w, header, d, palette["primary"], texture=textures.get("plum_mark"), texture_background=palette["primary"])
+    _box(b, "frame", 0, 0.10, -d / 2 + 0.02, w, top - 0.10, 0.04, palette["charcoal"])
+    _box(b, "frame_side_left", -w / 2 + 0.02, 0.10, 0, 0.04, top - 0.10, d, palette["charcoal"])
+    _box(b, "frame_side_right", w / 2 - 0.02, 0.10, 0, 0.04, top - 0.10, d, palette["charcoal"])
+    _box(b, "interior_glow", 0, 0.12, -d / 2 + 0.05, w - 0.1, top - 0.14, 0.01, palette["tileWhite"], emissive=True)
+    door_h = top - 0.10
+    _box(b, "door_left", -w / 4, 0.10, d / 2 - 0.012, w / 2 - 0.02, door_h, 0.02, palette["skyPastel"], opacity=0.35, roughness=0.1)
+    _box(b, "door_right", w / 4, 0.10, d / 2 - 0.012, w / 2 - 0.02, door_h, 0.02, palette["skyPastel"], opacity=0.35, roughness=0.1)
+    _box(b, "handle_left", -0.04, 0.8, d / 2 + 0.007, 0.025, 0.5, 0.02, palette["cream"], roughness=0.3)
+    _box(b, "handle_right", 0.04, 0.8, d / 2 + 0.007, 0.025, 0.5, 0.02, palette["cream"], roughness=0.3)
+    _box(b, "compressor_vent", 0, 0.02, d / 2, w - 0.2, 0.05, 0.01, palette["charcoal"])
 
 
 def dairy_chiller(b, spec, palette, textures):

@@ -193,4 +193,60 @@ import StoreSimKit
         #expect(tints.count == 3)
         #expect(Set(tints.map { "\($0)" }).count == 3)
     }
+
+    // MARK: Merchandise layer
+
+    static func count(named name: String, in root: Entity) -> Int {
+        (root.name == name ? 1 : 0) + root.children.reduce(0) { $0 + count(named: name, in: $1) }
+    }
+
+    @Test func merchandiseSiblingIsBuiltWhenTheModelLoads() throws {
+        let dir = try BriefSpec.modelsDirectory()
+        let cat = AssetCatalogue(modelURLs: [dir.appendingPathComponent("gondola_shelf").appendingPathExtension("usdz")])
+        let root = Self.root(catalogue: cat)
+        let g = try #require(root.findEntity(named: "gondola_1"))
+        #expect(Self.count(named: "merchandise", in: g) == 1)
+        #expect(Self.count(named: "shelf_0", in: g) == 1)
+        #expect(g.findEntity(named: "product_0_0") != nil)
+        // The loaded shell is there too, and the stand-in's own parts are not.
+        #expect(g.findEntity(named: "upright_left") == nil || Self.count(named: "upright_left", in: g) == 1)
+    }
+
+    @Test func merchandiseIsNotDuplicatedWhenTheModelFails() throws {
+        let missing = URL(fileURLWithPath: "/nonexistent").appendingPathComponent("gondola_shelf").appendingPathExtension("usdz")
+        let root = Self.root(catalogue: AssetCatalogue(modelURLs: [missing]))
+        let g = try #require(root.findEntity(named: "gondola_1"))
+        #expect(Self.count(named: "merchandise", in: g) == 1)
+        #expect(Self.count(named: "shelf_0", in: g) == 1)
+        #expect(Self.count(named: "upright_left", in: g) == 1)
+    }
+
+    @Test func quadBuildsAFlatMeshOfItsSize() throws {
+        let node = SceneNode(name: "card", shape: .quad, size: SIMD3(0.2, 0.3, 0), material: .paint(Brand.palette.cream))
+        let built = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: .empty))
+        let mesh = try #require(built.components[ModelComponent.self]?.mesh)
+        let extents = mesh.bounds.extents
+        #expect(abs(extents.x - 0.2) < 1e-4 && abs(extents.y - 0.3) < 1e-4 && extents.z < 1e-4)
+    }
+
+    @Test func equalBoxesShareOneMesh() {
+        let loader = ModelLoader(catalogue: .empty)
+        let a = SceneNode(name: "a", shape: .box, size: SIMD3(0.123, 0.456, 0.789))
+        let b = SceneNode(name: "b", shape: .box, size: SIMD3(0.123, 0.456, 0.789))
+        let before = EntityBuilder.meshCacheCount
+        _ = EntityBuilder.entity(for: a, loader: loader)
+        let afterFirst = EntityBuilder.meshCacheCount
+        _ = EntityBuilder.entity(for: b, loader: loader)
+        #expect(afterFirst == before + 1)
+        #expect(EntityBuilder.meshCacheCount == afterFirst)
+    }
+
+    @Test func atlasMaterialFallsBackToItsColourWithoutAPicture() throws {
+        let node = SceneNode(
+            name: "card", shape: .quad, size: SIMD3(0.1, 0.2, 0),
+            material: .atlas(.packFronts, region: AtlasRegion(u: 0, v: 0, width: 0.1, height: 0.1),
+                             fallback: Brand.palette.cream))
+        let built = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: .empty))
+        #expect(built.components[ModelComponent.self]?.materials.first is SimpleMaterial)
+    }
 }

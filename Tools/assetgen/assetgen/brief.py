@@ -174,15 +174,15 @@ def part_names(parts_line: str) -> list[str]:
     return names
 
 
-# The three shelf assets carry a packet, a can and a bottle at every spot; the app shows one.
-SHAPED_ASSETS = ("gondola_shelf", "wall_shelf", "end_cap")
+# The two wall-side shelf assets carry a packet, a can and a bottle at every spot; the app shows one.
+# The island shelf is an empty carcass: the app draws its goods.
+SHAPED_ASSETS = ("wall_shelf", "end_cap")
 SHAPES = ("packet", "can", "bottle")
 
 
 def shaped_parts(name: str, parts: list[str]) -> list[str]:
     """Replace each `product_<shelf>_<i>` of a shelf asset with its three shape meshes.
 
-    The gondola is double-sided, so it also gets a `product_back_<shelf>_<i>` row.
     """
     if name not in SHAPED_ASSETS:
         return parts
@@ -192,9 +192,7 @@ def shaped_parts(name: str, parts: list[str]) -> list[str]:
         if not matched:
             out.append(part)
             continue
-        stems = ["product", "product_back"] if name == "gondola_shelf" else ["product"]
-        for stem in stems:
-            out.extend(f"{stem}_{matched.group(1)}_{matched.group(2)}_{shape}" for shape in SHAPES)
+        out.extend(f"product_{matched.group(1)}_{matched.group(2)}_{shape}" for shape in SHAPES)
     return out
 
 

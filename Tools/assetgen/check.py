@@ -26,6 +26,7 @@ SIGNAGE = {
     "price_strip",
     "window_poster_set",
     "menu_board_texture",
+    "pack_fronts",
 }
 
 
@@ -35,7 +36,7 @@ def _fronts(name: str) -> list[str]:
 
 
 # Only these assets carry a packet, a can and a bottle at every spot; the app shows one.
-SHAPED_ASSETS = {"gondola_shelf", "wall_shelf", "end_cap"}
+SHAPED_ASSETS = {"wall_shelf", "end_cap"}
 SHAPE_MESH = re.compile(r"^(product|product_back)_[0-9]+_[0-9]+_(packet|can|bottle)$")
 OLD_PRODUCT_MESH = re.compile(r"^(product|product_back)_[0-9]+_[0-9]+$")
 MAX_SHAPE_TRIANGLES = 48
@@ -182,11 +183,29 @@ def _check_signage(name: str, spec, models: str) -> None:
             _fail(name, "svg missing")
 
 
+def _check_pack_fronts(models: str, catalogue_path: str) -> None:
+    """Every product has a cell, and its art rectangle is not blank."""
+    from assetgen.catalogue import load_catalogue
+
+    catalogue = load_catalogue(catalogue_path)
+    atlas = catalogue.atlas
+    with Image.open(os.path.join(models, "pack_fronts.png")) as image:
+        rgba = image.convert("RGBA")
+    for product in catalogue.products:
+        col, row = product.cell % atlas.columns, product.cell // atlas.columns
+        ax, ay, aw, ah = catalogue.art_rect(catalogue.shapes[product.shape])
+        left, top = col * atlas.cell_width + ax, row * atlas.cell_height + ay
+        cell = rgba.crop((left, top, left + aw, top + ah))
+        if cell.getchannel("A").getbbox() is None:
+            _fail("pack_fronts", f"the art cell of {product.id} is blank")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--brief", required=True)
     parser.add_argument("--models", required=True)
     parser.add_argument("--shipped", help="folder holding the sourced files (App/Resources/Models)")
+    parser.add_argument("--catalogue", help="planograms.json, to prove every product has a drawn cell")
     parser.add_argument("--only", nargs="*")
     args = parser.parse_args()
     only = set(args.only) if args.only else None
@@ -205,6 +224,8 @@ def main() -> int:
             sourced += 1
         elif spec.is_signage or name in SIGNAGE:
             _check_signage(name, spec, args.models)
+            if name == "pack_fronts" and args.catalogue:
+                _check_pack_fronts(args.models, args.catalogue)
         else:
             _check_model(name, spec, args.models)
             checked += 1

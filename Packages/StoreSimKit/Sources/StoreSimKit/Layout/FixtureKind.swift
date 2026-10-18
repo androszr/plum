@@ -90,7 +90,7 @@ public enum FixtureKind: String, CaseIterable, Codable, Sendable {
     /// Vertical extent in metres (min, max) used for the selection box.
     public var verticalExtent: ClosedRange<Double> {
         switch self {
-        case .gondolaShelf: 0...1.75
+        case .gondolaShelf: 0...1.85
         case .wallShelf: 0...1.9
         case .endCap: 0...1.4
         case .wallFridge: 0...2.1

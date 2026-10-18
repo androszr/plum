@@ -43,7 +43,13 @@ public enum EntityBuilder {
         }
 
         if case .asset = node.shape {
-            return entity // children are only the procedural fallback, handled in baseEntity
+            // The `fallback` child is the procedural stand-in, handled in baseEntity. Any other child is a
+            // layer that goes on top of the shell whether it came from the model or the stand-in
+            // (the merchandise).
+            for child in node.children where child.name != Self.fallbackName {
+                entity.addChild(self.entity(for: child, loader: loader))
+            }
+            return entity
         }
         for child in node.children {
             entity.addChild(self.entity(for: child, loader: loader))
@@ -79,6 +85,23 @@ public enum EntityBuilder {
         }
     }
 
+    static let fallbackName = "fallback"
+
+    private static var meshes: [String: MeshResource] = [:]
+
+    /// Equal shapes at equal sizes (to the millimetre) share one mesh.
+    private static func cachedMesh(_ key: String, _ make: () -> MeshResource) -> MeshResource {
+        if let hit = meshes[key] { return hit }
+        let mesh = make()
+        meshes[key] = mesh
+        return mesh
+    }
+
+    /// Number of distinct meshes built so far (tests).
+    static var meshCacheCount: Int { meshes.count }
+
+    private static func mm(_ v: Float) -> Int { Int((v * 1000).rounded()) }
+
     private static func size3(_ s: SIMD3<Double>) -> SIMD3<Float> { SIMD3<Float>(s) }
 
     private static func baseEntity(for node: SceneNode, loader: ModelLoader) -> Entity {
@@ -91,12 +114,17 @@ public enum EntityBuilder {
         case .group:
             return Entity()
         case .box:
-            return model(.generateBox(size: size))
+            let key = "box:\(mm(size.x)):\(mm(size.y)):\(mm(size.z))"
+            return model(cachedMesh(key) { .generateBox(size: size) })
         case let .roundedBox(radius):
             let r = Float(min(radius, Double(min(size.x, min(size.y, size.z))) * 0.45))
             return model(.generateBox(width: size.x, height: size.y, depth: size.z, cornerRadius: r))
         case .cylinder:
-            return model(.generateCylinder(height: size.y, radius: size.x / 2))
+            let key = "cyl:\(mm(size.x)):\(mm(size.y))"
+            return model(cachedMesh(key) { .generateCylinder(height: size.y, radius: size.x / 2) })
+        case .quad:
+            let key = "quad:\(mm(size.x)):\(mm(size.y))"
+            return model(cachedMesh(key) { .generatePlane(width: size.x, height: size.y) })
         case .plane:
             return model(.generatePlane(width: size.x, depth: size.z))
         case let .text(string):
@@ -122,7 +150,9 @@ public enum EntityBuilder {
             }
             // Loading failed: fall back to the procedural tree kept under `fallback`.
             let holder = Entity()
-            for child in node.children { holder.addChild(entity(for: child, loader: loader)) }
+            for child in node.children where child.name == Self.fallbackName {
+                holder.addChild(entity(for: child, loader: loader))
+            }
             return holder
         }
     }

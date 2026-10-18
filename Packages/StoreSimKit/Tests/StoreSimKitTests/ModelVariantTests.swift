@@ -79,7 +79,7 @@ import Testing
     }
 
     @Test func parserSkipsNonProductParts() {
-        let shelving = ModelVariant.productPartStems(for: .gondolaShelf)
+        let shelving = ModelVariant.productPartStems(for: .wallShelf)
         let a = ModelVariant.parseProductPart("product_2_5", stems: shelving)
         #expect(a?.shelf == 2 && a?.facing == 5 && a?.shape == nil)
         #expect(ModelVariant.parseProductPart("product_2_5_packet", stems: shelving)?.shape == .packet)
@@ -90,6 +90,15 @@ import Testing
         #expect(ModelVariant.parseProductPart("product_0_3_neck", stems: shelving) == nil)
         #expect(ModelVariant.parseProductPart("upright_left", stems: shelving) == nil)
         #expect(ModelVariant.parseProductPart("bottle_1_2", stems: shelving) == nil)
+    }
+
+    @Test func gondolaAndFridgeStemsAreEmpty() {
+        // Their goods are drawn by the merchandiser from the planogram, never recoloured per copy.
+        #expect(ModelVariant.productPartStems(for: .gondolaShelf).isEmpty)
+        #expect(ModelVariant.productPartStems(for: .wallFridge).isEmpty)
+        #expect(!ModelVariant.productPartStems(for: .wallShelf).isEmpty)
+        #expect(!ModelVariant.productPartStems(for: .endCap).isEmpty)
+        #expect(!ModelVariant.productPartStems(for: .dairyChiller).isEmpty)
     }
 
     @Test func visibleShapeWalksTheRow() {
