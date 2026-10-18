@@ -5,7 +5,7 @@ import StoreSimKit
 @testable import StoreSimRender
 
 /// One test per asset file, one per fixture model, and one fallback. Swift Testing counts a
-/// parameterised test once, so each case is its own function (34 + 29 + 1, plus the former-pending check).
+/// parameterised test once, so each case is its own function (34 + 29 + 1, plus the former-pending check and the three character files in `Characters/`).
 @MainActor
 @Suite struct ModelSanityTests {
     private static func catalogue() throws -> AssetCatalogue {
@@ -105,6 +105,15 @@ import StoreSimKit
     @Test func file_price_strip() throws { try Self.assertPresent(.priceStrip) }
     @Test func file_window_poster_set() throws { try Self.assertPresent(.windowPosterSet) }
     @Test func file_menu_board_texture() throws { try Self.assertPresent(.menuBoardTexture) }
+
+    private static func assertCharacterPresent(_ name: AssetName) throws {
+        let url = try BriefSpec.charactersDirectory().appendingPathComponent(name.rawValue).appendingPathExtension("usdz")
+        #expect(FileManager.default.fileExists(atPath: url.path), "missing \(url.lastPathComponent)")
+    }
+
+    @Test func file_pedestrian_a() throws { try Self.assertCharacterPresent(.pedestrianA) }
+    @Test func file_pedestrian_b() throws { try Self.assertCharacterPresent(.pedestrianB) }
+    @Test func file_pedestrian_c() throws { try Self.assertCharacterPresent(.pedestrianC) }
 
     @Test func model_gondola_shelf() throws { try Self.assertMatchesBrief(.gondolaShelf) }
     @Test func model_wall_shelf() throws { try Self.assertMatchesBrief(.wallShelf) }

@@ -38,6 +38,9 @@ public enum EntityBuilder {
             entity.components.set(CollisionComponent(shapes: [shape]))
             entity.components.set(InputTargetComponent())
         }
+        if let mover = node.mover {
+            entity.components.set(MoverComponent(mover: mover))
+        }
         if node.name == "store_roof" {
             entity.components.set(OpacityComponent(opacity: 1))
         }
@@ -135,8 +138,17 @@ public enum EntityBuilder {
         guard let fallback = node.children.first(where: { $0.name == "fallback" }) else { return }
         let standIn = entity(for: fallback, loader: loader)
         let stand = standIn.visualBounds(relativeTo: nil)
-        let model = loaded.visualBounds(relativeTo: nil)
+        var model = loaded.visualBounds(relativeTo: nil)
         guard stand.min.x <= stand.max.x, model.min.x <= model.max.x else { return }
+        if case let .asset(name) = node.shape, AssetName.characterNames.contains(name) {
+            // Meshy output is not metre-accurate: scale it uniformly to the stand-in's height first.
+            let standHeight = stand.max.y - stand.min.y
+            let modelHeight = model.max.y - model.min.y
+            if standHeight > 0, modelHeight > 0 {
+                loaded.scale *= SIMD3(repeating: standHeight / modelHeight)
+                model = loaded.visualBounds(relativeTo: nil)
+            }
+        }
         let standCenter = (stand.min + stand.max) * 0.5
         let modelCenter = (model.min + model.max) * 0.5
         var shift = standCenter - modelCenter

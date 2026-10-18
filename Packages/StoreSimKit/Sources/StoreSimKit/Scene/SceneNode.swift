@@ -59,6 +59,8 @@ public struct SceneNode: Sendable {
     public var children: [SceneNode]
     /// Derived per-instance version (see `ModelVariant`); never persisted.
     public var variant: Int
+    /// The route of a passing car or walker; the render side moves the entity along it each frame.
+    public var mover: Mover?
 
     public init(
         name: String,
@@ -74,7 +76,8 @@ public struct SceneNode: Sendable {
         bounds: NodeBounds? = nil,
         blocksPicking: Bool = false,
         children: [SceneNode] = [],
-        variant: Int = 0
+        variant: Int = 0,
+        mover: Mover? = nil
     ) {
         self.name = name
         self.displayName = displayName
@@ -90,6 +93,7 @@ public struct SceneNode: Sendable {
         self.blocksPicking = blocksPicking
         self.children = children
         self.variant = variant
+        self.mover = mover
     }
 
     /// Depth-first, self first.

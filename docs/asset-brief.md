@@ -15,6 +15,7 @@ This brief tells an artist, or an AI image-to-3D tool, exactly which models the 
 - Keep the parts listed under each asset as separate named meshes where the tool allows it; the stand-in is built from exactly those parts.
 - A section whose Status line reads "stand-in only" is a kind with no model yet: the generator and the checker skip it and nothing is written for it (no section carries it today).
 - Sourced street props (`parked_car_*`, `tree_*`) are the written exception to the flat-pastel rule and to the named-parts rule: realistic proportions and textured surfaces, colours muted toward the palette, one mesh. A section with a `Source:` line is not generated; `Tools/assetgen` skips it.
+- A section whose Status line starts with `external` is a walking character made outside the generator with Meshy and shipped in `App/Resources/Characters/` (not `Models/`): the generator and the checker skip it, `Scripts/models.sh --check` never looks at it, and the app turns it to the section's size on load. Its Prompt line is the prompt actually used.
 - On `gondola_shelf`, `wall_shelf` and `end_cap`, every facing is three meshes named `product_<shelf>_<facing>_<shape>` (and `product_back_<shelf>_<facing>_<shape>` on the gondola) with `<shape>` one of `packet`, `can`, `bottle`; each is at most 48 triangles; the app shows one per facing and hides the other two, and the checker counts every triangle, hidden ones included. `wall_fridge` and `dairy_chiller` keep their single bottle and carton meshes.
 - Parts named `product_<shelf>_<facing>_<shape>` (and `product_back_<shelf>_<facing>_<shape>` on the gondola) on the three shelf assets, `bottle_<shelf>_<facing>` on `wall_fridge` and `carton_<shelf>_<facing>` on `dairy_chiller` are recoloured per placed copy by the app and must carry a flat colour, no texture.
 
@@ -663,3 +664,68 @@ Parts: background, six dish tiles, price labels
 Description: The hot-food menu screen image in English: six dishes in pastel tiles with prices, on a deep aubergine background.
 
 Prompt: Flat vector-style artwork, the hot-food menu screen image in English: six dishes in pastel tiles with prices, on a deep aubergine background. Size 2048 x 683 px, palette #2E1A47, #FAFAF7, #B9C6B0, #E9C46A, #D9D6CF, crisp edges, English text only, no real-world logos.
+
+
+## Characters
+
+Walking people for the street outside the shop. Made with Meshy, rigged with its built-in walking motion, shipped in `App/Resources/Characters/`; how each was made is recorded in `App/Resources/Characters.md`.
+
+### pedestrian_a
+
+Dimensions: 0.6 x 0.4 x 1.75 m (width x depth x height)
+
+Pivot: bottom centre of the footprint, front of the figure toward +Z
+
+Poly budget: 15000 triangles
+
+Palette: primary #4A4E57, cream #FAFAF7, charcoal #22252B
+
+Format: USDZ with the walk cycle embedded
+
+Parts: one skinned mesh and its skeleton; the tool names the prims and nothing is asserted by name
+
+Description: An adult in a plain slate-grey coat, walking, arms swinging, no bag, no logos, no text.
+
+Prompt: low-poly flat-shaded pastel diorama pedestrian, adult in a plain slate-grey coat, T-pose, facing forward, no logos, no text, palette primary #4A4E57, cream #FAFAF7, charcoal #22252B
+
+Status: external — made with Meshy, shipped in App/Resources/Characters/; the generator and the checker skip it
+
+### pedestrian_b
+
+Dimensions: 0.6 x 0.4 x 1.75 m (width x depth x height)
+
+Pivot: bottom centre of the footprint, front of the figure toward +Z
+
+Poly budget: 15000 triangles
+
+Palette: mintDeep #6E8B74, cream #FAFAF7, charcoal #22252B
+
+Format: USDZ with the walk cycle embedded
+
+Parts: one skinned mesh and its skeleton; the tool names the prims and nothing is asserted by name
+
+Description: An adult in a plain sage-green coat, walking, arms swinging, no bag, no logos, no text.
+
+Prompt: low-poly flat-shaded pastel diorama pedestrian, adult in a plain sage-green coat, T-pose, facing forward, no logos, no text, palette mintDeep #6E8B74, cream #FAFAF7, charcoal #22252B
+
+Status: external — made with Meshy, shipped in App/Resources/Characters/; the generator and the checker skip it
+
+### pedestrian_c
+
+Dimensions: 0.6 x 0.4 x 1.75 m (width x depth x height)
+
+Pivot: bottom centre of the footprint, front of the figure toward +Z
+
+Poly budget: 15000 triangles
+
+Palette: priceRailYellow #E9C46A, cream #FAFAF7, charcoal #22252B
+
+Format: USDZ with the walk cycle embedded
+
+Parts: one skinned mesh and its skeleton; the tool names the prims and nothing is asserted by name
+
+Description: An adult in a plain mustard-yellow coat, walking, arms swinging, no bag, no logos, no text.
+
+Prompt: low-poly flat-shaded pastel diorama pedestrian, adult in a plain mustard-yellow coat, T-pose, facing forward, no logos, no text, palette priceRailYellow #E9C46A, cream #FAFAF7, charcoal #22252B
+
+Status: external — made with Meshy, shipped in App/Resources/Characters/; the generator and the checker skip it

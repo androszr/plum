@@ -29,12 +29,16 @@ struct StoreView: View {
         RealityView { content in
             content.camera = .virtual
 
-            let usdz = Bundle.main.urls(forResourcesWithExtension: "usdz", subdirectory: "Models") ?? []
+            let usdz = (Bundle.main.urls(forResourcesWithExtension: "usdz", subdirectory: "Models") ?? [])
+                + (Bundle.main.urls(forResourcesWithExtension: "usdz", subdirectory: "Characters") ?? [])
             let png = Bundle.main.urls(forResourcesWithExtension: "png", subdirectory: "Models") ?? []
             let catalogue = AssetCatalogue(modelURLs: usdz + png)
+            // Already registered by StoreSimApp.init; a second call is harmless and covers previews.
+            TrafficDriver.register()
             let node = SceneComposer.compose(layout: .plumCorner, detail: .platformDefault, catalogue: catalogue)
             let root = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: catalogue))
             content.add(root)
+            TrafficDriver.startWalkCycles(in: root)
 
             // A wide, flat pick surface so a click on bare ground clears the selection.
             let ground = Entity()

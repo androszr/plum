@@ -196,7 +196,7 @@ def main() -> int:
     for name, spec in brief.specs.items():
         if only and name not in only:
             continue
-        if spec.pending:
+        if spec.pending or spec.external:
             continue
         if spec.sourced:
             if not args.shipped:

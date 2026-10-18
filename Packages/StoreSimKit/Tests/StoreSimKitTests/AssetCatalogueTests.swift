@@ -58,11 +58,29 @@ func modelURL(_ base: String, ext: String = "usdz", dir: String = "/m") -> URL {
         #expect(AssetCatalogue(modelURLs: [url]).resolve(.priceStrip) == .procedural)
     }
 
-    @Test func fixtureAndSignageNamesPartitionTheCatalogue() {
+    @Test func fixtureCharacterAndSignageNamesPartitionTheCatalogue() {
         let fixtures = AssetName.fixtureNames
+        let characters = AssetName.characterNames
         let signage = AssetName.signageNames
-        #expect(fixtures.union(signage) == Set(AssetName.allCases))
+        #expect(fixtures.union(characters).union(signage) == Set(AssetName.allCases))
         #expect(fixtures.isDisjoint(with: signage))
+        #expect(fixtures.isDisjoint(with: characters))
+        #expect(characters.isDisjoint(with: signage))
+    }
+
+    @Test func characterUsdzResolvesToModel() {
+        for name in AssetName.characterNames {
+            let url = modelURL(name.rawValue, dir: "/characters")
+            #expect(AssetCatalogue(modelURLs: [url]).resolve(name) == .model(url))
+            #expect(name.expectedFileExtensions == ["usdz"])
+        }
+    }
+
+    @Test func characterPngIsIgnored() {
+        for name in AssetName.characterNames {
+            let url = modelURL(name.rawValue, ext: "png")
+            #expect(AssetCatalogue(modelURLs: [url]).resolve(name) == .procedural)
+        }
     }
 
     @Test func everyFixtureKindHasAnAsset() {

@@ -52,10 +52,14 @@ def main() -> int:
     signage_names = [name for name in SIGNAGE_ORDER if name in brief.specs]
     fixture_names = [
         name for name in names if name not in set(SIGNAGE_ORDER) and not brief.specs[name].pending
+        and not brief.specs[name].external
     ]
     for name in sorted(only or ()):
         if name in brief.specs and brief.specs[name].pending:
             raise RuntimeError(f"{name} is stand-in only; nothing to generate")
+    for name in sorted(only or ()):
+        if name in brief.specs and brief.specs[name].external:
+            raise RuntimeError(f"{name} is external (see its Status line); nothing to generate")
     if only and not only.issubset(set(names)):
         unknown = sorted(only.difference(names))[0]
         raise RuntimeError(f"unknown --only name {unknown}")

@@ -28,6 +28,9 @@ class Spec:
     # True when the section says `Status: stand-in only`: no model yet, generator and checker skip it.
     pending: bool = False
     sourced: bool = False
+    # True when the section says `Status: external ...`: made outside the generator and shipped in
+    # App/Resources/Characters/, so the generator and the checker skip it.
+    external: bool = False
 
     @property
     def is_signage(self) -> bool:
@@ -270,5 +273,6 @@ def load_brief(path: str) -> Brief:
             palette_names=_palette_names(_line_value(body, "Palette:", name)),
             pending=status is not None and "stand-in only" in status,
             sourced=_is_sourced(body),
+            external=status is not None and status.strip().lower().startswith("external"),
         )
     return Brief(palette=palette, specs=specs)
