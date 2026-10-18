@@ -3,6 +3,7 @@ import Foundation
 import ImageIO
 import Metal
 import RealityKit
+import simd
 import Testing
 import UniformTypeIdentifiers
 import StoreSimKit
@@ -69,18 +70,31 @@ let hasGPU = MTLCreateSystemDefaultDevice() != nil
         #expect(s.centre != s.corner)
     }
 
-    /// The success criterion: two frames two seconds apart differ where the traffic is, and the parked cars do not move.
+    /// The success criterion: two frames two seconds apart differ where the traffic is, and the parked cars' pixels do not.
     @Test(.enabled(if: hasGPU))
     func trafficMovesBetweenTwoFrames() async throws {
         let catalogue = AssetCatalogue.empty
         let node = SceneComposer.compose(layout: .plumCorner, detail: .full, catalogue: catalogue)
         let root = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: catalogue))
         EntityBuilder.applyRoofOpacity(root: root, camera: .isoPreset)
-        TrafficDriver.place(in: root, at: 0)
-        let first = try await OffscreenRenderer().render(root: root, camera: .isoPreset, size: (512, 512))
+        let movers = Traffic.movers(for: .plumCorner, detail: .full)
+        // Once another test has registered `TrafficSystem`, a render would also step the movers by its frame
+        // time; taking their clocks away for the render keeps each frame exactly at `t`.
+        func render(at t: Double) async throws -> CGImage {
+            TrafficDriver.place(in: root, at: t)
+            var clocks: [(Entity, MoverComponent)] = []
+            for m in movers {
+                if let e = root.findEntity(named: m.id), let c = e.components[MoverComponent.self] {
+                    clocks.append((e, c))
+                    e.components.remove(MoverComponent.self)
+                }
+            }
+            defer { for (e, c) in clocks { e.components.set(c) } }
+            return try await OffscreenRenderer().render(root: root, camera: .isoPreset, size: (512, 512))
+        }
+        let first = try await render(at: 0)
         try Self.write(first, name: "traffic-t0-512x512.png")
-        TrafficDriver.place(in: root, at: 2)
-        let second = try await OffscreenRenderer().render(root: root, camera: .isoPreset, size: (512, 512))
+        let second = try await render(at: 2)
         try Self.write(second, name: "traffic-t2-512x512.png")
         let a = Self.pixels(first), b = Self.pixels(second)
         #expect(a.count == b.count && !a.isEmpty)
@@ -88,12 +102,63 @@ let hasGPU = MTLCreateSystemDefaultDevice() != nil
         for i in stride(from: 0, to: min(a.count, b.count), by: 4)
         where a[i] != b[i] || a[i + 1] != b[i + 1] || a[i + 2] != b[i + 2] { differing += 1 }
         #expect(differing >= 50, "only \(differing) pixels changed")
-        // The parked cars never move: their entities sit where they were.
-        for car in StoreLayout.plumCorner.fixtures where car.kind == .parkedCar {
-            let e = try #require(root.findEntity(named: car.id))
-            let m = car.occupiedRect.centreMetres
-            #expect(e.position == SIMD3<Float>(Float(m.x), 0, Float(m.y)))
+        // The parked cars' pixels stay the same, except where a passing car or walker covers them in either frame.
+        let pose = OrbitCamera.isoPreset.pose
+        var covered: [Rect] = []
+        for t in [0.0, 2.0] {
+            for m in movers {
+                let at = Traffic.pose(of: m, at: t).position
+                // A metre round each mover on the ground covers its shadow too.
+                let half = (m.kind == .car ? SIMD3(Traffic.carLength / 2, 0, 1.0) : SIMD3(0.2, 0, 0.2)) + SIMD3(1, 0, 1)
+                let top = m.kind == .car ? 1.5 : Traffic.walkerHeight
+                if let r = Self.screenRect(min: at - half, max: at + half + SIMD3(0, top, 0), pose: pose, size: 512) {
+                    covered.append(r.inset(by: -6))
+                }
+            }
         }
+        var checked = 0
+        for car in StoreLayout.plumCorner.fixtures where car.kind == .parkedCar {
+            let m = car.occupiedRect.centreMetres
+            let centre = SIMD3(m.x, 0, m.y)
+            let r = try #require(Self.screenRect(min: centre - SIMD3(2.25, 0, 1), max: centre + SIMD3(2.25, 1.5, 1),
+                                                pose: pose, size: 512), "\(car.id) off screen")
+            var changed = 0
+            for y in r.y0..<r.y1 {
+                for x in r.x0..<r.x1 where !covered.contains(where: { $0.contains(x, y) }) {
+                    let i = (y * 512 + x) * 4
+                    checked += 1
+                    if a[i] != b[i] || a[i + 1] != b[i + 1] || a[i + 2] != b[i + 2] { changed += 1 }
+                }
+            }
+            #expect(changed == 0, "\(changed) pixels of \(car.id) changed")
+        }
+        #expect(checked >= 200, "only \(checked) parked-car pixels were clear of traffic")
+    }
+
+    struct Rect {
+        var x0, y0, x1, y1: Int
+        func contains(_ x: Int, _ y: Int) -> Bool { x >= x0 && x < x1 && y >= y0 && y < y1 }
+        func inset(by d: Int) -> Rect { Rect(x0: x0 + d, y0: y0 + d, x1: x1 - d, y1: y1 - d) }
+    }
+
+    /// The pixel rectangle (row 0 at the top) a world box covers in a square frame from the renderer's
+    /// 45 degree camera at `pose`, clipped to the frame; nil when it falls outside.
+    static func screenRect(min lo: SIMD3<Double>, max hi: SIMD3<Double>, pose: CameraPose, size: Int) -> Rect? {
+        let f = simd_normalize(pose.target - pose.eye)
+        let r = simd_normalize(simd_cross(f, SIMD3(0, 1, 0)))
+        let u = simd_cross(r, f)
+        let t = tan(45.0 / 2 * Double.pi / 180)
+        var xs: [Double] = [], ys: [Double] = []
+        for cx in [lo.x, hi.x] { for cy in [lo.y, hi.y] { for cz in [lo.z, hi.z] {
+            let d = SIMD3(cx, cy, cz) - pose.eye
+            let z = simd_dot(d, f)
+            guard z > 0.1 else { return nil }
+            xs.append((simd_dot(d, r) / z / t + 1) / 2 * Double(size))
+            ys.append((1 - simd_dot(d, u) / z / t) / 2 * Double(size))
+        } } }
+        let rect = Rect(x0: Swift.max(0, Int(xs.min()!)), y0: Swift.max(0, Int(ys.min()!)),
+                        x1: Swift.min(size, Int(xs.max()!.rounded(.up))), y1: Swift.min(size, Int(ys.max()!.rounded(.up))))
+        return rect.x0 < rect.x1 && rect.y0 < rect.y1 ? rect : nil
     }
 
     static func pixels(_ image: CGImage) -> [UInt8] {

@@ -83,8 +83,10 @@ import Testing
                 let start = Traffic.pose(of: mover, at: 0)
                 #expect(node.name == mover.id)
                 #expect(!node.selectable)
-                #expect(node.bounds == nil)
-                #expect(!node.blocksPicking)
+                // Takes the click so nothing behind it is picked, without being selectable itself.
+                #expect(node.blocksPicking)
+                let box = try #require(node.bounds)
+                #expect(box.size.y > 1.4 && box.center.y == box.size.y / 2)
                 #expect(node.mover == mover)
                 #expect(node.position == start.position)
                 #expect(node.yaw == start.yaw)

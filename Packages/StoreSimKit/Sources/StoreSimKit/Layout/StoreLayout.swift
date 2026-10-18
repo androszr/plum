@@ -115,7 +115,7 @@ extension StoreLayout {
         lotFixture("atm_locker_1", .atmLocker, 40, 16)
         lotFixture("a_frame_sign_1", .aFrameSign, 24, 18)
         lotFixture("litter_bin_1", .litterBin, 14, 17)
-        lotFixture("litter_bin_2", .litterBin, 42, 19)
+        lotFixture("litter_bin_2", .litterBin, 42, 18)
         lotFixture("bike_rack_1", .bikeRack, 46, 17)
         for (i, x) in [8, 24, 40, 52].enumerated() { lotFixture("street_lamp_\(i + 1)", .streetLamp, x, 21) }
 

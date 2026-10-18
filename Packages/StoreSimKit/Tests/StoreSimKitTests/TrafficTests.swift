@@ -54,15 +54,10 @@ import Testing
             let lanes = Self.walkLanes.filter { $0.id.contains(side) }.sorted { $0.z < $1.z }
             #expect(lanes.count == 2)
             let gap = lanes[1].z - lanes[0].z
-            if side == "far" {
-                // Trees leave two wide bands, one line in each.
-                #expect(gap >= 2 * h, "far lines \(gap) apart")
-            } else {
-                // One 0.65 m band between the bin and the lamp posts holds both bodies side by side
-                // only when it is 4 half-widths wide; here it is not, so the lines sit as far apart as
-                // that band allows, every body clear of the fixtures (walkersNeverClipAFixture).
-                #expect(gap > h, "near lines \(gap) apart")
-            }
+            // Walkers heading opposite ways always meet somewhere along the street, so the lines must
+            // be a full body apart. Far: trees leave two wide bands, one line in each. Near: one
+            // 1.1 m band between the bins and the lamp posts holds both bodies side by side.
+            #expect(gap >= 2 * h - 1e-9, "\(side) lines \(gap) apart")
         }
     }
 
@@ -78,10 +73,27 @@ import Testing
         let near = Self.walkLanes.filter { $0.id.contains("near") }
         let far = Self.walkLanes.filter { $0.id.contains("far") }
         #expect(near.count == 2 && far.count == 2)
-        for lane in near { #expect(Self.row(lane.z) == 20, "\(lane.id)") }
+        #expect(Set(near.map { Self.row($0.z) }) == [19, 20])
         #expect(Set(far.map { Self.row($0.z) }) == [38, 41])
         #expect(Set(near.map(\.direction)) == [1, -1])
         #expect(Set(far.map(\.direction)) == [1, -1])
+    }
+
+    @Test func walkersStartAtDifferentPointsOfTheirWalkCycle() {
+        let clip = 1.0667
+        for detail in [DetailLevel.full, .reduced] {
+            let phases = Traffic.movers(for: Self.layout, detail: detail)
+                .filter { $0.kind == .pedestrian }
+                .map { Traffic.walkCyclePhase(of: $0, clipLength: clip) }
+            #expect(phases.count >= 2)
+            for (i, a) in phases.enumerated() {
+                #expect(a >= 0 && a < clip)
+                for b in phases[(i + 1)...] {
+                    let d = abs(a - b)
+                    #expect(min(d, clip - d) >= 0.05 * clip, "phases \(a) and \(b) step together")
+                }
+            }
+        }
     }
 
     @Test func poseIsPeriodic() {

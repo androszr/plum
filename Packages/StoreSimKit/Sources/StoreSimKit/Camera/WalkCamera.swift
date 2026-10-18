@@ -75,10 +75,18 @@ public struct WalkCamera: Equatable, Sendable {
         position = floor.resolve(from: position, to: position + move)
     }
 
-    /// One resolved move of `metres` along the ground forward (negative walks back).
+    /// Longest single resolved move; `resolve` checks only the end point, so longer moves are cut up.
+    static let maxResolvedMove = 0.1
+
+    /// A move of `metres` along the ground forward (negative walks back), resolved in short pieces
+    /// so a long trackpad flick stops at a fixture instead of landing beyond it.
     public mutating func step(forward metres: Double, on floor: WalkableFloor) {
         route = []
-        position = floor.resolve(from: position, to: position + groundForward * metres)
+        let pieces = max(1, Int((abs(metres) / Self.maxResolvedMove).rounded(.up)))
+        let piece = groundForward * (metres / Double(pieces))
+        for _ in 0..<pieces {
+            position = floor.resolve(from: position, to: position + piece)
+        }
     }
 
     @discardableResult

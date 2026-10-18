@@ -143,15 +143,17 @@ packs cannot fill a shelf more evenly than whole packs allow); `PlanogramTests` 
 people walk the pavements while the app is open. It is derived, not stored: `Traffic` (pure, in
 `StoreSimKit`) takes the street zone and the pavement zones of the lot and makes lanes, movers and
 `pose(of:at:)` from a time value; `TrafficComposer` turns each mover into a `SceneNode` (named
-`moving_car_N` / `walker_N`, never selectable, no bounds) under a `traffic` group, carrying its route
+`moving_car_N` / `walker_N`, never selectable; `blocksPicking` with a pick box in `bounds`, so a click
+on one clears the selection rather than picking what stands behind it) under a `traffic` group, carrying its route
 in `SceneNode.mover`. `TrafficDriver` and `TrafficSystem` (in `StoreSimRender`) are the only per-frame
 code: a RealityKit `System` adds the frame time to each `MoverComponent` and sets its transform, and
-`startWalkCycles` starts each walker's built-in animation. Rules: two car lanes in the street zone,
+`startWalkCycles` starts each walker's built-in animation at its own `walkCyclePhase`, so the street
+does not march in step. Rules: two car lanes in the street zone,
 the near one driving -X and the far one +X (right-hand traffic, front of a car is +X); a walker uses
 `Traffic.walkingLines`: the clear bands between the fixture bodies on a pavement (from
 `solidMetres`; a bin, lamp or tree blocks only its body). The two widest bands get a line down their
 middle each, otherwise both lines share the one band, as far apart as it allows, as on the near
-pavement; one line each way; the phone shows fewer movers through `DetailLevel.reduced`. A moving car reuses
+pavement (1.1 m between the bins and the lamp posts, so opposite walkers pass a body apart); one line each way; the phone shows fewer movers through `DetailLevel.reduced`. A moving car reuses
 the parked cars' three models, continuing their variant count, so it is not repainted. The walkers are
 `pedestrian_a|b|c.usdz` (Meshy, rigged with the walk cycle) in `App/Resources/Characters/`.
 

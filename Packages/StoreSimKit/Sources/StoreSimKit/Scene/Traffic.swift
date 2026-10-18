@@ -192,6 +192,13 @@ public enum Traffic {
         return out
     }
 
+    /// Where in its walk cycle a walker starts, in seconds: every file carries the same clip, so
+    /// without this the whole street steps in unison. Golden-ratio steps keep any two walkers apart.
+    public static func walkCyclePhase(of mover: Mover, clipLength: Double) -> Double {
+        let fraction = (Double(mover.ordinal) * 0.618_034).truncatingRemainder(dividingBy: 1)
+        return fraction * clipLength
+    }
+
     /// How far past the lot edge a mover wraps.
     public static func wrapMargin(of mover: Mover) -> Double { mover.length + wrapPadding }
 

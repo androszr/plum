@@ -30,6 +30,20 @@ import StoreSimKit
         }
     }
 
+    @Test func passingTrafficTakesClicksWithoutBeingSelectable() throws {
+        let root = Self.root()
+        let traffic = try #require(root.findEntity(named: "traffic"))
+        #expect(!traffic.children.isEmpty)
+        for mover in traffic.children {
+            let collision = try #require(mover.components[CollisionComponent.self], "\(mover.name)")
+            #expect(mover.components[InputTargetComponent.self] != nil)
+            #expect(mover.components[SelectableComponent.self] == nil)
+            // The pick box stands on the ground, not half sunk into it.
+            let b = collision.shapes[0].bounds
+            #expect(abs(b.min.y) < 0.01 && b.max.y > 1.4, "\(mover.name)")
+        }
+    }
+
     @Test func roofFadesButNeverBlocksClicks() {
         let roof = Self.root().findEntity(named: "store_roof")
         #expect(roof?.components[OpacityComponent.self] != nil)

@@ -34,7 +34,10 @@ public enum EntityBuilder {
         }
         if node.blocksPicking, !node.selectable {
             // Takes clicks but has no SelectableComponent, so a click here clears the selection.
-            let shape = ShapeResource.generateBox(size: size3(node.size))
+            // A pick box in `bounds` wins over the node's size (movers stand on their origin).
+            let shape = node.bounds.map {
+                ShapeResource.generateBox(size: SIMD3<Float>($0.size)).offsetBy(translation: SIMD3<Float>($0.center))
+            } ?? ShapeResource.generateBox(size: size3(node.size))
             entity.components.set(CollisionComponent(shapes: [shape]))
             entity.components.set(InputTargetComponent())
         }

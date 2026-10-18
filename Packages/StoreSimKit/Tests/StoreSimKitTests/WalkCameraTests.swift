@@ -96,6 +96,24 @@ import simd
         }
     }
 
+    @Test func aLongScrollStepNeverJumpsAFixture() {
+        // A trackpad flick can ask for metres in one event; every point it passes must be floor.
+        for c in Self.floor.walkable {
+            for heading in [0.0, Double.pi / 2, Double.pi, 3 * Double.pi / 2] {
+                let start = Self.floor.centre(of: c)
+                guard Self.floor.isWalkable(start) else { continue }
+                var cam = WalkCamera(position: start, yaw: heading)
+                cam.step(forward: 3, on: Self.floor)
+                let n = Int((simd_length(cam.position - start) / 0.02).rounded(.up))
+                for i in 0...max(n, 1) {
+                    let p = start + (cam.position - start) * (Double(i) / Double(max(n, 1)))
+                    let onFloor = Self.floor.isWalkable(p)
+                    #expect(onFloor, "\(c) heading \(heading) at \(p)")
+                }
+            }
+        }
+    }
+
     @Test func walkInputClearsTheRoute() {
         var c = Self.preset
         c.route = [SIMD2(14, 6)]

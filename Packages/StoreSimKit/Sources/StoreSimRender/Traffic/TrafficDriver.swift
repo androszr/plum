@@ -67,11 +67,12 @@ public enum TrafficDriver {
     public static func startWalkCycles(in root: Entity) -> Int {
         var started = 0
         for entity in movers(in: root) {
-            guard entity.components[MoverComponent.self]?.mover.kind == .pedestrian,
+            guard let mover = entity.components[MoverComponent.self]?.mover, mover.kind == .pedestrian,
                   let animated = firstAnimated(entity),
                   let animation = animated.availableAnimations.max(by: { $0.definition.duration < $1.definition.duration })
             else { continue }
-            animated.playAnimation(animation.repeat(), transitionDuration: 0)
+            let playback = animated.playAnimation(animation.repeat(), transitionDuration: 0)
+            playback.time = Traffic.walkCyclePhase(of: mover, clipLength: animation.definition.duration)
             started += 1
         }
         return started

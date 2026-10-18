@@ -207,7 +207,8 @@ struct KeyWalkCatcher: NSViewRepresentable {
             monitor = nil
             guard window != nil else { return }
             monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
-                guard let key = Self.walkKey(for: event.keyCode) else { return event }
+                // Every store window installs a monitor; each one walks only its own window.
+                guard event.window === self?.window, let key = Self.walkKey(for: event.keyCode) else { return event }
                 let down = event.type == .keyDown
                 // Command, Control and Option chords belong to the menus (Cmd-W closes the window).
                 if !event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
