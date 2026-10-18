@@ -1,6 +1,12 @@
 {
   "permissions": {
     "allow": [
+      "Bash(bash Scripts/models.sh:*)",
+      "Bash(.venv-assetgen/bin/python:*)",
+      "Bash(usdchecker:*)",
+      "Bash(cmp:*)",
+      "Bash(unzip:*)",
+      "Bash(shasum:*)",
       "Bash(git diff:*)",
       "Bash(git status:*)",
       "Bash(git log:*)",
@@ -25,12 +31,6 @@
       "Bash(.venv/bin/pytest:*)",
       "Bash(swift build:*)",
       "Bash(swift test:*)",
-      "Bash(bash Scripts/models.sh:*)",
-      "Bash(.venv-assetgen/bin/python:*)",
-      "Bash(usdchecker:*)",
-      "Bash(cmp:*)",
-      "Bash(unzip:*)",
-      "Bash(shasum:*)",
       "Bash(npm run build:*)",
       "Bash(ruff check:*)",
       "mcp__dark-army",
