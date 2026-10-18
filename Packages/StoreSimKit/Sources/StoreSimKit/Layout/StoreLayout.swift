@@ -87,13 +87,14 @@ extension StoreLayout {
         shop("end_cap_1", .endCap, 4, 5, 3, label: "Half price")
         shop("end_cap_2", .endCap, 15, 5, 1, label: "This week")
 
-        // Front of shop: two tills with the alcohol wall and tobacco behind them.
-        shop("checkout_1", .checkoutCounter, 13, 11, 2)
-        shop("checkout_2", .checkoutCounter, 17, 11, 2)
-        shop("alcohol_wall_1", .alcoholWall, 13, 13, 2, label: "Wine & spirits")
-        shop("alcohol_wall_2", .alcoholWall, 17, 13, 2, label: "Vodka & whisky")
-        shop("self_checkout_1", .selfCheckout, 12, 12, 3)
-        shop("basket_stack_1", .basketStack, 12, 11)
+        // Front of shop: two tills, a one-cell cashier lane behind them, the alcohol wall across the lane;
+        // the tobacco cabinet on the right wall opens onto the lane's end.
+        shop("checkout_1", .checkoutCounter, 12, 10, 2)
+        shop("checkout_2", .checkoutCounter, 16, 10, 2)
+        shop("alcohol_wall_1", .alcoholWall, 12, 13, 2, label: "Wine & spirits")
+        shop("alcohol_wall_2", .alcoholWall, 16, 13, 2, label: "Vodka & whisky")
+        shop("self_checkout_1", .selfCheckout, 10, 11)
+        shop("basket_stack_1", .basketStack, 9, 11)
         shop("coffee_machine_1", .coffeeMachine, 8, 13, 2)
 
         // Window seating and the entrance.
