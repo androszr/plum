@@ -92,9 +92,13 @@ let hasGPU = MTLCreateSystemDefaultDevice() != nil
             defer { for (e, c) in clocks { e.components.set(c) } }
             return try await OffscreenRenderer().render(root: root, camera: .isoPreset, size: (512, 512))
         }
-        let first = try await render(at: 0)
+        // A moment when a car is fully on the road at both frames; the timetable leaves the road empty at times.
+        let t0 = try #require(stride(from: 0.0, through: 900.0, by: 0.25).first { t in
+            movers.contains { $0.kind == .car && Traffic.pose(of: $0, at: t).visibility == 1 && Traffic.pose(of: $0, at: t + 2).visibility == 1 }
+        })
+        let first = try await render(at: t0)
         try Self.write(first, name: "traffic-t0-512x512.png")
-        let second = try await render(at: 2)
+        let second = try await render(at: t0 + 2)
         try Self.write(second, name: "traffic-t2-512x512.png")
         let a = Self.pixels(first), b = Self.pixels(second)
         #expect(a.count == b.count && !a.isEmpty)
@@ -105,7 +109,7 @@ let hasGPU = MTLCreateSystemDefaultDevice() != nil
         // The parked cars' pixels stay the same, except where a passing car or walker covers them in either frame.
         let pose = OrbitCamera.isoPreset.pose
         var covered: [Rect] = []
-        for t in [0.0, 2.0] {
+        for t in [t0, t0 + 2] {
             for m in movers {
                 let at = Traffic.pose(of: m, at: t).position
                 // A metre round each mover on the ground covers its shadow too.

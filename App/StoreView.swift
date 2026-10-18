@@ -97,6 +97,7 @@ struct StoreView: View {
             .updating($lastDrag) { value, last, _ in
                 let delta = CGSize(width: value.translation.width - last.width,
                                    height: value.translation.height - last.height)
+                let from = CGPoint(x: value.startLocation.x + last.width, y: value.startLocation.y + last.height)
                 last = value.translation
                 #if os(macOS)
                 if NSEvent.modifierFlags.contains(.option) {
@@ -104,7 +105,7 @@ struct StoreView: View {
                     return
                 }
                 #endif
-                controller.pan(by: delta)
+                controller.drag(from: from, to: value.location, viewSize: viewSize)
             }
     }
 
@@ -126,7 +127,7 @@ struct StoreView: View {
 
     @ViewBuilder private var platformInputCatchers: some View {
         #if os(macOS)
-        ScrollZoomCatcher { dy in controller.scroll(by: dy) }
+        ScrollZoomCatcher { dx, dy, precise in controller.scroll(dx: dx, dy: dy, precise: precise, viewSize: viewSize) }
         KeyWalkCatcher(isInside: { controller.mode == .inside },
                        onKey: { key, pressed in controller.setKey(key, pressed: pressed) })
         #elseif os(iOS)
@@ -137,9 +138,11 @@ struct StoreView: View {
 }
 
 #if os(macOS)
-/// Reports scroll-wheel and two-finger-scroll movement over the window so it can zoom.
+/// Reports scroll-wheel and two-finger-scroll movement over the window: the trackpad moves the camera,
+/// a mouse wheel zooms. Deltas keep the system's scroll direction, so with natural scrolling the lot
+/// follows the fingers.
 struct ScrollZoomCatcher: NSViewRepresentable {
-    var onScroll: @MainActor (Double) -> Void
+    var onScroll: @MainActor (Double, Double, Bool) -> Void
 
     func makeNSView(context: Context) -> MonitorView {
         let view = MonitorView()
@@ -150,7 +153,7 @@ struct ScrollZoomCatcher: NSViewRepresentable {
     func updateNSView(_ nsView: MonitorView, context: Context) { nsView.onScroll = onScroll }
 
     final class MonitorView: NSView {
-        var onScroll: (@MainActor (Double) -> Void)?
+        var onScroll: (@MainActor (Double, Double, Bool) -> Void)?
         nonisolated(unsafe) private var monitor: Any?
 
         override func viewDidMoveToWindow() {
@@ -159,8 +162,10 @@ struct ScrollZoomCatcher: NSViewRepresentable {
             monitor = nil
             guard window != nil else { return }
             monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
-                let dy = Double(event.scrollingDeltaY)
-                MainActor.assumeIsolated { self?.onScroll?(event.hasPreciseScrollingDeltas ? dy * 0.4 : dy) }
+                let dx = Double(event.scrollingDeltaX), dy = Double(event.scrollingDeltaY)
+                // Command held makes any scroll a zoom: a Magic Mouse sends precise deltas and has no pinch.
+                let precise = event.hasPreciseScrollingDeltas && !event.modifierFlags.contains(.command)
+                MainActor.assumeIsolated { self?.onScroll?(dx, dy, precise) }
                 return event
             }
         }

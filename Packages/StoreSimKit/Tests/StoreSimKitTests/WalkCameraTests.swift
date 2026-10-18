@@ -46,20 +46,50 @@ import simd
         }
     }
 
-    @Test func lookClampsPitchBothWays() {
-        var c = Self.preset
-        c.look(by: SIMD2(0, -100000))
-        #expect(abs(c.pitch - WalkCamera.pitchLimit) < 1e-12)
-        c.look(by: SIMD2(0, 200000))
-        #expect(abs(c.pitch + WalkCamera.pitchLimit) < 1e-12)
-    }
-
-    @Test func lookDraggingRightTurnsRight() {
+    /// Drag and drop: the shop follows the hand, so dragging right swings the view left.
+    @Test func lookDraggingRightTurnsLeft() {
         var c = Self.preset
         let before = c.forward
-        c.look(by: SIMD2(40, 0))
+        c.look(by: 40, viewSize: SIMD2(1200, 800))
         let right = SIMD3(cos(Self.preset.yaw), 0, -sin(Self.preset.yaw))
-        #expect(simd_dot(c.forward - before, right) > 0)
+        #expect(simd_dot(c.forward - before, right) < 0)
+    }
+
+    /// A drag the whole width of the view turns by the whole field of view: the shop keeps pace with the hand.
+    @Test func lookTurnsAsFarAsTheHandMoves() {
+        var c = Self.preset
+        c.look(by: 1200, viewSize: SIMD2(1200, 800))
+        let fov = 2 * atan(tan(22.5 * Double.pi / 180) * 1.5)
+        var turned = (c.yaw - Self.preset.yaw).truncatingRemainder(dividingBy: 2 * .pi)
+        if turned < 0 { turned += 2 * .pi }
+        #expect(abs(turned - fov) < 1e-9)
+    }
+
+    @Test func lookKeepsTheViewLevel() {
+        var c = Self.preset
+        c.look(by: 300, viewSize: SIMD2(1200, 800))
+        #expect(c.pitch == WalkCamera.viewPitch)
+        #expect(Self.preset.pitch == WalkCamera.viewPitch)
+    }
+
+    @Test func sidewaysWalkInputSidestepsWithoutTurning() {
+        var c = Self.preset
+        let start = c.position
+        c.walk(input: SIMD2(1, 0), dt: 0.5, on: Self.floor)
+        #expect(c.yaw == Self.preset.yaw)
+        let right = SIMD2(cos(c.yaw), -sin(c.yaw))
+        #expect(simd_dot(c.position - start, right) > 0.3)
+    }
+
+    /// Two fingers down look up, the shop following the fingers, and never past `tiltLimit`.
+    @Test func trackpadTiltFollowsTheFingersWithinLimits() {
+        var c = Self.preset
+        c.tilt(by: 40, viewSize: SIMD2(1200, 800))
+        #expect(c.pitch > Self.preset.pitch)
+        c.tilt(by: 100000, viewSize: SIMD2(1200, 800))
+        #expect(abs(c.pitch - WalkCamera.tiltLimit) < 1e-12)
+        c.tilt(by: -200000, viewSize: SIMD2(1200, 800))
+        #expect(abs(c.pitch + WalkCamera.tiltLimit) < 1e-12)
     }
 
     @Test func walkTurnedLeftMatchesTheOrbitConvention() {

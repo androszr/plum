@@ -6,7 +6,11 @@ import Testing
     static let layout = StoreLayout.plumCorner
     static var carLanes: [TrafficLane] { Traffic.lanes(for: layout).filter { $0.kind == .car } }
     static var walkLanes: [TrafficLane] { Traffic.lanes(for: layout).filter { $0.kind == .pedestrian } }
-    static let times = stride(from: 0.0, through: 120.0, by: 0.25)
+    static let times = Array(stride(from: 0.0, through: 600.0, by: 0.25))
+    static func shown(_ m: Mover, at t: Double) -> MoverPose? {
+        let pose = Traffic.pose(of: m, at: t)
+        return pose.visibility > 0 ? pose : nil
+    }
 
     static func row(_ z: Double) -> Int { Int((z / cellSize).rounded(.down)) }
 
@@ -96,40 +100,109 @@ import Testing
         }
     }
 
-    @Test func poseIsPeriodic() {
-        for detail in [DetailLevel.full, .reduced] {
-            for m in Traffic.movers(for: Self.layout, detail: detail) {
-                let period = Traffic.loopLength(of: m) / m.lane.speed
-                for t in [0.0, 1.3, 7.7] {
-                    let a = Traffic.pose(of: m, at: t)
-                    let b = Traffic.pose(of: m, at: t + period)
-                    #expect(abs(a.position.x - b.position.x) < 1e-9, "\(m.id)")
-                    #expect(a.position.z == b.position.z)
-                    #expect(a.yaw == b.yaw)
-                }
+    @Test func theStreetIsTheSameOnEveryRun() {
+        // Pinned values from an independent SplitMix64 + FNV-1a run: a per-process seed (`Hasher`) would miss them.
+        var rng = SlotRandom(lane: "near_road", slot: 7)
+        #expect(rng.next() == 0.4621577287141748)
+        #expect(rng.next() == 0.9864962377915878)
+        #expect(rng.next() == 0.3249453449289249)
+    }
+
+    @Test func nothingIsDrawnBeyondTheLotEdge() {
+        for m in Traffic.movers(for: Self.layout, detail: .full) {
+            for t in Self.times {
+                guard let pose = Self.shown(m, at: t) else { continue }
+                let x = pose.position.x
+                #expect(x - m.length / 2 >= m.lane.xRange.lowerBound - 1e-9 && x + m.length / 2 <= m.lane.xRange.upperBound + 1e-9,
+                        "\(m.id) shown at \(t) with its body over the void: x \(x)")
             }
         }
     }
 
-    @Test func moverStaysWithinTheLoop() {
+    @Test func moversFadeInAndOutRatherThanPop() {
         for m in Traffic.movers(for: Self.layout, detail: .full) {
-            let margin = Traffic.wrapMargin(of: m)
-            for t in Self.times {
-                let x = Traffic.pose(of: m, at: t).position.x
-                #expect(x >= m.lane.xRange.lowerBound - margin - 1e-9 && x <= m.lane.xRange.upperBound + margin + 1e-9,
-                        "\(m.id) at \(t): \(x)")
+            var last = 0.0
+            for t in stride(from: 0.0, through: 300.0, by: 0.05) {
+                let v = Traffic.pose(of: m, at: t).visibility
+                // One 50 ms frame never jumps from hidden to fully shown or back.
+                #expect(abs(v - last) < 0.5, "\(m.id) jumps from \(last) to \(v) at \(t)")
+                last = v
             }
         }
+    }
+
+    @Test func carsAreUnhurriedAndEachCrossingHasItsOwnSpeed() {
+        for m in Traffic.movers(for: Self.layout, detail: .full) where m.kind == .car {
+            var speeds = Set<Double>()
+            for t in Self.times { if let p = Self.shown(m, at: t) { speeds.insert(p.speed) } }
+            #expect(speeds.allSatisfy { (3.5...6.0).contains($0) }, "\(m.id) speeds \(speeds)")
+            #expect(speeds.count >= 3, "\(m.id) drives at only \(speeds.count) speeds in ten minutes")
+        }
+    }
+
+    /// Times a lane's movers enter the lot, in order.
+    static func arrivals(in lane: TrafficLane, detail: DetailLevel) -> [Double] {
+        let group = Traffic.movers(for: Self.layout, detail: detail).filter { $0.lane == lane }
+        var out: [Double] = []
+        for m in group {
+            var was = false
+            for t in Self.times {
+                let now = Self.shown(m, at: t) != nil
+                if now && !was { out.append(t) }
+                was = now
+            }
+        }
+        return out.sorted()
+    }
+
+    @Test func carsComeIrregularlyAndNotTooOften() {
+        for lane in Self.carLanes {
+            let times = Self.arrivals(in: lane, detail: .full)
+            let gaps = zip(times.dropFirst(), times).map { $0 - $1 }
+            // About one car or pair every twenty seconds a lane, never on a fixed beat.
+            #expect(times.count >= 20 && times.count <= 60, "\(lane.id): \(times.count) cars in ten minutes")
+            #expect((gaps.max() ?? 0) - (gaps.min() ?? 0) > 10, "\(lane.id) gaps \(gaps)")
+        }
+    }
+
+    @Test func carsSometimesComeInPairsAndTheRoadIsSometimesEmpty() {
+        let movers = Traffic.movers(for: Self.layout, detail: .full).filter { $0.kind == .car }
+        var two = false, empty = false
+        for lane in Self.carLanes {
+            for t in Self.times {
+                let n = movers.filter { $0.lane == lane && Self.shown($0, at: t) != nil }.count
+                if n >= 2 { two = true }
+                if n == 0 { empty = true }
+            }
+        }
+        #expect(two && empty)
+    }
+
+    @Test func lanesDoNotRunInStep() {
+        let firsts = Traffic.lanes(for: Self.layout).map { Self.arrivals(in: $0, detail: .full).prefix(3) }
+        #expect(Set(firsts.map { Array($0) }).count == firsts.count)
+    }
+
+    @Test func walkersPlayTheirWalkAtTheirOwnPace() {
+        for m in Traffic.movers(for: Self.layout, detail: .full) where m.kind == .pedestrian {
+            for t in Self.times {
+                guard let p = Self.shown(m, at: t) else { continue }
+                #expect((1.1...1.6).contains(p.speed))
+            }
+        }
+        // The clip walks in place at the measured 1.45 m/s; this rate keeps the planted foot still.
+        #expect(abs(Traffic.walkCycleRate(at: 1.45) - 1.0) < 1e-12)
+        #expect(abs(Traffic.walkCycleRate(at: 1.16) - 0.8) < 1e-12)
     }
 
     @Test func carsFaceTheWayTheyDrive() {
         for m in Traffic.movers(for: Self.layout, detail: .full) where m.kind == .car {
-            let a = Traffic.pose(of: m, at: 10)
-            let b = Traffic.pose(of: m, at: 10.01)
-            let travelled = b.position.x - a.position.x
-            #expect(travelled * m.lane.direction > 0 || abs(travelled) > 10, "\(m.id) moves against its lane")
-            // The front is +X; yaw 0 keeps it, yaw pi turns it round.
-            #expect(a.yaw == (m.lane.direction > 0 ? 0 : .pi))
+            for t in Self.times {
+                guard let a = Self.shown(m, at: t), let b = Self.shown(m, at: t + 0.01) else { continue }
+                #expect((b.position.x - a.position.x) * m.lane.direction > 0, "\(m.id) moves against its lane")
+                // The front is +X; yaw 0 keeps it, yaw pi turns it round.
+                #expect(a.yaw == (m.lane.direction > 0 ? 0 : .pi))
+            }
         }
     }
 
@@ -151,10 +224,8 @@ import Testing
             for t in Self.times {
                 for (i, a) in group.enumerated() {
                     for b in group[(i + 1)...] {
-                        let loop = Traffic.loopLength(of: a)
-                        let d = abs(Traffic.pose(of: a, at: t).position.x - Traffic.pose(of: b, at: t).position.x)
-                        // Across the wrap the two are a loop apart, not close.
-                        let gap = min(d, loop - d)
+                        guard let pa = Self.shown(a, at: t), let pb = Self.shown(b, at: t) else { continue }
+                        let gap = abs(pa.position.x - pb.position.x)
                         #expect(gap >= a.length + 1, "\(a.id) and \(b.id) at \(t): \(gap)")
                     }
                 }
@@ -200,7 +271,7 @@ import Testing
             // Half the body width across the lane, half the length along it.
             let halfAcross = m.kind == .car ? 1.0 : 0.3
             for t in Self.times {
-                let p = Traffic.pose(of: m, at: t).position
+                guard let p = Self.shown(m, at: t)?.position else { continue }
                 for car in parked {
                     let x = car.occupiedRect.xRangeMetres, z = car.occupiedRect.zRangeMetres
                     let inside = p.x + m.length / 2 > x.lowerBound && p.x - m.length / 2 < x.upperBound
@@ -209,11 +280,5 @@ import Testing
                 }
             }
         }
-    }
-
-    @Test func laneOffsetsKeepLanesApartInPhase() {
-        let movers = Traffic.movers(for: Self.layout, detail: .full)
-        let firsts = Traffic.lanes(for: Self.layout).compactMap { lane in movers.first { $0.lane == lane } }
-        #expect(Set(firsts.map(\.offset)).count == firsts.count)
     }
 }

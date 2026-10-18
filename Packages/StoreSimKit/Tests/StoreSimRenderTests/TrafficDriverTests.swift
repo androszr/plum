@@ -1,4 +1,6 @@
+import CoreGraphics
 import Foundation
+import Metal
 import RealityKit
 import Testing
 import StoreSimKit
@@ -15,6 +17,13 @@ import StoreSimKit
         return AssetCatalogue(modelURLs: urls)
     }
 
+    /// The first time on a quarter-second grid when `mover` is fully shown, and still is `after` seconds later.
+    static func shownTime(of mover: Mover, after: Double = 0) -> Double? {
+        stride(from: 0.0, through: 900.0, by: 0.25).first {
+            Traffic.pose(of: mover, at: $0).visibility == 1 && Traffic.pose(of: mover, at: $0 + after).visibility == 1
+        }
+    }
+
     static func entity(for mover: Mover) -> Entity {
         let node = SceneNode(name: mover.id, mover: mover)
         return EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: .empty))
@@ -25,14 +34,33 @@ import StoreSimKit
         TrafficDriver.register()
         let mover = try #require(Traffic.movers(for: Self.layout, detail: .full).first)
         let entity = Self.entity(for: mover)
-        for t in [0.0, 3.0] {
+        let t0 = try #require(Self.shownTime(of: mover, after: 3))
+        for t in [t0, t0 + 3] {
             TrafficDriver.place(entity, at: t)
             let pose = Traffic.pose(of: mover, at: t)
             #expect(entity.position == SIMD3<Float>(pose.position))
             let expected = simd_quatf(angle: Float(pose.yaw), axis: SIMD3(0, 1, 0))
             #expect(abs(simd_dot(entity.orientation, expected)) > 0.9999)
         }
-        #expect(Traffic.pose(of: mover, at: 0).position != Traffic.pose(of: mover, at: 3).position)
+        #expect(Traffic.pose(of: mover, at: t0).position != Traffic.pose(of: mover, at: t0 + 3).position)
+    }
+
+    @Test func placeShrinksAWaitingMoverAndFadesItAtTheEdge() throws {
+        let mover = try #require(Traffic.movers(for: Self.layout, detail: .full).first)
+        let entity = Self.entity(for: mover)
+        let times = Array(stride(from: 0.0, through: 900.0, by: 0.05))
+        let hidden = try #require(times.first { Traffic.pose(of: mover, at: $0).visibility == 0 })
+        TrafficDriver.place(entity, at: hidden)
+        #expect(entity.scale == SIMD3(repeating: TrafficDriver.hiddenScale))
+        #expect(entity.isEnabled, "a disabled walker's clip would stop")
+        let fading = try #require(times.first { (0.1...0.9).contains(Traffic.pose(of: mover, at: $0).visibility) })
+        TrafficDriver.place(entity, at: fading)
+        #expect(entity.scale == SIMD3(repeating: 1))
+        let opacity = try #require(entity.components[OpacityComponent.self]).opacity
+        #expect(abs(Double(opacity) - Traffic.pose(of: mover, at: fading).visibility) < 1e-6)
+        let shown = try #require(Self.shownTime(of: mover))
+        TrafficDriver.place(entity, at: shown)
+        #expect(!entity.components.has(OpacityComponent.self))
     }
 
     @Test func placeInRootTouchesOnlyMoverEntities() throws {
@@ -101,11 +129,14 @@ import StoreSimKit
         let root = EntityBuilder.entity(for: node, loader: ModelLoader(catalogue: .empty))
         let mover = try #require(Traffic.movers(for: Self.layout, detail: .full).first)
         let entity = try #require(root.findEntity(named: mover.id))
-        let before = entity.position
         #expect(entity.components[MoverComponent.self]?.elapsed == 0)
+        // Start the clock where the mover is on the road, so one frame visibly moves it.
+        let t0 = try #require(Self.shownTime(of: mover, after: 2))
+        TrafficDriver.place(in: root, at: t0)
+        let before = entity.position
         _ = try await OffscreenRenderer().render(root: root, camera: .isoPreset, size: (64, 64))
         let elapsed = try #require(entity.components[MoverComponent.self]).elapsed
-        #expect(elapsed > 0, "TrafficSystem.update never ran")
+        #expect(elapsed > t0, "TrafficSystem.update never ran")
         #expect(entity.position != before)
         let pose = Traffic.pose(of: mover, at: elapsed)
         #expect(entity.position == SIMD3<Float>(pose.position))
@@ -138,6 +169,65 @@ import StoreSimKit
         _ = try await OffscreenRenderer().render(root: tagged, camera: .isoPreset, size: (64, 64), frameDelta: 0.25)
         let moved = joints(root)
         #expect(zip(rest, moved).contains { $0.matrix != $1.matrix }, "no joint moved after the walk cycle ran")
+        // On the road, the clip runs at the walker's own pace so the planted foot does not slide.
+        let walk = try #require(tagged.components[MoverComponent.self]?.walk, "the started clip is kept for pacing")
+        let t = try #require(Self.shownTime(of: route))
+        TrafficDriver.place(tagged, at: t)
+        #expect(abs(Double(walk.speed) - Traffic.walkCycleRate(at: Traffic.pose(of: route, at: t).speed)) < 1e-6)
+    }
+
+    /// Half a second of play is half a stride: the legs swap. A clip whose samples sit on fractional time codes
+    /// (1 code per second) plays about thirty times too slowly in RealityKit, a near-frozen figure sliding along.
+    @Test(.enabled(if: hasGPU))
+    func walkCycleSwingsTheLegsAtClipSpeed() async throws {
+        let catalogue = try Self.characterCatalogue()
+        let node = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: catalogue)
+        let traffic = try #require(node.node(named: "traffic"))
+        let device = try #require(MTLCreateSystemDefaultDevice())
+        for asset in AssetName.characterNames.sorted(by: { $0.rawValue < $1.rawValue }) {
+            var walker = try #require(traffic.children.first { $0.mover?.asset == asset })
+            let route = try #require(walker.mover)
+            walker.mover = nil
+            let root = Entity()
+            root.addChild(EntityBuilder.entity(for: walker, loader: ModelLoader(catalogue: catalogue)))
+            root.components.set(MoverComponent(mover: route))
+            #expect(TrafficDriver.startWalkCycles(in: root) == 1)
+            root.components.remove(MoverComponent.self)
+            func skin(_ e: Entity) -> ModelEntity? {
+                if let m = e as? ModelEntity, !m.jointNames.isEmpty { return m }
+                return e.children.lazy.compactMap(skin).first
+            }
+            let body = try #require(skin(root))
+            // One renderer for every frame, as in the app: the clip's clock runs on in its scene.
+            let renderer = try RealityRenderer()
+            renderer.entities.append(root)
+            let camera = PerspectiveCamera()
+            camera.look(at: SIMD3(0, 0.9, 0), from: SIMD3(0, 1, 3), relativeTo: nil as Entity?)
+            renderer.entities.append(camera)
+            renderer.activeCamera = camera
+            let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 16, height: 16, mipmapped: false)
+            desc.usage = [.renderTarget, .shaderRead, .shaderWrite]
+            desc.storageMode = .shared
+            let texture = try #require(device.makeTexture(descriptor: desc))
+            let output = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: texture))
+            func frames(_ n: Int) async throws {
+                for _ in 0..<n {
+                    try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+                        do {
+                            try renderer.updateAndRender(deltaTime: 1.0 / 30, cameraOutput: output, whenScheduled: nil,
+                                                         onComplete: { _ in cont.resume() })
+                        } catch { cont.resume(throwing: error) }
+                    }
+                }
+            }
+            try await frames(1)
+            let before = body.jointTransforms.map(\.rotation)
+            try await frames(15)
+            let turned = zip(before, body.jointTransforms.map(\.rotation)).map { a, b in
+                2 * acos(min(1, abs(simd_dot(a.vector, b.vector))))
+            }.max() ?? 0
+            #expect(turned > 0.35, "\(asset.rawValue): no joint turned more than \(turned) rad in half a second of walking")
+        }
     }
 
     /// The picture itself: a walker caught mid-stride does not look like the same walker standing still.
@@ -173,6 +263,47 @@ import StoreSimKit
                 differing += 1
             }
             #expect(differing >= 200, "\(asset.rawValue): only \(differing) pixels differ between standing and mid-stride")
+        }
+    }
+
+    /// Rows of the frame the figure covers: pixels that differ from the background corner.
+    static func coveredRows(_ image: CGImage) -> Int {
+        let p = SnapshotRenderTests.pixels(image)
+        var top = Int.max, bottom = -1
+        for i in Swift.stride(from: 0, to: p.count, by: 4) where p[i] != p[0] || p[i + 1] != p[1] || p[i + 2] != p[2] {
+            let y = i / 4 / image.width
+            top = min(top, y)
+            bottom = max(bottom, y)
+        }
+        return bottom >= top ? bottom - top + 1 : 0
+    }
+
+    /// The skinned body is drawn at the size it measures: a skeleton in other units than its mesh renders a giant
+    /// (or nothing) while `visualBounds` still reports 1.75 m. Compared against the code-built stand-in, mid-stride.
+    @Test(.enabled(if: hasGPU))
+    func walkingCharacterIsDrawnAtPersonHeight() async throws {
+        let catalogue = try Self.characterCatalogue()
+        let node = SceneComposer.compose(layout: Self.layout, detail: .full, catalogue: catalogue)
+        let traffic = try #require(node.node(named: "traffic"))
+        let camera = OrbitCamera(target: SIMD3(0, 0.9, 0), distance: 6, yaw: .pi / 2, pitch: 0.35)
+        for asset in AssetName.characterNames.sorted(by: { $0.rawValue < $1.rawValue }) {
+            var walker = try #require(traffic.children.first { $0.mover?.asset == asset })
+            walker.position = .zero
+            walker.yaw = 0
+            let route = try #require(walker.mover)
+            walker.mover = nil
+            let standIn = Entity()
+            standIn.addChild(EntityBuilder.entity(for: walker, loader: ModelLoader(catalogue: .empty)))
+            let reference = Self.coveredRows(try await OffscreenRenderer().render(root: standIn, camera: camera, size: (256, 256)))
+            let moving = Entity()
+            moving.addChild(EntityBuilder.entity(for: walker, loader: ModelLoader(catalogue: catalogue)))
+            moving.components.set(MoverComponent(mover: route))
+            #expect(TrafficDriver.startWalkCycles(in: moving) == 1)
+            moving.components.remove(MoverComponent.self)
+            let drawn = Self.coveredRows(try await OffscreenRenderer().render(root: moving, camera: camera, size: (256, 256), frameDelta: 0.25))
+            #expect(reference > 40, "the stand-in should fill a fair part of the frame")
+            #expect(Double(drawn) > Double(reference) * 0.75 && Double(drawn) < Double(reference) * 1.25,
+                    "\(asset.rawValue): drawn \(drawn) rows tall mid-stride, the 1.75 m stand-in is \(reference)")
         }
     }
 

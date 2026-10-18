@@ -120,7 +120,7 @@ extension StoreLayout {
         for (i, x) in [8, 24, 40, 52].enumerated() { lotFixture("street_lamp_\(i + 1)", .streetLamp, x, 21) }
 
         // Parking lane and far sidewalk.
-        for (i, x) in [4, 20, 36].enumerated() { lotFixture("parked_car_\(i + 1)", .parkedCar, x, 22) }
+        for (i, x) in [4, 20].enumerated() { lotFixture("parked_car_\(i + 1)", .parkedCar, x, 22) }
         for (i, x) in [4, 14, 24, 34, 44, 52].enumerated() { lotFixture("tree_\(i + 1)", .tree, x, 39) }
 
         return StoreLayout(lot: lot, fixtures: out)

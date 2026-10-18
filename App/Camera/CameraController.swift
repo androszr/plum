@@ -68,13 +68,22 @@ final class CameraController {
 
     // MARK: Gestures (deltas, in points or ratios)
 
-    func pan(by delta: CGSize) {
+    /// A drag from `from` to `to` (view points, y down). Outside, the ground under the pointer stays under it;
+    /// Inside, a sideways drag turns the view with the hand; the view stays level.
+    func drag(from: CGPoint, to: CGPoint, viewSize: CGSize) {
         guard glide == nil else { return }
         cancelAnimation()
+        let delta = CGSize(width: to.x - from.x, height: to.y - from.y)
         if mode == .inside {
-            walk.look(by: SIMD2(Double(delta.width), Double(delta.height)))
+            walk.look(by: Double(delta.width), viewSize: SIMD2(Double(viewSize.width), Double(viewSize.height)))
             return
         }
+        let size = SIMD2(Double(viewSize.width), Double(viewSize.height))
+        if size.x > 0, size.y > 0,
+           camera.drag(from: SIMD2(Double(from.x), Double(from.y)), to: SIMD2(Double(to.x), Double(to.y)), viewSize: size) {
+            return
+        }
+        // Above the horizon there is no ground to hold: slide by the distance instead, the same way round.
         let k = camera.distance * panFactor
         camera.pan(by: SIMD2(-Double(delta.width) * k, Double(delta.height) * k))
     }
@@ -88,13 +97,25 @@ final class CameraController {
         camera.zoom(by: 1 / ratio)
     }
 
-    func scroll(by dy: Double) {
+    /// Two fingers on a trackpad (`precise`) move the camera over the lot like a drag from the middle of the
+    /// view; a mouse wheel, or any scroll with Command held, zooms. Inside, two fingers look around (sideways
+    /// turns, up and down tilts) and never walk: walking is W, A, S, D.
+    func scroll(dx: Double, dy: Double, precise: Bool, viewSize: CGSize) {
         guard glide == nil else { return }
-        cancelAnimation()
         if mode == .inside {
-            walk.step(forward: dy * WalkCamera.scrollMetresPerPoint, on: floor)
+            guard precise else { return }
+            cancelAnimation()
+            let size = SIMD2(Double(viewSize.width), Double(viewSize.height))
+            walk.look(by: dx, viewSize: size)
+            walk.tilt(by: dy, viewSize: size)
             return
         }
+        if precise {
+            let centre = CGPoint(x: viewSize.width / 2, y: viewSize.height / 2)
+            drag(from: centre, to: CGPoint(x: centre.x + dx, y: centre.y + dy), viewSize: viewSize)
+            return
+        }
+        cancelAnimation()
         camera.zoom(by: exp(-dy * 0.01))
     }
 
@@ -112,7 +133,7 @@ final class CameraController {
         guard glide == nil else { return }
         cancelAnimation()
         if mode == .inside {
-            walk.look(by: SIMD2(Double(delta.width), Double(delta.height)))
+            walk.turn(by: Double(delta.width) * 0.008)
             return
         }
         camera.rotate(by: -Double(delta.width) * 0.008)
@@ -122,10 +143,8 @@ final class CameraController {
     func tilt(by points: Double) {
         guard glide == nil else { return }
         cancelAnimation()
-        if mode == .inside {
-            walk.look(by: SIMD2(0, points))
-            return
-        }
+        // Inside the view stays level.
+        if mode == .inside { return }
         camera.tilt(by: points * 0.005)
     }
 

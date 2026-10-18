@@ -74,8 +74,88 @@ How each was made:
 
    `TrafficDriverTests.characterMeshIsSkinnedToItsSkeleton` and
    `walkCycleBendsTheBodyOnScreen` are the tripwires: skip this step and they go red.
+6. **Bake the armature scale** — the dropped `n25` carried the GLB's
+   centimetre-to-metre scale, which the conversion also leaves on the
+   `Armature` Xform (`xformOp:scale = 0.01`). The mesh is in metres but the
+   joints and the walk are in centimetres, so RealityKit draws the skinned
+   body about a hundred times too big (the camera ends up inside one giant
+   shoe) while `visualBounds` still reports 1.75 m. Set that scale to 1,
+   multiply every translation under it by 0.01 (the Xform `translate`s, the
+   skeleton's `restTransforms` and the `SkelAnimation`'s `translations`), and
+   divide the 3×3 part of each `bindTransforms` matrix by 0.01:
+
+   ```python
+   # fix_units.py in.usdz out.usdz
+   import sys, os, shutil, subprocess, glob, tempfile
+   from pxr import Usd, UsdSkel, Gf, Vt
+   src, dst = sys.argv[1:3]
+   d = tempfile.mkdtemp()
+   try:
+       subprocess.run(["unzip", "-q", src, "-d", d], check=True)
+       root = glob.glob(d + "/*.usd*")[0]
+       st = Usd.Stage.Open(root)
+       for prim in st.Traverse():
+           sc = prim.GetAttribute("xformOp:scale")
+           if prim.GetTypeName() != "Xform" or not sc or sc.Get() is None: continue
+           v = sc.Get()
+           if not (abs(v[0] - v[1]) < 1e-9 and abs(v[1] - v[2]) < 1e-9 and abs(v[0] - 1) > 1e-6): continue
+           s = float(v[0]); sc.Set(Gf.Vec3f(1, 1, 1))
+           for p in Usd.PrimRange(prim):
+               if p == prim: continue
+               t = p.GetAttribute("xformOp:translate")
+               if t and t.HasValue():
+                   if t.Get() is not None: t.Set(t.Get() * s)
+                   for time in t.GetTimeSamples(): t.Set(t.Get(time) * s, time)
+               if p.GetTypeName() == "Skeleton":
+                   sk = UsdSkel.Skeleton(p)
+                   rest = [Gf.Matrix4d(m) for m in sk.GetRestTransformsAttr().Get()]
+                   for m in rest: m.SetTranslateOnly(m.ExtractTranslation() * s)
+                   sk.GetRestTransformsAttr().Set(Vt.Matrix4dArray(rest))
+                   bind = []
+                   for m in sk.GetBindTransformsAttr().Get():
+                       n = Gf.Matrix4d(m)
+                       for i in range(3): n.SetRow(i, m.GetRow(i) / s)
+                       bind.append(n)
+                   sk.GetBindTransformsAttr().Set(Vt.Matrix4dArray(bind))
+               if p.GetTypeName() == "SkelAnimation":
+                   tr = UsdSkel.Animation(p).GetTranslationsAttr()
+                   for time in tr.GetTimeSamples():
+                       tr.Set(Vt.Vec3fArray([x * s for x in tr.Get(time)]), time)
+       st.GetRootLayer().Save()
+       names = [os.path.basename(root)] + [p for p in os.listdir(d) if p != os.path.basename(root)]
+       out = os.path.abspath(dst)
+       if os.path.exists(out): os.remove(out)
+       subprocess.run(["usdzip", out] + names, cwd=d, check=True)
+   finally:
+       shutil.rmtree(d, ignore_errors=True)
+   ```
+
+   `pip install usd-core` in a throwaway venv provides `pxr`.
+   `TrafficDriverTests.walkingCharacterIsDrawnAtPersonHeight` is the tripwire:
+   it compares the walker mid-stride with the 1.75 m stand-in on screen.
+7. **Re-time onto whole frames** — the conversion writes `timeCodesPerSecond = 1`
+   with the samples on fractional codes (0.033, 0.067, …). RealityKit reports the
+   right 1.03 s length but plays such a clip about thirty times too slowly: the
+   figure slides along in a near-frozen pose. Move every time sample to
+   `round(t × 30)` and set `timeCodesPerSecond`, `framesPerSecond` and the
+   start/end codes to match (same unzip, edit and `usdzip` frame as above):
+
+   ```python
+   old = st.GetTimeCodesPerSecond()
+   for prim in st.Traverse():
+       for attr in prim.GetAttributes():
+           vals = [(t, attr.Get(t)) for t in attr.GetTimeSamples()]
+           if not vals: continue
+           attr.Clear()
+           for t, v in vals: attr.Set(v, round(t / old * 30))
+   st.SetStartTimeCode(round(st.GetStartTimeCode() / old * 30))
+   st.SetEndTimeCode(round(st.GetEndTimeCode() / old * 30))
+   st.SetTimeCodesPerSecond(30); st.SetFramesPerSecond(30)
+   ```
+
+   `TrafficDriverTests.walkCycleSwingsTheLegsAtClipSpeed` is the tripwire.
 
 **Replacing a file.** Re-download from the rig task by its id first
 (`meshy_get_task_status` on the rig task returns fresh walking-GLB links, free)
-and repeat steps 4 and 5. Generate a new character only when the look itself has to
+and repeat steps 4 to 7. Generate a new character only when the look itself has to
 change, and record the new task ids, model and credits in this table.

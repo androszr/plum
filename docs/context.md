@@ -148,7 +148,15 @@ on one clears the selection rather than picking what stands behind it) under a `
 in `SceneNode.mover`. `TrafficDriver` and `TrafficSystem` (in `StoreSimRender`) are the only per-frame
 code: a RealityKit `System` adds the frame time to each `MoverComponent` and sets its transform, and
 `startWalkCycles` starts each walker's built-in animation at its own `walkCyclePhase`, so the street
-does not march in step. Rules: two car lanes in the street zone,
+does not march in step. Timing is a timetable, not a loop: time is cut into slots per lane (each long
+enough for the slowest crossing), and a seeded hash of the lane id and the slot decides whether anyone
+crosses, at what speed (cars 3.5–6 m/s, walkers 1.1–1.6 m/s), when, and whether a second follows at
+the same speed; so arrivals are irregular, sometimes paired, and a lane never holds two movers that
+could meet. A mover fades in and out over the last metres inside the lot edge (`visibility`, an
+`OpacityComponent`) and waits off the lot shrunk to `TrafficDriver.hiddenScale`, never disabled,
+because a disabled entity's walk clip stops. The walk clip walks in place at 1.45 m/s
+(`Traffic.walkClipSpeed`, measured from the planted foot), so each walker plays it at
+`walkCycleRate(at:)` = its speed / 1.45 and the feet do not slide. Rules: two car lanes in the street zone,
 the near one driving -X and the far one +X (right-hand traffic, front of a car is +X); a walker uses
 `Traffic.walkingLines`: the clear bands between the fixture bodies on a pavement (from
 `solidMetres`; a bin, lamp or tree blocks only its body). The two widest bands get a line down their
@@ -158,7 +166,14 @@ the parked cars' three models, continuing their variant count, so it is not repa
 `pedestrian_a|b|c.usdz` (Meshy, rigged with the walk cycle) in `App/Resources/Characters/`.
 
 **Camera and roof.** Outside is `OrbitCamera`, a pure value: pan, zoom, rotate and tilt
-are clamped, and `roofOpacity` is 1 below 30 degrees of pitch, 0 above 50,
+are clamped. Moving it is drag and drop: `drag(from:to:viewSize:)` keeps the ground point under the
+pointer under it (a ray onto the ground plane, capped at half the distance per event), and two fingers
+on a Mac trackpad do the same from the middle of the view, in the system's scroll direction; pinch, a
+mouse wheel and a Command-held scroll (the Magic Mouse's only zoom) zoom, Option-drag orbits. Inside is kept simple: looking and walking are separate. Two fingers on
+the trackpad look around (sideways turns, up and down tilts within `WalkCamera.tiltLimit`), a drag turns,
+both exactly as far as the hand moves with the shop following it as Outside; W, A, S, D and the arrows walk
+and sidestep (the iPhone stick the same), and a tap on the floor strolls there. The trackpad never walks,
+and the view starts level with a slight look down (`viewPitch`). `roofOpacity` is 1 below 30 degrees of pitch, 0 above 50,
 linear between. `EntityBuilder.applyRoofOpacity` sets the `store_roof`
 `OpacityComponent` on every camera change. The roof carries no collision shape,
 so it never swallows a click. Inside is a first-person walk: `WalkCamera` (position, yaw, pitch,

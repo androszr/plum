@@ -62,6 +62,25 @@ public struct OrbitCamera: Equatable, Sendable {
         if let r = limits.targetZ { target.z = min(max(target.z, r.lowerBound), r.upperBound) }
     }
 
+    /// Drag and drop on the ground: the ground point under `from` (screen points, y down) ends up under `to`.
+    /// Returns false, moving nothing, when either point looks above the horizon. The move is capped at half
+    /// the camera distance, so a drag near the horizon cannot fling the view across the lot.
+    @discardableResult
+    public mutating func drag(from: SIMD2<Double>, to: SIMD2<Double>, viewSize: SIMD2<Double>,
+                              verticalFOVDegrees: Double = 45) -> Bool {
+        let pose = self.pose
+        guard let a = WalkCamera.floorPoint(pose: pose, tap: from, viewSize: viewSize, verticalFOVDegrees: verticalFOVDegrees),
+              let b = WalkCamera.floorPoint(pose: pose, tap: to, viewSize: viewSize, verticalFOVDegrees: verticalFOVDegrees)
+        else { return false }
+        var move = a - b
+        let cap = distance / 2
+        if simd_length(move) > cap { move *= cap / simd_length(move) }
+        target += SIMD3(move.x, 0, move.y)
+        if let r = limits.targetX { target.x = min(max(target.x, r.lowerBound), r.upperBound) }
+        if let r = limits.targetZ { target.z = min(max(target.z, r.lowerBound), r.upperBound) }
+        return true
+    }
+
     public mutating func zoom(by factor: Double) {
         distance = min(max(distance * factor, limits.distance.lowerBound), limits.distance.upperBound)
     }

@@ -14,9 +14,11 @@ let maxMeanDifference = 0.12
 
 @MainActor
 @Suite struct ModelSnapshotTests {
-    /// The `variant`-th fixture of `kind` in layout order, so its derived variant index is `variant`.
+    /// The `variant`-th fixture of `kind` in layout order, so its derived variant index is `variant`; the first one
+    /// stands in for a variant the layout does not place (the van drives past but is never parked).
     private static func fixture(_ kind: FixtureKind, variant: Int) -> Fixture {
-        StoreLayout.plumCorner.fixtures.filter { $0.kind == kind }[variant]
+        let all = StoreLayout.plumCorner.fixtures.filter { $0.kind == kind }
+        return all[min(variant, all.count - 1)]
     }
 
     private static func camera(extent: Double, height: Double) -> OrbitCamera {
@@ -92,7 +94,7 @@ let maxMeanDifference = 0.12
 
     private static func compare(_ kind: FixtureKind, variant wanted: Int = 0) async throws {
         let fixture = Self.fixture(kind, variant: wanted)
-        let variant = ModelVariant.index(of: fixture, in: .plumCorner)
+        let variant = wanted
         let assetName = ModelVariant.assetName(for: kind, variant: variant)
         let spec = try #require(BriefSpec.load()[assetName.rawValue])
         let dim = try #require(spec.dimensions)

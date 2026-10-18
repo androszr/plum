@@ -41,10 +41,12 @@ enum StreetBuilder {
                     x += step
                     i += 1
                 }
+                // The crossing runs kerb to kerb: over the parking lane as well as the street.
                 let zebraX = w - 4.0
-                let n = Int(sm.d / 0.6)
+                let zebraMinZ = min(minZ, st.rect.minZ).asMetres, zebraMaxZ = max(maxZ, st.rect.maxZ).asMetres
+                let n = Int((zebraMaxZ - zebraMinZ) / 0.6)
                 for k in 0..<n {
-                    p.box("zebra_\(k)", zebraX, roadTop, st.rect.minZ.asMetres + 0.3 + 0.6 * Double(k), 2.6, 0.006, 0.3, .paint(c.cream))
+                    p.box("zebra_\(k)", zebraX, roadTop, zebraMinZ + 0.3 + 0.6 * Double(k), 2.6, 0.006, 0.3, .paint(c.cream))
                 }
                 if let pk = lot.zones(of: .parkingLane).first {
                     let pm = metres(pk.rect)

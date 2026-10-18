@@ -15,12 +15,13 @@ public struct WalkCamera: Equatable, Sendable {
     public static let eyeHeight = 1.6
     public static let pitchLimit = 60.0 * Double.pi / 180
     public static let walkSpeed = 1.4
+    /// How far two fingers can tilt the view up or down from level, in radians.
+    public static let tiltLimit = 30.0 * Double.pi / 180
     public static let turnStep = OrbitCamera.rotateStep
-    public static let lookYawPerPoint = 0.005
-    public static let lookPitchPerPoint = 0.004
-    public static let scrollMetresPerPoint = 0.01
+    /// Inside starts level with a slight look down, so the floor a few metres ahead is in shot to tap.
+    public static let viewPitch = -0.15
 
-    public init(position: SIMD2<Double>, yaw: Double, pitch: Double = 0) {
+    public init(position: SIMD2<Double>, yaw: Double, pitch: Double = WalkCamera.viewPitch) {
         self.position = position
         self.yaw = OrbitCamera.wrap(yaw)
         self.pitch = min(max(pitch, -Self.pitchLimit), Self.pitchLimit)
@@ -35,10 +36,20 @@ public struct WalkCamera: Equatable, Sendable {
         return CameraPose(eye: eye, target: eye + forward)
     }
 
-    /// Drag: right turns the head right, down looks down.
-    public mutating func look(by delta: SIMD2<Double>) {
-        yaw = OrbitCamera.wrap(yaw - delta.x * Self.lookYawPerPoint)
-        pitch = min(max(pitch - delta.y * Self.lookPitchPerPoint, -Self.pitchLimit), Self.pitchLimit)
+    /// A sideways drag of `points` across a view `viewSize` wide: the shop moves with the hand, exactly as far,
+    /// so dragging right turns the view left. Only the heading changes; the view never tilts.
+    public mutating func look(by points: Double, viewSize: SIMD2<Double>, verticalFOVDegrees: Double = 45) {
+        guard viewSize.x > 0, viewSize.y > 0 else { return }
+        let horizontalFOV = 2 * atan(tan(verticalFOVDegrees * .pi / 360) * viewSize.x / viewSize.y)
+        yaw = OrbitCamera.wrap(yaw + points * horizontalFOV / viewSize.x)
+    }
+
+    /// Two fingers up or down by `points` on a view `viewSize` tall: the shop moves with the fingers, so
+    /// moving them down looks up. Held within `tiltLimit` of level.
+    public mutating func tilt(by points: Double, viewSize: SIMD2<Double>, verticalFOVDegrees: Double = 45) {
+        guard viewSize.y > 0 else { return }
+        let next = pitch + points * (verticalFOVDegrees * .pi / 180) / viewSize.y
+        pitch = min(max(next, -Self.tiltLimit), Self.tiltLimit)
     }
 
     public mutating func turn(by angle: Double) { yaw = OrbitCamera.wrap(yaw + angle) }
@@ -167,9 +178,9 @@ public struct WalkCamera: Equatable, Sendable {
                 }
             }
         }
-        if let b = best { return WalkCamera(position: b.position, yaw: b.yaw, pitch: 0) }
+        if let b = best { return WalkCamera(position: b.position, yaw: b.yaw) }
         let fallback = floor.nearestWalkable(to: entrance + inward * cellSize, within: 1.5) ?? entrance
-        return WalkCamera(position: fallback, yaw: 0, pitch: 0)
+        return WalkCamera(position: fallback, yaw: 0)
     }
 
     /// The ground point under a tap, or nil when the ray does not reach the floor.

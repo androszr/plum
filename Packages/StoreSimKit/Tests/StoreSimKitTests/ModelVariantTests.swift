@@ -27,22 +27,22 @@ import Testing
         }
     }
 
-    @Test func threeCarsGetThreeModels() {
+    @Test func twoParkedCarsGetTwoModels() {
         let cars = Self.layout.fixtures.filter { $0.kind == .parkedCar }
         let indices = cars.map { ModelVariant.index(of: $0, in: Self.layout) }
-        #expect(indices == [0, 1, 2])
+        #expect(indices == [0, 1])
         #expect(indices.map { ModelVariant.assetName(for: .parkedCar, variant: $0) }
-                == [.parkedCarHatchback, .parkedCarSaloon, .parkedCarVan])
+                == [.parkedCarHatchback, .parkedCarSaloon])
     }
 
     @Test func parkedCarsCountUpThroughTheirModels() {
-        #expect(["parked_car_1", "parked_car_2", "parked_car_3"].map { Self.variant($0) } == [0, 1, 2])
+        #expect(["parked_car_1", "parked_car_2"].map { Self.variant($0) } == [0, 1])
     }
 
     @Test func movingCarsContinueAfterTheParkedOnes() {
         let cars = Traffic.movers(for: Self.layout, detail: .full).filter { $0.kind == .car }
         let indices = cars.map { ModelVariant.index(of: $0, in: Self.layout) }
-        #expect(Array(indices.prefix(4)) == [0, 1, 2, 0])
+        #expect(Array(indices.prefix(4)) == [2, 0, 1, 2])
         #expect(cars.first?.ordinal == 0)
         for m in Traffic.movers(for: Self.layout, detail: .full) where m.kind == .pedestrian {
             #expect(ModelVariant.index(of: m, in: Self.layout) == 0)

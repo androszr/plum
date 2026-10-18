@@ -124,6 +124,22 @@ import Testing
         }
     }
 
+    /// The zebra reaches from the shop-side kerb to the far pavement, and no parked car stands on it.
+    @Test func zebraCrossingRunsKerbToKerb() {
+        let stripes = Self.root.allNodes().filter { $0.name.hasPrefix("zebra_") }
+        let near = Double(Self.layout.lot.zones(of: .sidewalk)[0].rect.maxZ) * cellSize
+        let far = Double(Self.layout.lot.zones(of: .farSidewalk)[0].rect.minZ) * cellSize
+        let lo = stripes.map { $0.position.z - $0.size.z / 2 }.min() ?? .infinity
+        let hi = stripes.map { $0.position.z + $0.size.z / 2 }.max() ?? -.infinity
+        #expect(lo - near < 0.4, "the crossing stops \(lo - near) m short of the shop-side kerb")
+        #expect(far - hi < 0.4, "the crossing stops \(far - hi) m short of the far pavement")
+        let x0 = stripes.map { $0.position.x - $0.size.x / 2 }.min() ?? 0
+        let x1 = stripes.map { $0.position.x + $0.size.x / 2 }.max() ?? 0
+        for car in Self.layout.fixtures.filter({ $0.kind == .parkedCar }).map(\.occupiedRect) {
+            #expect(Double(car.maxX) * cellSize <= x0 || Double(car.minX) * cellSize >= x1, "a parked car stands on the crossing")
+        }
+    }
+
     @Test func opaqueShellBlocksPickingButIsNotSelectable() {
         for name in ["store_wall_back", "store_wall_left", "store_wall_right", "facade", "neighbour_left", "neighbour_right"] {
             let n = Self.root.node(named: name)!
